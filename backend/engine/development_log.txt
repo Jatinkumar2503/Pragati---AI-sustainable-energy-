@@ -1,2 +1,3 @@
 [2026-05-08T10:18:25] chore: create project root directory structural folders
 [2026-05-08T10:41:25] chore: configure .gitignore to exclude virtual environments
+[2026-05-08T10:47:54] chore: configure .gitignore to ignore node_modules and logs
