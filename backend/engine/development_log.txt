@@ -6,3 +6,4 @@
 [2026-05-08T13:47:44] chore: add pandas and numpy for data handling
 [2026-05-08T14:28:28] chore: append scikit-learn and joblib for ML modules
 [2026-05-08T14:34:43] chore: add prophet and holidays dependencies to requirements
+[2026-05-08T15:08:45] docs: write product specifications outline in PRD.md
