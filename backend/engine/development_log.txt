@@ -2,3 +2,4 @@
 [2026-05-08T10:41:25] chore: configure .gitignore to exclude virtual environments
 [2026-05-08T10:47:54] chore: configure .gitignore to ignore node_modules and logs
 [2026-05-08T10:51:37] chore: initialize requirements.txt with base system libraries
+[2026-05-08T11:08:07] chore: add fastapi and uvicorn dependencies to requirements
