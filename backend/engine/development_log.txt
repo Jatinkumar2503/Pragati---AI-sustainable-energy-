@@ -8,3 +8,4 @@
 [2026-05-08T14:34:43] chore: add prophet and holidays dependencies to requirements
 [2026-05-08T15:08:45] docs: write product specifications outline in PRD.md
 [2026-05-08T16:09:52] docs: document executive summary and platform core goals in PRD
+[2026-05-09T10:32:19] docs: specify target KPIs and carbon success metrics in PRD
