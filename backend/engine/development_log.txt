@@ -12,3 +12,4 @@
 [2026-05-09T11:17:27] docs: write technical architecture data flow in PRD
 [2026-05-09T11:18:10] docs: add modular system layout diagram to PRD
 [2026-05-09T11:26:00] docs: outline 4-phase release plan and milestones in PRD
+[2026-05-09T11:53:59] docs: write project value proposition in README.md
