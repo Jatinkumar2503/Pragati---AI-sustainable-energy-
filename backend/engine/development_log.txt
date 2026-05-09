@@ -10,3 +10,4 @@
 [2026-05-08T16:09:52] docs: document executive summary and platform core goals in PRD
 [2026-05-09T10:32:19] docs: specify target KPIs and carbon success metrics in PRD
 [2026-05-09T11:17:27] docs: write technical architecture data flow in PRD
+[2026-05-09T11:18:10] docs: add modular system layout diagram to PRD
