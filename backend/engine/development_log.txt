@@ -27,3 +27,4 @@
 [2026-05-10T13:59:32] fix: add folder checking to verify data cache dir exists
 [2026-05-10T14:56:21] feat: implement duplicate check skipping download if cached
 [2026-05-10T15:12:02] feat: write console log updates for downloader status
+[2026-05-10T15:37:16] docs: add docstrings explaining downloader cache path check
