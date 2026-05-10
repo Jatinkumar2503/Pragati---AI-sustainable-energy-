@@ -20,3 +20,4 @@
 [2026-05-09T17:58:00] docs: add developers registry and credentials in README
 [2026-05-10T09:11:53] feat: create engine/dataset_loader.py module file
 [2026-05-10T09:51:24] feat: add base imports for loader requests and zipfile
+[2026-05-10T09:58:22] feat: configure logger interface in dataset loader
