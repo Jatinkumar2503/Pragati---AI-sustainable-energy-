@@ -24,3 +24,4 @@
 [2026-05-10T10:29:36] feat: define local caching paths constants for data files
 [2026-05-10T12:15:05] feat: add UCI Steel industry energy consumption dataset URL
 [2026-05-10T12:54:55] feat: write download_and_extract_dataset skeleton structure
+[2026-05-10T13:59:32] fix: add folder checking to verify data cache dir exists
