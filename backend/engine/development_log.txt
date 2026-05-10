@@ -26,3 +26,4 @@
 [2026-05-10T12:54:55] feat: write download_and_extract_dataset skeleton structure
 [2026-05-10T13:59:32] fix: add folder checking to verify data cache dir exists
 [2026-05-10T14:56:21] feat: implement duplicate check skipping download if cached
+[2026-05-10T15:12:02] feat: write console log updates for downloader status
