@@ -21,3 +21,4 @@
 [2026-05-10T09:11:53] feat: create engine/dataset_loader.py module file
 [2026-05-10T09:51:24] feat: add base imports for loader requests and zipfile
 [2026-05-10T09:58:22] feat: configure logger interface in dataset loader
+[2026-05-10T10:29:36] feat: define local caching paths constants for data files
