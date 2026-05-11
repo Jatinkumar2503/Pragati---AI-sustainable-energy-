@@ -29,3 +29,4 @@
 [2026-05-10T15:12:02] feat: write console log updates for downloader status
 [2026-05-10T15:37:16] docs: add docstrings explaining downloader cache path check
 [2026-05-11T09:14:57] feat: add requests stream download in dataset loader
+[2026-05-11T09:16:38] feat: implement stream progress tracker with logger prints
