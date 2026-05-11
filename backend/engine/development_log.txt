@@ -31,3 +31,4 @@
 [2026-05-11T09:14:57] feat: add requests stream download in dataset loader
 [2026-05-11T09:16:38] feat: implement stream progress tracker with logger prints
 [2026-05-11T11:41:50] feat: write zipfile extract helper utility in loader
+[2026-05-11T13:25:08] feat: delete local zip archive after successful extract
