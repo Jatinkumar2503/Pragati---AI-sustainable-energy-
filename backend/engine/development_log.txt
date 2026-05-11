@@ -37,3 +37,4 @@
 [2026-05-11T15:55:58] refactor: clean up file stream close operations in loader
 [2026-05-11T16:15:25] fix: handle edge case when UCI data repository is offline
 [2026-05-11T16:21:59] refactor: rename variables for cleaner path resolution
+[2026-05-11T17:58:05] docs: document dataset download source links and citation
