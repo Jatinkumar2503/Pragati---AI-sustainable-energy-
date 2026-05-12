@@ -43,3 +43,4 @@
 [2026-05-12T12:07:01] feat: map column header names to lowercase snake_case
 [2026-05-12T12:16:06] feat: normalize Usage_kWh column name to usage_kwh
 [2026-05-12T12:22:22] feat: map reactive lagging power factor header labels
+[2026-05-12T15:00:52] feat: map reactive leading power factor header labels
