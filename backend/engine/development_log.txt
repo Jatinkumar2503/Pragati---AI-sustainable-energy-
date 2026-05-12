@@ -40,3 +40,4 @@
 [2026-05-11T17:58:05] docs: document dataset download source links and citation
 [2026-05-12T10:12:05] feat: implement load_dataset core function in loader
 [2026-05-12T11:23:03] feat: add pandas csv parser parameters for load_dataset
+[2026-05-12T12:07:01] feat: map column header names to lowercase snake_case
