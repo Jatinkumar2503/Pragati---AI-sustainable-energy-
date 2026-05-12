@@ -45,3 +45,4 @@
 [2026-05-12T12:22:22] feat: map reactive lagging power factor header labels
 [2026-05-12T15:00:52] feat: map reactive leading power factor header labels
 [2026-05-12T15:11:51] feat: clean power factor column header names
+[2026-05-12T15:32:10] feat: parse datestamp strings to pandas datetime format
