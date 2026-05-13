@@ -56,3 +56,4 @@
 [2026-05-13T15:56:52] feat: add weekend status boolean flag to resampled rows
 [2026-05-13T16:48:25] refactor: optimize dataframe columns data types to float32
 [2026-05-13T16:58:10] fix: handle zero-length inputs inside load_dataset
+[2026-05-13T17:20:41] test: assert resampled row counts match theoretical counts
