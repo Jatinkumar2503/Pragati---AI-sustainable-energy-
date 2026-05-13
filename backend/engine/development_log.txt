@@ -53,3 +53,4 @@
 [2026-05-13T11:56:12] feat: add forward fill interpolation for missing timestamps
 [2026-05-13T12:11:06] feat: add backward fill fallback interpolation checks
 [2026-05-13T12:56:46] feat: compute baseline statistics for active power consumption
+[2026-05-13T15:56:52] feat: add weekend status boolean flag to resampled rows
