@@ -52,3 +52,4 @@
 [2026-05-13T11:07:21] refactor: group resampled power variables by mean value
 [2026-05-13T11:56:12] feat: add forward fill interpolation for missing timestamps
 [2026-05-13T12:11:06] feat: add backward fill fallback interpolation checks
+[2026-05-13T12:56:46] feat: compute baseline statistics for active power consumption
