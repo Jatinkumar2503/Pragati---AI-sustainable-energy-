@@ -62,3 +62,4 @@
 [2026-05-14T10:46:41] feat: add abc and pandas imports to base database
 [2026-05-14T11:21:03] feat: define BaseDatabase abstract class interface
 [2026-05-14T11:52:02] feat: add init_db abstract method definition
+[2026-05-14T12:40:58] feat: add insert_telemetry_records abstract method
