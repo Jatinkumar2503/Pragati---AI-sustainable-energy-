@@ -59,3 +59,4 @@
 [2026-05-13T17:20:41] test: assert resampled row counts match theoretical counts
 [2026-05-13T17:59:18] feat: return clean normalized dataframes in load_dataset
 [2026-05-14T10:32:09] feat: create engine/base_db.py module file
+[2026-05-14T10:46:41] feat: add abc and pandas imports to base database
