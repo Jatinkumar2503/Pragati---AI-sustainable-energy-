@@ -67,3 +67,4 @@
 [2026-05-14T13:56:36] feat: add query_recent_telemetry abstract method
 [2026-05-14T15:03:48] feat: add clear_all_telemetry abstract method
 [2026-05-14T15:16:14] feat: add close connection abstract method
+[2026-05-14T15:53:46] docs: write docstrings detailing BaseDatabase interface rules
