@@ -63,3 +63,4 @@
 [2026-05-14T11:21:03] feat: define BaseDatabase abstract class interface
 [2026-05-14T11:52:02] feat: add init_db abstract method definition
 [2026-05-14T12:40:58] feat: add insert_telemetry_records abstract method
+[2026-05-14T13:29:44] feat: add query_all_telemetry abstract method
