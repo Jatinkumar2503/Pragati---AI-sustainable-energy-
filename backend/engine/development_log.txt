@@ -72,3 +72,4 @@
 [2026-05-15T10:45:38] feat: add sqlite3 and thread locks imports to database
 [2026-05-15T11:48:46] feat: define TelemetryDB class inheriting from BaseDatabase
 [2026-05-15T12:47:50] feat: initialize default sqlite file path constants
+[2026-05-15T13:25:34] feat: write init_db method creating telemetry table
