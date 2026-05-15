@@ -75,3 +75,4 @@
 [2026-05-15T13:25:34] feat: write init_db method creating telemetry table
 [2026-05-15T13:26:33] feat: define schema indices on datetime column
 [2026-05-15T13:56:31] feat: add thread locking protection in init_db call
+[2026-05-15T15:18:52] fix: handle directory paths generation for sqlite files
