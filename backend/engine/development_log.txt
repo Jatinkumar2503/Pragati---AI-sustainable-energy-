@@ -78,3 +78,4 @@
 [2026-05-15T15:18:52] fix: handle directory paths generation for sqlite files
 [2026-05-15T16:09:24] test: verify sqlite database tables create successfully
 [2026-05-15T17:27:58] docs: document sqlite connection thread safety strategies
+[2026-05-16T09:08:42] feat: implement insert_telemetry_records method in TelemetryDB
