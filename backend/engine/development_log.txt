@@ -84,3 +84,4 @@
 [2026-05-16T10:12:20] feat: add immediate commit flag override configuration
 [2026-05-16T10:17:47] fix: catch transaction rollback exceptions on insert fail
 [2026-05-16T10:27:42] feat: implement insert records counter tracking
+[2026-05-16T10:38:38] refactor: optimize insertions by opening single transaction
