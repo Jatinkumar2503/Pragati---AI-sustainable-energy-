@@ -80,3 +80,4 @@
 [2026-05-15T17:27:58] docs: document sqlite connection thread safety strategies
 [2026-05-16T09:08:42] feat: implement insert_telemetry_records method in TelemetryDB
 [2026-05-16T09:41:42] feat: write row transformations mapping tuple structures
+[2026-05-16T09:59:56] feat: add batch insertions query using executemany
