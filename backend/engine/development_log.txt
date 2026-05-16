@@ -83,3 +83,4 @@
 [2026-05-16T09:59:56] feat: add batch insertions query using executemany
 [2026-05-16T10:12:20] feat: add immediate commit flag override configuration
 [2026-05-16T10:17:47] fix: catch transaction rollback exceptions on insert fail
+[2026-05-16T10:27:42] feat: implement insert records counter tracking
