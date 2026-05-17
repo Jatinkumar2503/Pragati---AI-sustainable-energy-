@@ -96,3 +96,4 @@
 [2026-05-17T12:58:09] fix: prevent SQL injection by parameterizing query filters
 [2026-05-17T13:16:49] refactor: reuse database connection instances across queries
 [2026-05-17T16:49:13] fix: handle cases when query results return empty rows
+[2026-05-17T17:19:22] test: assert queried dataframe columns match schema specs
