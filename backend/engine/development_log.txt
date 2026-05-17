@@ -97,3 +97,4 @@
 [2026-05-17T13:16:49] refactor: reuse database connection instances across queries
 [2026-05-17T16:49:13] fix: handle cases when query results return empty rows
 [2026-05-17T17:19:22] test: assert queried dataframe columns match schema specs
+[2026-05-17T17:44:07] docs: write docstrings for query_recent_telemetry method
