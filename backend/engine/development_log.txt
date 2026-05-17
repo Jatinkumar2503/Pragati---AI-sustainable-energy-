@@ -90,3 +90,4 @@
 [2026-05-16T16:34:34] docs: write code comments explaining sql transaction rollbacks
 [2026-05-17T09:12:40] feat: implement query_all_telemetry method in TelemetryDB
 [2026-05-17T09:55:58] feat: read SQL query outcomes directly into pandas dataframe
+[2026-05-17T10:34:05] feat: ensure query results are sorted by date ascending
