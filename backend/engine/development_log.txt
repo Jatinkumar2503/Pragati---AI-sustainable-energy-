@@ -93,3 +93,4 @@
 [2026-05-17T10:34:05] feat: ensure query results are sorted by date ascending
 [2026-05-17T11:07:50] feat: implement query_recent_telemetry method for N days
 [2026-05-17T12:21:16] feat: write date bounds calculations using datetime offset
+[2026-05-17T12:58:09] fix: prevent SQL injection by parameterizing query filters
