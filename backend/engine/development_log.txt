@@ -100,3 +100,4 @@
 [2026-05-17T17:44:07] docs: write docstrings for query_recent_telemetry method
 [2026-05-18T09:00:29] feat: implement clear_all_telemetry method in TelemetryDB
 [2026-05-18T09:56:21] feat: write sql table truncate drop operations
+[2026-05-18T12:06:45] feat: implement database close connection pool logic
