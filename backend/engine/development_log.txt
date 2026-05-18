@@ -102,3 +102,4 @@
 [2026-05-18T09:56:21] feat: write sql table truncate drop operations
 [2026-05-18T12:06:45] feat: implement database close connection pool logic
 [2026-05-18T13:07:42] feat: add db connection release on object destruction
+[2026-05-18T13:53:22] fix: handle lock timeouts during database clear runs
