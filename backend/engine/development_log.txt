@@ -107,3 +107,4 @@
 [2026-05-18T15:03:48] refactor: flush unwritten transaction caches on close
 [2026-05-18T15:25:41] fix: close cursor objects cleanly to avoid memory leaks
 [2026-05-18T16:47:19] test: verify clear database routine leaves zero records
+[2026-05-18T17:03:16] docs: update telemetry database instructions in specs
