@@ -8,3 +8,4 @@
 [2026-05-19T11:57:41] chore: add fastapi and uvicorn dependencies
 [2026-05-19T12:05:45] chore: add scikit-learn and pandas requirement settings
 [2026-05-19T12:09:11] docs: specify project metadata and development team
+[2026-05-19T12:36:14] docs: list out compliance goals (GRI, TCFD, CDP)
