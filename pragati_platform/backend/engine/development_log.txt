@@ -10,3 +10,4 @@
 [2026-05-19T12:09:11] docs: specify project metadata and development team
 [2026-05-19T12:36:14] docs: list out compliance goals (GRI, TCFD, CDP)
 [2026-05-19T12:37:26] chore: add git commit attributes configurations
+[2026-05-19T12:40:54] docs: define energy parameters scope in PRD
