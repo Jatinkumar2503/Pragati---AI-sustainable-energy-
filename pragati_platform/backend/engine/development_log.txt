@@ -2,3 +2,4 @@
 [2026-05-19T10:33:04] chore: configure .gitignore for node_modules and pycache
 [2026-05-19T10:42:46] chore: create requirements.txt with core python packages
 [2026-05-19T10:59:07] docs: write product requirements document (PRD.md)
+[2026-05-19T10:59:55] docs: add core project readme guide
