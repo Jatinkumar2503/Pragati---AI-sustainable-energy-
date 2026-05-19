@@ -3,3 +3,4 @@
 [2026-05-19T10:42:46] chore: create requirements.txt with core python packages
 [2026-05-19T10:59:07] docs: write product requirements document (PRD.md)
 [2026-05-19T10:59:55] docs: add core project readme guide
+[2026-05-19T11:14:15] chore: setup local development directories
