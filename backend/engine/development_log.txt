@@ -110,3 +110,4 @@
 [2026-05-18T17:03:16] docs: update telemetry database instructions in specs
 [2026-05-19T09:05:11] feat: add carbon auditing calculations inside engine
 [2026-05-19T09:38:18] feat: define Scope 1 emission factor constants
+[2026-05-19T10:50:05] feat: define Scope 2 grid emission intensity parameters
