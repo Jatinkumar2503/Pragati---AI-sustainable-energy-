@@ -108,3 +108,4 @@
 [2026-05-18T15:25:41] fix: close cursor objects cleanly to avoid memory leaks
 [2026-05-18T16:47:19] test: verify clear database routine leaves zero records
 [2026-05-18T17:03:16] docs: update telemetry database instructions in specs
+[2026-05-19T09:05:11] feat: add carbon auditing calculations inside engine
