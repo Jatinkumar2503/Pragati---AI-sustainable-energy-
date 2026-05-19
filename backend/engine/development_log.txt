@@ -115,3 +115,4 @@
 [2026-05-19T13:06:36] feat: write compute_scope_1_emissions base formula
 [2026-05-19T13:20:51] feat: write compute_scope_2_emissions grid mix formula
 [2026-05-19T13:52:21] feat: write compute_scope_3_emissions supplier coefficients
+[2026-05-19T14:17:35] fix: check for negative active power in scope 2 math
