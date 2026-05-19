@@ -5,3 +5,4 @@
 [2026-05-19T10:59:55] docs: add core project readme guide
 [2026-05-19T11:14:15] chore: setup local development directories
 [2026-05-19T11:36:48] docs: document high-level user architecture selections
+[2026-05-19T11:57:41] chore: add fastapi and uvicorn dependencies
