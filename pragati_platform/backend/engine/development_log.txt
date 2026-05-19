@@ -18,3 +18,4 @@
 [2026-05-19T14:56:42] chore: standardise line endings across workspace
 [2026-05-19T15:00:38] docs: add contact information to project team registry
 [2026-05-19T16:44:01] chore: create template directories for frontend modules
+[2026-05-19T17:32:54] docs: list out anomaly classification heuristic rules in PRD
