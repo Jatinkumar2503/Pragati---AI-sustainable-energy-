@@ -1,1 +1,2 @@
 [2026-05-19T09:09:10] chore: initial workspace structure setup
+[2026-05-19T10:33:04] chore: configure .gitignore for node_modules and pycache
