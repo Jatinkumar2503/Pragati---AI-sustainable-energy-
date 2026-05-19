@@ -13,3 +13,4 @@
 [2026-05-19T12:40:54] docs: define energy parameters scope in PRD
 [2026-05-19T12:43:11] docs: add setup instructions template in readme
 [2026-05-19T13:36:43] chore: structure backend and engine subdirectories
+[2026-05-19T13:53:56] chore: configure folder permissions for local caching
