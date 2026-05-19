@@ -17,3 +17,4 @@
 [2026-05-19T14:37:36] docs: write system scaling guidelines
 [2026-05-19T14:56:42] chore: standardise line endings across workspace
 [2026-05-19T15:00:38] docs: add contact information to project team registry
+[2026-05-19T16:44:01] chore: create template directories for frontend modules
