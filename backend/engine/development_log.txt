@@ -117,3 +117,4 @@
 [2026-05-19T13:52:21] feat: write compute_scope_3_emissions supplier coefficients
 [2026-05-19T14:17:35] fix: check for negative active power in scope 2 math
 [2026-05-19T16:27:50] test: verify scope 2 carbon matches grid power draw
+[2026-05-19T17:11:00] docs: document green house gas protocol reference links
