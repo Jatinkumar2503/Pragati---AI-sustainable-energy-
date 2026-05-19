@@ -113,3 +113,4 @@
 [2026-05-19T10:50:05] feat: define Scope 2 grid emission intensity parameters
 [2026-05-19T12:22:26] feat: define Scope 3 logistics baseline emission coefficients
 [2026-05-19T13:06:36] feat: write compute_scope_1_emissions base formula
+[2026-05-19T13:20:51] feat: write compute_scope_2_emissions grid mix formula
