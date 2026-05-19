@@ -16,3 +16,4 @@
 [2026-05-19T13:53:56] chore: configure folder permissions for local caching
 [2026-05-19T14:37:36] docs: write system scaling guidelines
 [2026-05-19T14:56:42] chore: standardise line endings across workspace
+[2026-05-19T15:00:38] docs: add contact information to project team registry
