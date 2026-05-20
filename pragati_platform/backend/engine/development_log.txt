@@ -29,3 +29,4 @@
 [2026-05-20T10:47:17] fix: add path checks to ensure data directory exists
 [2026-05-20T11:07:09] feat: add cache validation check for local dataset
 [2026-05-20T11:27:44] refactor: optimize dataframe memory allocation during load
+[2026-05-20T12:04:02] fix: resolve column header spelling anomalies
