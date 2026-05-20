@@ -35,3 +35,4 @@
 [2026-05-20T13:21:39] feat: add custom exceptions for HTTP fetch failures
 [2026-05-20T13:27:12] refactor: rename variables for steel columns to snake_case
 [2026-05-20T13:31:56] fix: handle zipfile corrupt stream errors
+[2026-05-20T13:35:47] docs: add docstrings to load_dataset function in loader
