@@ -120,3 +120,4 @@
 [2026-05-19T17:11:00] docs: document green house gas protocol reference links
 [2026-05-20T09:33:43] feat: write compile_esg_report summarizing audit figures
 [2026-05-20T10:10:47] feat: structure compliance results into modular JSON payload
+[2026-05-20T10:38:51] feat: map figures to GRI (Global Reporting Initiative) keys
