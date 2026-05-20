@@ -38,3 +38,4 @@
 [2026-05-20T13:35:47] docs: add docstrings to load_dataset function in loader
 [2026-05-20T14:34:27] refactor: clean up file close handlers in extract logic
 [2026-05-20T14:49:32] test: mock uci dataset network fetch stream
+[2026-05-20T15:05:01] feat: add status check log prints during file load
