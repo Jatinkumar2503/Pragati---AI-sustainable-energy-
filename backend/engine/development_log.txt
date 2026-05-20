@@ -123,3 +123,4 @@
 [2026-05-20T10:38:51] feat: map figures to GRI (Global Reporting Initiative) keys
 [2026-05-20T10:50:45] feat: map figures to TCFD disclosure scorecard structures
 [2026-05-20T12:21:18] feat: map figures to CDP climate change questionnaire format
+[2026-05-20T12:53:35] refactor: speed up emissions aggregations on dataset
