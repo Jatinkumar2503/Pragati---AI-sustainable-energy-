@@ -32,3 +32,4 @@
 [2026-05-20T12:04:02] fix: resolve column header spelling anomalies
 [2026-05-20T12:10:01] docs: document dataset downloader caching mechanism
 [2026-05-20T12:49:07] test: write simple downloader path testing assert
+[2026-05-20T13:21:39] feat: add custom exceptions for HTTP fetch failures
