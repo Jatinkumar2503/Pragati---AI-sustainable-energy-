@@ -40,3 +40,4 @@
 [2026-05-20T14:49:32] test: mock uci dataset network fetch stream
 [2026-05-20T15:05:01] feat: add status check log prints during file load
 [2026-05-20T15:06:51] fix: handle edge cases where UCI site returns HTTP 404
+[2026-05-20T15:25:12] refactor: restructure caching file paths in loader
