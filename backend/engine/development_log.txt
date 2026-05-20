@@ -126,3 +126,4 @@
 [2026-05-20T12:53:35] refactor: speed up emissions aggregations on dataset
 [2026-05-20T13:18:15] fix: handle missing supplier log entries in Scope 3
 [2026-05-20T14:59:23] feat: compile monthly carbon reduction trend charts
+[2026-05-20T16:47:48] test: verify ESG reports contain valid JSON keys
