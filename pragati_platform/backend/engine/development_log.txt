@@ -24,3 +24,4 @@
 [2026-05-19T18:24:19] fix: handle minor edge cases
 [2026-05-20T09:20:17] feat: implement dataset_loader.py for UCI Steel dataset
 [2026-05-20T10:21:59] feat: add direct file downloader from UCI Repository
+[2026-05-20T10:33:28] feat: build zip extraction utility for steel data
