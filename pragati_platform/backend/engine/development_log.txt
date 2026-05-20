@@ -42,3 +42,4 @@
 [2026-05-20T15:06:51] fix: handle edge cases where UCI site returns HTTP 404
 [2026-05-20T15:25:12] refactor: restructure caching file paths in loader
 [2026-05-20T15:55:45] docs: update dataset source URL links in loader comments
+[2026-05-20T16:21:57] test: check pipeline validation scores
