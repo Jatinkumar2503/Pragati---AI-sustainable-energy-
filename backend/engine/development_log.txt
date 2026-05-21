@@ -130,3 +130,4 @@
 [2026-05-20T16:47:51] docs: write auditing model equations details in PRD
 [2026-05-21T09:19:24] feat: implement carbon auditing unit tests suites
 [2026-05-21T09:44:41] feat: add mock telemetry dataset matching audit scope
+[2026-05-21T10:00:55] feat: assert Scope 1 calculations against manually solved keys
