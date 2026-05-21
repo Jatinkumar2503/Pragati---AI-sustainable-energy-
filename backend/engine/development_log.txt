@@ -136,3 +136,4 @@
 [2026-05-21T12:51:38] fix: resolve float truncation differences in carbon tests
 [2026-05-21T13:27:02] refactor: optimize cumulative carbon summing loop speeds
 [2026-05-21T14:23:58] docs: add comment logs explaining GRI mapping guidelines
+[2026-05-21T17:26:57] style: align parameter lists formatting in carbon engine
