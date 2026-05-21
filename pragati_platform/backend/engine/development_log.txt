@@ -58,3 +58,4 @@
 [2026-05-21T14:34:35] feat: add weekend status boolean column helper
 [2026-05-21T14:38:36] refactor: map weekday status indices to categorical values
 [2026-05-21T14:41:56] fix: resolve missing values in categorical fields
+[2026-05-21T16:50:09] test: verify resampled hourly row count fits expected limits
