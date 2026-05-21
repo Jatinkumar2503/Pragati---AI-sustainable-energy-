@@ -55,3 +55,4 @@
 [2026-05-21T12:36:14] feat: calculate overall mean and standard deviation for active power
 [2026-05-21T12:38:11] refactor: compute active power stats by hour of day
 [2026-05-21T14:12:04] docs: comment resample_data method parameters
+[2026-05-21T14:34:35] feat: add weekend status boolean column helper
