@@ -65,3 +65,4 @@
 [2026-05-21T18:12:13] fix: handle float precision formatting on power columns
 [2026-05-21T18:50:56] feat: compile summary stats dictionary for ingestion logs
 [2026-05-21T18:58:01] docs: update readme with steel dataset dimensions details
+[2026-05-21T18:59:07] docs: update inline comments
