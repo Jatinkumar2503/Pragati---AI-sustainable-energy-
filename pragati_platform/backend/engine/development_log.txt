@@ -63,3 +63,4 @@
 [2026-05-21T17:05:05] docs: add mathematical notation comments for normalization
 [2026-05-21T17:57:06] refactor: remove redundant columns from resampled dataset
 [2026-05-21T18:12:13] fix: handle float precision formatting on power columns
+[2026-05-21T18:50:56] feat: compile summary stats dictionary for ingestion logs
