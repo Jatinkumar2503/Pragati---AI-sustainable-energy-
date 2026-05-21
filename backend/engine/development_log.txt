@@ -135,3 +135,4 @@
 [2026-05-21T11:26:22] feat: test Scope 3 data structures parsing safety
 [2026-05-21T12:51:38] fix: resolve float truncation differences in carbon tests
 [2026-05-21T13:27:02] refactor: optimize cumulative carbon summing loop speeds
+[2026-05-21T14:23:58] docs: add comment logs explaining GRI mapping guidelines
