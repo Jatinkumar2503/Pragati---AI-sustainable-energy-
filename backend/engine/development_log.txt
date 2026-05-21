@@ -132,3 +132,4 @@
 [2026-05-21T09:44:41] feat: add mock telemetry dataset matching audit scope
 [2026-05-21T10:00:55] feat: assert Scope 1 calculations against manually solved keys
 [2026-05-21T10:39:45] feat: assert Scope 2 calculations for clean grid factors
+[2026-05-21T11:26:22] feat: test Scope 3 data structures parsing safety
