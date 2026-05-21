@@ -60,3 +60,4 @@
 [2026-05-21T14:41:56] fix: resolve missing values in categorical fields
 [2026-05-21T16:50:09] test: verify resampled hourly row count fits expected limits
 [2026-05-21T16:51:23] feat: write data preprocessing clean run function
+[2026-05-21T17:05:05] docs: add mathematical notation comments for normalization
