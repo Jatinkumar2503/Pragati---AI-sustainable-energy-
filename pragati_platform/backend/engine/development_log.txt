@@ -48,3 +48,4 @@
 [2026-05-21T09:23:16] feat: parse datetime columns in steel industry dataset
 [2026-05-21T10:03:12] feat: add timezone-aware timestamp conversion utils
 [2026-05-21T10:09:19] refactor: adjust datetime format strings for DD/MM/YYYY
+[2026-05-21T10:18:40] fix: resolve datetime day-first parsing errors in pandas
