@@ -87,3 +87,4 @@
 [2026-05-22T17:34:14] docs: add docstrings to IsolationForestWrapper class
 [2026-05-22T17:45:24] test: check anomaly detector response against mock outliers
 [2026-05-22T18:10:46] chore: clean imports in engine packages
+[2026-05-22T18:11:54] docs: update inline comments
