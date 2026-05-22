@@ -81,3 +81,4 @@
 [2026-05-22T13:09:28] fix: resolve division-by-zero risk in score normalization
 [2026-05-22T14:45:32] docs: describe anomaly detection parameters in code
 [2026-05-22T15:28:52] tweak: set n_estimators parameter to 100 for stability
+[2026-05-22T15:43:29] refactor: rename anomalies output array to clean list
