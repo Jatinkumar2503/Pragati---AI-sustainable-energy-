@@ -75,3 +75,4 @@
 [2026-05-22T11:20:41] refactor: optimize isolation forest training runtime
 [2026-05-22T11:48:54] fix: prevent NaN inputs to anomaly detection model
 [2026-05-22T11:53:23] docs: add mathematical comments explaining path lengths
+[2026-05-22T12:05:15] test: write basic prediction assert checking outputs
