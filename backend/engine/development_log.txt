@@ -146,3 +146,4 @@
 [2026-05-22T14:05:32] feat: write run_anomaly_detection base core function
 [2026-05-22T14:06:16] feat: isolate input matrices columns from dataset
 [2026-05-22T14:33:49] fix: check for missing input columns in dataframe
+[2026-05-22T16:08:12] fix: fill empty feature values using mean column values
