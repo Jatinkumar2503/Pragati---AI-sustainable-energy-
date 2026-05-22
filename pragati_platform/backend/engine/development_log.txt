@@ -76,3 +76,4 @@
 [2026-05-22T11:48:54] fix: prevent NaN inputs to anomaly detection model
 [2026-05-22T11:53:23] docs: add mathematical comments explaining path lengths
 [2026-05-22T12:05:15] test: write basic prediction assert checking outputs
+[2026-05-22T12:19:09] feat: separate outlier score and final decision outputs
