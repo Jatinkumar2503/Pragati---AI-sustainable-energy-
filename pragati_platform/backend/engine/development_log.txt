@@ -83,3 +83,4 @@
 [2026-05-22T15:28:52] tweak: set n_estimators parameter to 100 for stability
 [2026-05-22T15:43:29] refactor: rename anomalies output array to clean list
 [2026-05-22T16:14:50] feat: build local cache for trained isolation forest model
+[2026-05-22T17:03:50] fix: handle input dataframe structure validation checks
