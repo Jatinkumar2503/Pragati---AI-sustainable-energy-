@@ -72,3 +72,4 @@
 [2026-05-22T10:05:44] refactor: fit isolation forest model on normalized data
 [2026-05-22T11:02:01] feat: add anomaly score calculation metrics
 [2026-05-22T11:11:40] tweak: adjust isolation forest contamination rate parameter
+[2026-05-22T11:20:41] refactor: optimize isolation forest training runtime
