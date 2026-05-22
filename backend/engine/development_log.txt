@@ -144,3 +144,4 @@
 [2026-05-22T11:10:30] feat: configure logger channel inside anomaly detector
 [2026-05-22T14:00:59] feat: define feature column list constants for model inputs
 [2026-05-22T14:05:32] feat: write run_anomaly_detection base core function
+[2026-05-22T14:06:16] feat: isolate input matrices columns from dataset
