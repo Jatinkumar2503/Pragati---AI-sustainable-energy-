@@ -85,3 +85,4 @@
 [2026-05-22T16:14:50] feat: build local cache for trained isolation forest model
 [2026-05-22T17:03:50] fix: handle input dataframe structure validation checks
 [2026-05-22T17:34:14] docs: add docstrings to IsolationForestWrapper class
+[2026-05-22T17:45:24] test: check anomaly detector response against mock outliers
