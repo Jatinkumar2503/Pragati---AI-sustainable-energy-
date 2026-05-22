@@ -70,3 +70,4 @@
 [2026-05-22T09:47:22] feat: configure scikit-learn IsolationForest estimator
 [2026-05-22T10:02:34] feat: define active power and power factor features in detector
 [2026-05-22T10:05:44] refactor: fit isolation forest model on normalized data
+[2026-05-22T11:02:01] feat: add anomaly score calculation metrics
