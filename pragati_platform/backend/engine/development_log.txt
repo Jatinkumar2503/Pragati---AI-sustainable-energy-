@@ -78,3 +78,4 @@
 [2026-05-22T12:05:15] test: write basic prediction assert checking outputs
 [2026-05-22T12:19:09] feat: separate outlier score and final decision outputs
 [2026-05-22T12:59:28] refactor: speed up isolation forest prediction pipeline
+[2026-05-22T13:09:28] fix: resolve division-by-zero risk in score normalization
