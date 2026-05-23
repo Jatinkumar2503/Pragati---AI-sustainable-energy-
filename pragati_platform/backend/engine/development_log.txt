@@ -98,3 +98,4 @@
 [2026-05-23T12:01:27] feat: add critical power usage spike detection rule
 [2026-05-23T12:13:23] refactor: combine ml anomalies with rule heuristics
 [2026-05-23T12:32:50] fix: check for light load thresholds before idle checks
+[2026-05-23T12:49:06] refactor: speed up expert system loops on dataframe
