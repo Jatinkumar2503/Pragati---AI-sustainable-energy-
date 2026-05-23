@@ -104,3 +104,4 @@
 [2026-05-23T13:55:25] feat: write anomaly advice formatting output helpers
 [2026-05-23T14:06:40] refactor: customize advice text for factory operators
 [2026-05-23T14:35:37] fix: resolve string interpolation issues in rule warnings
+[2026-05-23T14:58:47] test: assert heuristic labels match expected conditions
