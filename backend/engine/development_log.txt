@@ -154,3 +154,4 @@
 [2026-05-23T11:33:29] feat: fit IsolationForest model on cleaned input features
 [2026-05-23T12:49:35] feat: predict outlier classes (1 for normal, -1 outlier)
 [2026-05-23T14:32:14] feat: extract decision function anomaly score offsets
+[2026-05-23T15:32:33] refactor: optimize model training execution speed
