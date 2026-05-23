@@ -106,3 +106,4 @@
 [2026-05-23T14:35:37] fix: resolve string interpolation issues in rule warnings
 [2026-05-23T14:58:47] test: assert heuristic labels match expected conditions
 [2026-05-23T15:11:54] feat: add overall anomaly stats summarizer endpoint logic
+[2026-05-23T15:32:29] refactor: optimize dataframe filtering speed in heuristics
