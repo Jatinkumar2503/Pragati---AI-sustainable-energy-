@@ -156,3 +156,4 @@
 [2026-05-23T14:32:14] feat: extract decision function anomaly score offsets
 [2026-05-23T15:32:33] refactor: optimize model training execution speed
 [2026-05-23T15:34:23] feat: cache trained IsolationForest instances locally
+[2026-05-23T15:54:05] test: assert outlier prediction values are within bounds
