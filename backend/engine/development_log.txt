@@ -148,3 +148,4 @@
 [2026-05-22T14:33:49] fix: check for missing input columns in dataframe
 [2026-05-22T16:08:12] fix: fill empty feature values using mean column values
 [2026-05-22T16:42:21] docs: document isolation forest hyperparameter constraints
+[2026-05-23T09:03:44] feat: configure IsolationForest model constructor parameters
