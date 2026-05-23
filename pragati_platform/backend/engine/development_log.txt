@@ -95,3 +95,4 @@
 [2026-05-23T10:33:01] feat: add idle energy leak condition rule
 [2026-05-23T10:39:52] feat: add weekend activity spike detector logic
 [2026-05-23T10:54:47] feat: add machinery idling power factor alert rule
+[2026-05-23T12:01:27] feat: add critical power usage spike detection rule
