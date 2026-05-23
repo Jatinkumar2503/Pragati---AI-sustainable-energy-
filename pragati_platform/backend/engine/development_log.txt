@@ -91,3 +91,4 @@
 [2026-05-22T18:26:48] style: refine button hovers
 [2026-05-22T18:37:32] chore: clean imports in engine packages
 [2026-05-22T18:38:15] refactor: optimize processing speed
+[2026-05-23T09:50:53] feat: implement rule-based anomaly heuristic classifiers
