@@ -102,3 +102,4 @@
 [2026-05-23T13:24:40] fix: handle cases where stats dictionary is missing values
 [2026-05-23T13:37:29] docs: document rule parameters and threshold metrics
 [2026-05-23T13:55:25] feat: write anomaly advice formatting output helpers
+[2026-05-23T14:06:40] refactor: customize advice text for factory operators
