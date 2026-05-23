@@ -157,3 +157,4 @@
 [2026-05-23T15:32:33] refactor: optimize model training execution speed
 [2026-05-23T15:34:23] feat: cache trained IsolationForest instances locally
 [2026-05-23T15:54:05] test: assert outlier prediction values are within bounds
+[2026-05-23T17:34:51] docs: write code comments describing anomaly path lengths
