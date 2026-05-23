@@ -151,3 +151,4 @@
 [2026-05-23T09:03:44] feat: configure IsolationForest model constructor parameters
 [2026-05-23T10:11:59] tweak: set IsolationForest contamination rate to 0.01
 [2026-05-23T10:13:06] tweak: set IsolationForest estimators trees count to 100
+[2026-05-23T11:33:29] feat: fit IsolationForest model on cleaned input features
