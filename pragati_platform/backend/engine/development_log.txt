@@ -107,3 +107,4 @@
 [2026-05-23T14:58:47] test: assert heuristic labels match expected conditions
 [2026-05-23T15:11:54] feat: add overall anomaly stats summarizer endpoint logic
 [2026-05-23T15:32:29] refactor: optimize dataframe filtering speed in heuristics
+[2026-05-23T16:17:06] fix: correct power factor percentage factor multiplier
