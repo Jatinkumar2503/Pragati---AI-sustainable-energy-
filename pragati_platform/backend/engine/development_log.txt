@@ -110,3 +110,4 @@
 [2026-05-23T16:17:06] fix: correct power factor percentage factor multiplier
 [2026-05-23T16:31:09] docs: write comments explaining heuristics logic flow
 [2026-05-23T16:46:27] feat: export anomaly logs to temporary json caches
+[2026-05-23T17:37:33] docs: update anomalies section in product docs
