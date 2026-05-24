@@ -127,3 +127,4 @@
 [2026-05-24T14:24:09] docs: document prophet curve-fitting additive equations
 [2026-05-24T15:06:26] test: check prophet forecast shape matches future timeline
 [2026-05-24T15:31:05] feat: implement RMSE verification logic on train-test splits
+[2026-05-24T15:56:04] refactor: set prophet validation split ratio to 80-20
