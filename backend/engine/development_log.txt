@@ -164,3 +164,4 @@
 [2026-05-24T11:17:19] feat: define Machinery Idling alert check on low power-factor
 [2026-05-24T11:44:01] fix: check for machinery active workload thresholds in rules
 [2026-05-24T11:48:16] refactor: combine IsolationForest outliers with rule alerts
+[2026-05-24T15:12:01] fix: handle division-by-zero risks in power factor checks
