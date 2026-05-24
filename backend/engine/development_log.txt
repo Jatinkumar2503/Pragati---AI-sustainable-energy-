@@ -162,3 +162,4 @@
 [2026-05-24T09:25:09] feat: implement base stats calculation loops for rules
 [2026-05-24T10:59:58] feat: define Critical Power Spike alert threshold condition
 [2026-05-24T11:17:19] feat: define Machinery Idling alert check on low power-factor
+[2026-05-24T11:44:01] fix: check for machinery active workload thresholds in rules
