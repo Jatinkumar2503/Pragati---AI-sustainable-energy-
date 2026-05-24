@@ -167,3 +167,4 @@
 [2026-05-24T15:12:01] fix: handle division-by-zero risks in power factor checks
 [2026-05-24T15:23:27] feat: map custom mitigation suggestions for power spikes
 [2026-05-24T17:04:02] feat: assign severity classifications (Critical, High, Medium)
+[2026-05-24T17:18:51] docs: document power factor and machinery idling formulas
