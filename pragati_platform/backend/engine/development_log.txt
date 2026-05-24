@@ -132,3 +132,4 @@
 [2026-05-24T16:57:33] docs: add mathematical explanations for Fourier seasonality series
 [2026-05-24T17:21:47] tweak: adjust Prophet changepoint prior scale to 0.05
 [2026-05-24T17:40:43] refactor: map prophet predictions back to client formats
+[2026-05-24T18:32:29] fix: handle null dates in prophet future dataframes
