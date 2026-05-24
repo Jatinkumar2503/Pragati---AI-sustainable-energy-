@@ -124,3 +124,4 @@
 [2026-05-24T12:30:08] refactor: speed up Prophet fitting by caching model instances
 [2026-05-24T12:31:44] fix: handle missing prophet imports gracefully on Windows
 [2026-05-24T13:35:05] feat: add fallback mechanism if prophet library is missing
+[2026-05-24T14:24:09] docs: document prophet curve-fitting additive equations
