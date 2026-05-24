@@ -130,3 +130,4 @@
 [2026-05-24T15:56:04] refactor: set prophet validation split ratio to 80-20
 [2026-05-24T16:06:56] fix: handle zero-length forecasts inputs to prophet model
 [2026-05-24T16:57:33] docs: add mathematical explanations for Fourier seasonality series
+[2026-05-24T17:21:47] tweak: adjust Prophet changepoint prior scale to 0.05
