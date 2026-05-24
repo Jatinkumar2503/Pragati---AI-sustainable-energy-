@@ -117,3 +117,4 @@
 [2026-05-23T18:59:10] refactor: optimize processing speed
 [2026-05-24T09:28:35] feat: implement forecaster.py time-series model core
 [2026-05-24T10:07:54] feat: integrate Meta Prophet model wrapper functions
+[2026-05-24T10:09:59] feat: format inputs to ds and y format required by Prophet
