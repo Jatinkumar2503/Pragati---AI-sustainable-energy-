@@ -160,3 +160,4 @@
 [2026-05-23T17:34:51] docs: write code comments describing anomaly path lengths
 [2026-05-24T09:13:07] feat: write rule-based heuristics classifier in detector
 [2026-05-24T09:25:09] feat: implement base stats calculation loops for rules
+[2026-05-24T10:59:58] feat: define Critical Power Spike alert threshold condition
