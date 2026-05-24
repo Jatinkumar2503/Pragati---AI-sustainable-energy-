@@ -133,3 +133,4 @@
 [2026-05-24T17:21:47] tweak: adjust Prophet changepoint prior scale to 0.05
 [2026-05-24T17:40:43] refactor: map prophet predictions back to client formats
 [2026-05-24T18:32:29] fix: handle null dates in prophet future dataframes
+[2026-05-24T18:42:21] docs: add docstrings to ProphetForecaster class methods
