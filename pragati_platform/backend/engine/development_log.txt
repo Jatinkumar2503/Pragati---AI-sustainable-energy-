@@ -119,3 +119,4 @@
 [2026-05-24T10:07:54] feat: integrate Meta Prophet model wrapper functions
 [2026-05-24T10:09:59] feat: format inputs to ds and y format required by Prophet
 [2026-05-24T10:16:10] refactor: configure Prophet daily and weekly seasonality
+[2026-05-24T10:36:10] feat: add future dataframe helper calculations in forecaster
