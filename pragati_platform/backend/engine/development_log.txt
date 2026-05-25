@@ -149,3 +149,4 @@
 [2026-05-25T13:24:04] docs: document random forest lag features pipeline
 [2026-05-25T14:35:07] test: assert random forest model predictions are valid floats
 [2026-05-25T15:16:44] feat: export validation diagnostics to console logs
+[2026-05-25T15:46:44] refactor: clean up temporal feature extraction helper methods
