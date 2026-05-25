@@ -147,3 +147,4 @@
 [2026-05-25T13:08:57] refactor: write model selector logic based on RMSE accuracy
 [2026-05-25T13:19:21] fix: prevent random forest model over-fitting by tree limits
 [2026-05-25T13:24:04] docs: document random forest lag features pipeline
+[2026-05-25T14:35:07] test: assert random forest model predictions are valid floats
