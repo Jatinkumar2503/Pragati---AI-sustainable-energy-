@@ -136,3 +136,4 @@
 [2026-05-24T18:42:21] docs: add docstrings to ProphetForecaster class methods
 [2026-05-24T18:44:35] test: verify forecast data types match json expectations
 [2026-05-25T09:03:16] feat: implement Random Forest Regressor time-series engine
+[2026-05-25T09:42:56] feat: engineer cyclical time features (hour, day, month)
