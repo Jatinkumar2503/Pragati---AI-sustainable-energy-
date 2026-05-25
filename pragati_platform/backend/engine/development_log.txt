@@ -143,3 +143,4 @@
 [2026-05-25T10:56:05] tweak: set random forest n_estimators to 50 for quick train
 [2026-05-25T11:12:01] refactor: optimize random forest validation pipeline
 [2026-05-25T12:03:17] fix: handle NaN values in lag features using forward fill
+[2026-05-25T12:56:25] feat: compare Prophet and Random Forest RMSE scores in engine
