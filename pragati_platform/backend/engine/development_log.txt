@@ -154,3 +154,4 @@
 [2026-05-25T16:34:57] docs: add comments on random forest ensemble equations
 [2026-05-25T17:11:03] tweak: set max_depth of trees to 10 to speed up execution
 [2026-05-25T18:04:13] feat: cache random forest models locally in joblib style
+[2026-05-25T18:47:42] docs: update forecasting section in tech specs
