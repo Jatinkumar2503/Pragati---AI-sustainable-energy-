@@ -170,3 +170,4 @@
 [2026-05-24T17:18:51] docs: document power factor and machinery idling formulas
 [2026-05-25T09:42:04] feat: write Idle Energy Leak checker inside heuristics
 [2026-05-25T10:20:38] feat: write Weekend Energy Leak alert condition checks
+[2026-05-25T10:42:28] feat: incorporate hourly timestamp boundaries in leak checks
