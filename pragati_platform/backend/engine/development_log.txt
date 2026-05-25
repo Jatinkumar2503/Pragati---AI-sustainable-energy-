@@ -141,3 +141,4 @@
 [2026-05-25T10:42:57] feat: build lag_7d (168 hours prior) telemetry feature lag
 [2026-05-25T10:53:31] refactor: prepare random forest training matrix arrays
 [2026-05-25T10:56:05] tweak: set random forest n_estimators to 50 for quick train
+[2026-05-25T11:12:01] refactor: optimize random forest validation pipeline
