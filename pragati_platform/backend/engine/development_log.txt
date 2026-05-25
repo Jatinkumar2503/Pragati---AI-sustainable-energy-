@@ -145,3 +145,4 @@
 [2026-05-25T12:03:17] fix: handle NaN values in lag features using forward fill
 [2026-05-25T12:56:25] feat: compare Prophet and Random Forest RMSE scores in engine
 [2026-05-25T13:08:57] refactor: write model selector logic based on RMSE accuracy
+[2026-05-25T13:19:21] fix: prevent random forest model over-fitting by tree limits
