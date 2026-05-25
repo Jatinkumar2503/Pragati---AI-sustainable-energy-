@@ -138,3 +138,4 @@
 [2026-05-25T09:03:16] feat: implement Random Forest Regressor time-series engine
 [2026-05-25T09:42:56] feat: engineer cyclical time features (hour, day, month)
 [2026-05-25T10:30:58] feat: build lag_1d (24 hours prior) telemetry feature lag
+[2026-05-25T10:42:57] feat: build lag_7d (168 hours prior) telemetry feature lag
