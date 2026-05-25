@@ -173,3 +173,4 @@
 [2026-05-25T10:42:28] feat: incorporate hourly timestamp boundaries in leak checks
 [2026-05-25T12:25:23] feat: compile explanations for weekend operational patterns
 [2026-05-25T12:31:23] feat: assign mitigation guidelines for idling weekend leaks
+[2026-05-25T12:55:24] feat: map severity classes (Medium, Low) to leak alerts
