@@ -168,3 +168,4 @@
 [2026-05-26T13:27:24] test: verify scheduler returns optimal start hour inside window
 [2026-05-26T13:54:04] feat: allow customizable weight between cost and carbon
 [2026-05-26T14:00:55] refactor: tune optimization default weights to 0.15
+[2026-05-26T14:45:46] fix: check for task duration limits exceeding 24 hours
