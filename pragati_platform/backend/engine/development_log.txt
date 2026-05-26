@@ -162,3 +162,4 @@
 [2026-05-26T12:11:09] refactor: optimize load scheduler brute-force search window
 [2026-05-26T12:24:38] fix: handle Modulo 24 arithmetic in shift scheduler
 [2026-05-26T12:48:12] feat: add solar yield integration to scheduler scoring
+[2026-05-26T13:01:39] refactor: compute net grid draw accounting for solar yields
