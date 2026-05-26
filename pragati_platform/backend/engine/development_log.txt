@@ -171,3 +171,4 @@
 [2026-05-26T14:45:46] fix: check for task duration limits exceeding 24 hours
 [2026-05-26T15:11:15] docs: explain load shifting mathematics in comments
 [2026-05-26T15:50:01] feat: add task load profiling configurations
+[2026-05-26T16:46:03] refactor: compile schedule recommendations as json array
