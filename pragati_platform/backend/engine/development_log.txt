@@ -173,3 +173,4 @@
 [2026-05-26T15:50:01] feat: add task load profiling configurations
 [2026-05-26T16:46:03] refactor: compile schedule recommendations as json array
 [2026-05-26T17:21:36] fix: handle empty scheduled jobs arrays inputs
+[2026-05-26T17:28:35] docs: add docstrings to WorkloadScheduler helper class
