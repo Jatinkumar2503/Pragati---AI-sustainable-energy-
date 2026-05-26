@@ -160,3 +160,4 @@
 [2026-05-26T09:46:07] feat: add grid carbon intensity coefficient curves
 [2026-05-26T11:14:21] feat: code workload cost scoring formula math logic
 [2026-05-26T12:11:09] refactor: optimize load scheduler brute-force search window
+[2026-05-26T12:24:38] fix: handle Modulo 24 arithmetic in shift scheduler
