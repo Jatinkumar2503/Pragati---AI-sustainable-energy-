@@ -156,3 +156,4 @@
 [2026-05-25T18:04:13] feat: cache random forest models locally in joblib style
 [2026-05-25T18:47:42] docs: update forecasting section in tech specs
 [2026-05-26T09:25:48] feat: implement scheduler.py workload shift optimizer
+[2026-05-26T09:38:34] feat: write grid time-of-use tariff schedule profiles
