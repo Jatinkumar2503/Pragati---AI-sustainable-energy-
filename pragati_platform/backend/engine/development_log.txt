@@ -164,3 +164,4 @@
 [2026-05-26T12:48:12] feat: add solar yield integration to scheduler scoring
 [2026-05-26T13:01:39] refactor: compute net grid draw accounting for solar yields
 [2026-05-26T13:08:48] fix: handle negative net grid draw values using max(0, x)
+[2026-05-26T13:22:22] docs: document load optimizer cost coefficients in code
