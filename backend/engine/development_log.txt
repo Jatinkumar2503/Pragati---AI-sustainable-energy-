@@ -179,3 +179,4 @@
 [2026-05-25T17:41:16] test: verify anomaly alert labels fit expected classes
 [2026-05-25T17:57:00] docs: update list of anomaly rules inside PRD document
 [2026-05-26T10:48:09] feat: add comprehensive unit checks for anomaly engine
+[2026-05-26T11:22:46] feat: write mock telemetry inputs with target outlier anomalies
