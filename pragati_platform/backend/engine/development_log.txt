@@ -190,3 +190,4 @@
 [2026-05-27T13:58:37] refactor: clean up variable names in simulation wrapper
 [2026-05-27T14:14:59] fix: resolve floating precision points on ROI output
 [2026-05-27T14:57:52] docs: write clear comments explaining battery calculations
+[2026-05-27T15:03:52] tweak: set baseline commercial panel cost factor to 850
