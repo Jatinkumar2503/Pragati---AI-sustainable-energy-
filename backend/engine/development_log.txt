@@ -196,3 +196,4 @@
 [2026-05-27T11:56:06] feat: split hourly datasets into train and validation sets
 [2026-05-27T12:04:24] feat: map training columns names to ds and y format
 [2026-05-27T12:23:09] feat: initialize Prophet model constructor instance
+[2026-05-27T14:53:25] refactor: enable daily and weekly additive seasonalities
