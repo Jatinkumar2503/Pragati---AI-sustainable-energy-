@@ -199,3 +199,4 @@
 [2026-05-27T16:41:29] test: check pipeline validation scores
 [2026-05-27T16:48:36] chore: clean imports in engine packages
 [2026-05-27T18:05:56] chore: clean imports in engine packages
+[2026-05-27T18:09:58] fix: handle minor edge cases
