@@ -184,3 +184,4 @@
 [2026-05-27T12:19:44] feat: calculate CO2 savings offset calculations dynamically
 [2026-05-27T12:23:19] refactor: speed up annual simulation math loops
 [2026-05-27T12:34:27] fix: cap battery capacity sizing limits to realistic bounds
+[2026-05-27T13:10:15] docs: document solar capacity factors and payback math
