@@ -175,3 +175,4 @@
 [2026-05-26T17:21:36] fix: handle empty scheduled jobs arrays inputs
 [2026-05-26T17:28:35] docs: add docstrings to WorkloadScheduler helper class
 [2026-05-26T17:49:13] test: check scheduler costs are strictly lower than base run
+[2026-05-27T09:08:51] feat: add Digital Twin sandbox simulations in engine
