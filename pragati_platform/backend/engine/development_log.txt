@@ -181,3 +181,4 @@
 [2026-05-27T10:13:00] feat: write investment payback period calculations
 [2026-05-27T10:56:55] refactor: consolidate solar and battery ROI models
 [2026-05-27T11:52:54] fix: check for division by zero in payback period formula
+[2026-05-27T12:19:44] feat: calculate CO2 savings offset calculations dynamically
