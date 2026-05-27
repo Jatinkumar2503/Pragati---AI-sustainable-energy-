@@ -194,3 +194,4 @@
 [2026-05-27T15:10:34] tweak: set commercial battery bank cost factor to 450
 [2026-05-27T15:28:48] feat: add monthly savings distribution calculator
 [2026-05-27T16:06:48] docs: update digital twin modules section in docs
+[2026-05-27T16:25:36] test: assert digital twin returns valid JSON schema
