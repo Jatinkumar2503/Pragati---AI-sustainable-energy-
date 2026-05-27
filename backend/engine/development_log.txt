@@ -190,3 +190,4 @@
 [2026-05-26T17:19:11] docs: document anomaly detection runtime parameters in specs
 [2026-05-27T09:46:44] feat: create engine/forecaster.py module file
 [2026-05-27T09:57:59] feat: write try-except import blocks for Meta Prophet
+[2026-05-27T11:17:32] feat: add fallback random forest flag if Prophet is missing
