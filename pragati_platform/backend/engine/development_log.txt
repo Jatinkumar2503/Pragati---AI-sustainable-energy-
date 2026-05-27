@@ -179,3 +179,4 @@
 [2026-05-27T09:32:48] feat: write solar potential generation annual formula
 [2026-05-27T09:33:33] feat: write battery self-consumption percentage rate loop
 [2026-05-27T10:13:00] feat: write investment payback period calculations
+[2026-05-27T10:56:55] refactor: consolidate solar and battery ROI models
