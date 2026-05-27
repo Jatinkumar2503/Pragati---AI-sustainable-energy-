@@ -194,3 +194,4 @@
 [2026-05-27T11:24:09] feat: implement generate_forecast base wrapper core
 [2026-05-27T11:44:45] feat: resample input datasets to hourly intervals in forecaster
 [2026-05-27T11:56:06] feat: split hourly datasets into train and validation sets
+[2026-05-27T12:04:24] feat: map training columns names to ds and y format
