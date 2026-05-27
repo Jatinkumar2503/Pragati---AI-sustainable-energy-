@@ -189,3 +189,4 @@
 [2026-05-27T13:28:00] feat: add battery efficiency loss factor in simulation
 [2026-05-27T13:58:37] refactor: clean up variable names in simulation wrapper
 [2026-05-27T14:14:59] fix: resolve floating precision points on ROI output
+[2026-05-27T14:57:52] docs: write clear comments explaining battery calculations
