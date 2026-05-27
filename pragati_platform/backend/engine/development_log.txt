@@ -196,3 +196,4 @@
 [2026-05-27T16:06:48] docs: update digital twin modules section in docs
 [2026-05-27T16:25:36] test: assert digital twin returns valid JSON schema
 [2026-05-27T16:28:04] docs: update inline comments
+[2026-05-27T16:41:29] test: check pipeline validation scores
