@@ -193,3 +193,4 @@
 [2026-05-27T11:17:32] feat: add fallback random forest flag if Prophet is missing
 [2026-05-27T11:24:09] feat: implement generate_forecast base wrapper core
 [2026-05-27T11:44:45] feat: resample input datasets to hourly intervals in forecaster
+[2026-05-27T11:56:06] feat: split hourly datasets into train and validation sets
