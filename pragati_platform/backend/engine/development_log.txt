@@ -203,3 +203,4 @@
 [2026-05-27T18:33:35] docs: update inline comments
 [2026-05-28T09:53:00] feat: implement api.py FastAPI backend server
 [2026-05-28T10:01:37] feat: configure CORS middleware for frontend access
+[2026-05-28T10:31:57] feat: add root status endpoint returning online check
