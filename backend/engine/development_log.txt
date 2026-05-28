@@ -207,3 +207,4 @@
 [2026-05-28T14:32:45] fix: handle null dates sequences inside Prophet forecasts
 [2026-05-28T14:56:22] test: assert Prophet future array length matches targets
 [2026-05-28T16:35:32] docs: explain Fourier seasonality series inside code comments
+[2026-05-28T16:48:54] docs: update Prophet model setups section in readme
