@@ -201,3 +201,4 @@
 [2026-05-28T09:37:24] feat: fit Prophet model on formatted train dataframes
 [2026-05-28T11:23:20] feat: generate future timeseries dates range indices
 [2026-05-28T12:03:25] feat: predict future values using fitted Prophet models
+[2026-05-28T12:57:38] fix: replace negative forecasted usage numbers with 0.0
