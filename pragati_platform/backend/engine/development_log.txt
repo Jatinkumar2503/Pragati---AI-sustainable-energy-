@@ -207,3 +207,4 @@
 [2026-05-28T12:21:53] feat: write API endpoint for historical telemetry logs
 [2026-05-28T12:49:33] refactor: wire dataset loader to API telemetry route
 [2026-05-28T12:52:32] fix: resolve import errors for engines inside api.py
+[2026-05-28T13:10:55] feat: add error handling middleware for backend routes
