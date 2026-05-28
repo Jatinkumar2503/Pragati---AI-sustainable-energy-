@@ -204,3 +204,4 @@
 [2026-05-28T09:53:00] feat: implement api.py FastAPI backend server
 [2026-05-28T10:01:37] feat: configure CORS middleware for frontend access
 [2026-05-28T10:31:57] feat: add root status endpoint returning online check
+[2026-05-28T12:21:53] feat: write API endpoint for historical telemetry logs
