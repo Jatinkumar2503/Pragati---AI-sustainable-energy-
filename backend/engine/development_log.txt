@@ -198,3 +198,4 @@
 [2026-05-27T12:23:09] feat: initialize Prophet model constructor instance
 [2026-05-27T14:53:25] refactor: enable daily and weekly additive seasonalities
 [2026-05-27T16:40:33] docs: explain Prophet trend equations inside comments
+[2026-05-28T09:37:24] feat: fit Prophet model on formatted train dataframes
