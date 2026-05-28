@@ -219,3 +219,4 @@
 [2026-05-28T15:23:55] feat: add startup event logs to uvicorn console
 [2026-05-28T15:47:08] refactor: clean up FastAPI routing files structure
 [2026-05-28T16:09:01] fix: resolve port bindings issues on Windows platforms
+[2026-05-28T16:39:30] docs: write developer API access guide in comments
