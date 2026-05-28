@@ -199,3 +199,4 @@
 [2026-05-27T14:53:25] refactor: enable daily and weekly additive seasonalities
 [2026-05-27T16:40:33] docs: explain Prophet trend equations inside comments
 [2026-05-28T09:37:24] feat: fit Prophet model on formatted train dataframes
+[2026-05-28T11:23:20] feat: generate future timeseries dates range indices
