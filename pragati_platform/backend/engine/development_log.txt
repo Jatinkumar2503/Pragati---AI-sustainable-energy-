@@ -212,3 +212,4 @@
 [2026-05-28T13:37:40] fix: resolve CORS credentials configuration warnings
 [2026-05-28T13:38:23] docs: document API structure and endpoint schemas
 [2026-05-28T14:03:31] test: check FastAPI root response status is 200 OK
+[2026-05-28T14:09:33] feat: write REST endpoint for anomaly log outputs
