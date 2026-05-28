@@ -209,3 +209,4 @@
 [2026-05-28T12:52:32] fix: resolve import errors for engines inside api.py
 [2026-05-28T13:10:55] feat: add error handling middleware for backend routes
 [2026-05-28T13:12:25] refactor: configure uvicorn server startup parameters
+[2026-05-28T13:37:40] fix: resolve CORS credentials configuration warnings
