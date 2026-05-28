@@ -220,3 +220,4 @@
 [2026-05-28T15:47:08] refactor: clean up FastAPI routing files structure
 [2026-05-28T16:09:01] fix: resolve port bindings issues on Windows platforms
 [2026-05-28T16:39:30] docs: write developer API access guide in comments
+[2026-05-28T17:29:49] test: verify telemetry route returning JSON array of logs
