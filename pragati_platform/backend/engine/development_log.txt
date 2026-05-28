@@ -216,3 +216,4 @@
 [2026-05-28T14:39:44] refactor: load dataset once at server startup to save time
 [2026-05-28T14:58:37] fix: handle empty telemetry logs lists in endpoint
 [2026-05-28T15:15:24] docs: describe API routes parameters in comments
+[2026-05-28T15:23:55] feat: add startup event logs to uvicorn console
