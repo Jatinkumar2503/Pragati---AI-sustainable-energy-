@@ -221,3 +221,4 @@
 [2026-05-28T16:09:01] fix: resolve port bindings issues on Windows platforms
 [2026-05-28T16:39:30] docs: write developer API access guide in comments
 [2026-05-28T17:29:49] test: verify telemetry route returning JSON array of logs
+[2026-05-28T17:33:01] fix: handle minor edge cases
