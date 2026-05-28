@@ -214,3 +214,4 @@
 [2026-05-28T14:03:31] test: check FastAPI root response status is 200 OK
 [2026-05-28T14:09:33] feat: write REST endpoint for anomaly log outputs
 [2026-05-28T14:39:44] refactor: load dataset once at server startup to save time
+[2026-05-28T14:58:37] fix: handle empty telemetry logs lists in endpoint
