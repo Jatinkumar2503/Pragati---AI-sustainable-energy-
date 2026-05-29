@@ -244,3 +244,4 @@
 [2026-05-29T14:05:58] fix: resolve thread locks in FastAPI async calls
 [2026-05-29T14:43:41] refactor: speed up copilot mock database lookup times
 [2026-05-29T14:52:58] fix: catch model failures and fallback cleanly in API
+[2026-05-29T15:50:16] docs: update backend setup guidelines in readme
