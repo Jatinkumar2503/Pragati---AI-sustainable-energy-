@@ -214,3 +214,4 @@
 [2026-05-29T10:39:44] feat: extract month and weekend boolean indicators columns
 [2026-05-29T11:07:00] feat: engineer lag_1d (24 hours shift) telemetry features
 [2026-05-29T12:43:33] feat: engineer lag_7d (168 hours shift) telemetry features
+[2026-05-29T13:34:53] fix: handle lag NaNs using mean value backfilling
