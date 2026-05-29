@@ -227,3 +227,4 @@
 [2026-05-28T18:41:22] test: check pipeline validation scores
 [2026-05-28T18:47:08] chore: clean imports in engine packages
 [2026-05-29T09:10:57] feat: add ML endpoints to FastAPI backend server
+[2026-05-29T09:29:32] feat: write POST /api/forecast endpoint route
