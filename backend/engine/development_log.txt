@@ -216,3 +216,4 @@
 [2026-05-29T12:43:33] feat: engineer lag_7d (168 hours shift) telemetry features
 [2026-05-29T13:34:53] fix: handle lag NaNs using mean value backfilling
 [2026-05-29T14:58:33] refactor: compile features lists for Random Forest training
+[2026-05-29T15:46:47] test: verify lag features engineering outputs correct shapes
