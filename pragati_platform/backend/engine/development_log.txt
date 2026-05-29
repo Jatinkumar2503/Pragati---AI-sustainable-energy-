@@ -226,3 +226,4 @@
 [2026-05-28T18:24:26] style: refine button hovers
 [2026-05-28T18:41:22] test: check pipeline validation scores
 [2026-05-28T18:47:08] chore: clean imports in engine packages
+[2026-05-29T09:10:57] feat: add ML endpoints to FastAPI backend server
