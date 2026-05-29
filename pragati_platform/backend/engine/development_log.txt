@@ -229,3 +229,4 @@
 [2026-05-29T09:10:57] feat: add ML endpoints to FastAPI backend server
 [2026-05-29T09:29:32] feat: write POST /api/forecast endpoint route
 [2026-05-29T09:43:35] feat: write POST /api/schedule endpoint route
+[2026-05-29T10:00:22] feat: write POST /api/simulate endpoint route
