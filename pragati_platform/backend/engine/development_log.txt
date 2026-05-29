@@ -234,3 +234,4 @@
 [2026-05-29T10:25:39] refactor: wire forecasting engines into forecast route
 [2026-05-29T10:36:16] refactor: wire shift scheduler into schedule route
 [2026-05-29T10:52:45] refactor: wire digital twin into simulate route
+[2026-05-29T11:02:47] refactor: wire keyword NLP classifier to copilot route
