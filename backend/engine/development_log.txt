@@ -217,3 +217,4 @@
 [2026-05-29T13:34:53] fix: handle lag NaNs using mean value backfilling
 [2026-05-29T14:58:33] refactor: compile features lists for Random Forest training
 [2026-05-29T15:46:47] test: verify lag features engineering outputs correct shapes
+[2026-05-29T17:30:25] docs: write comments detailing auto-regressive feature lag math
