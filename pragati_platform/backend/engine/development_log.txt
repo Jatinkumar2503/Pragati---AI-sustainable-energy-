@@ -241,3 +241,4 @@
 [2026-05-29T13:23:08] test: assert schedule endpoint returns correct hourly keys
 [2026-05-29T13:28:21] test: assert simulate endpoint payback calculations match
 [2026-05-29T13:54:56] test: assert copilot route responds to keyword queries
+[2026-05-29T14:05:58] fix: resolve thread locks in FastAPI async calls
