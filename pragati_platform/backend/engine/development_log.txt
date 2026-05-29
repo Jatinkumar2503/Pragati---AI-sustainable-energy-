@@ -248,3 +248,4 @@
 [2026-05-29T16:21:39] test: write automated end-to-end API integration tests
 [2026-05-29T16:24:51] chore: clean imports in engine packages
 [2026-05-29T16:38:54] docs: update inline comments
+[2026-05-29T17:51:44] fix: handle minor edge cases
