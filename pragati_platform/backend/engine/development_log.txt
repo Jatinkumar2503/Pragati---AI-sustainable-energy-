@@ -233,3 +233,4 @@
 [2026-05-29T10:05:50] feat: write POST /api/copilot NLP chat endpoint route
 [2026-05-29T10:25:39] refactor: wire forecasting engines into forecast route
 [2026-05-29T10:36:16] refactor: wire shift scheduler into schedule route
+[2026-05-29T10:52:45] refactor: wire digital twin into simulate route
