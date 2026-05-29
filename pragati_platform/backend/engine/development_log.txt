@@ -239,3 +239,4 @@
 [2026-05-29T13:06:48] docs: document all POST request schemas in code comments
 [2026-05-29T13:16:10] test: assert forecast endpoint returns expected timeline array
 [2026-05-29T13:23:08] test: assert schedule endpoint returns correct hourly keys
+[2026-05-29T13:28:21] test: assert simulate endpoint payback calculations match
