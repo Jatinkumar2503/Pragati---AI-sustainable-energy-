@@ -210,3 +210,4 @@
 [2026-05-28T16:48:54] docs: update Prophet model setups section in readme
 [2026-05-29T09:40:52] feat: write prepare_temporal_features method in forecaster
 [2026-05-29T10:21:44] feat: extract hour of day cyclic features from datetime
+[2026-05-29T10:32:36] feat: extract day of week cyclic features from datetime
