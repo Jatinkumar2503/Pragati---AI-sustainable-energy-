@@ -208,3 +208,4 @@
 [2026-05-28T14:56:22] test: assert Prophet future array length matches targets
 [2026-05-28T16:35:32] docs: explain Fourier seasonality series inside code comments
 [2026-05-28T16:48:54] docs: update Prophet model setups section in readme
+[2026-05-29T09:40:52] feat: write prepare_temporal_features method in forecaster
