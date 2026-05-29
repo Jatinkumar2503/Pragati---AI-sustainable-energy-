@@ -212,3 +212,4 @@
 [2026-05-29T10:21:44] feat: extract hour of day cyclic features from datetime
 [2026-05-29T10:32:36] feat: extract day of week cyclic features from datetime
 [2026-05-29T10:39:44] feat: extract month and weekend boolean indicators columns
+[2026-05-29T11:07:00] feat: engineer lag_1d (24 hours shift) telemetry features
