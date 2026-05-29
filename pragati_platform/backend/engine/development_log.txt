@@ -247,3 +247,4 @@
 [2026-05-29T15:50:16] docs: update backend setup guidelines in readme
 [2026-05-29T16:21:39] test: write automated end-to-end API integration tests
 [2026-05-29T16:24:51] chore: clean imports in engine packages
+[2026-05-29T16:38:54] docs: update inline comments
