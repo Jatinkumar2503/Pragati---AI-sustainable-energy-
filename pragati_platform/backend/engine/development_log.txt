@@ -262,3 +262,4 @@
 [2026-05-30T13:32:27] style: create style.css and define HSL colors theme variables
 [2026-05-30T14:07:00] style: write glassmorphic css styling card properties
 [2026-05-30T14:55:03] style: configure layout grid alignment in dashboard
+[2026-05-30T15:00:25] docs: write comments explaining layout sections in index.html
