@@ -253,3 +253,4 @@
 [2026-05-29T18:10:50] fix: handle minor edge cases
 [2026-05-29T18:47:14] chore: clean imports in engine packages
 [2026-05-30T09:10:43] feat: serve frontend static files from FastAPI server
+[2026-05-30T09:26:08] feat: mount frontend static files directory on api root
