@@ -222,3 +222,4 @@
 [2026-05-30T10:02:58] tweak: set Random Forest trees estimators count to 50
 [2026-05-30T10:10:14] tweak: set Random Forest max depth parameter to 10
 [2026-05-30T10:25:12] feat: fit Random Forest model on engineered features matrix
+[2026-05-30T11:34:06] feat: implement recursive autoregressive forecasting loop
