@@ -227,3 +227,4 @@
 [2026-05-30T13:38:09] feat: calculate Random Forest validation RMSE scores
 [2026-05-30T14:28:57] fix: handle single row inputs inside Random Forest prediction
 [2026-05-30T17:13:47] refactor: prune temporal features memory spaces after training
+[2026-05-30T17:17:15] docs: add docstrings explaining Random Forest loop logic
