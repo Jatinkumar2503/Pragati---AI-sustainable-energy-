@@ -255,3 +255,4 @@
 [2026-05-30T09:10:43] feat: serve frontend static files from FastAPI server
 [2026-05-30T09:26:08] feat: mount frontend static files directory on api root
 [2026-05-30T09:32:38] refactor: adjust API router prefixes for endpoints
+[2026-05-30T10:55:57] fix: resolve file path checks for frontend relative folder
