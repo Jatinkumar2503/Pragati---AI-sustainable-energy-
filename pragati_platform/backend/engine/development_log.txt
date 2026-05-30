@@ -272,3 +272,4 @@
 [2026-05-30T18:08:17] feat: add main container wrappers for dashboard tabs
 [2026-05-30T18:23:24] style: style tables and scrolling containers in CSS
 [2026-05-30T18:32:22] fix: handle CSS reset defaults across major browsers
+[2026-05-30T18:48:04] docs: update inline comments
