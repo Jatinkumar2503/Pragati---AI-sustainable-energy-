@@ -218,3 +218,4 @@
 [2026-05-29T14:58:33] refactor: compile features lists for Random Forest training
 [2026-05-29T15:46:47] test: verify lag features engineering outputs correct shapes
 [2026-05-29T17:30:25] docs: write comments detailing auto-regressive feature lag math
+[2026-05-30T09:19:43] feat: configure RandomForestRegressor constructor parameters
