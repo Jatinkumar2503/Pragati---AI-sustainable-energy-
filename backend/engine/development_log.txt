@@ -225,3 +225,4 @@
 [2026-05-30T11:34:06] feat: implement recursive autoregressive forecasting loop
 [2026-05-30T12:35:15] feat: update lag features with predictions during forecast runs
 [2026-05-30T13:38:09] feat: calculate Random Forest validation RMSE scores
+[2026-05-30T14:28:57] fix: handle single row inputs inside Random Forest prediction
