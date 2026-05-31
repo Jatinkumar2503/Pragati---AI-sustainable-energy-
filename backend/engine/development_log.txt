@@ -229,3 +229,4 @@
 [2026-05-30T17:13:47] refactor: prune temporal features memory spaces after training
 [2026-05-30T17:17:15] docs: add docstrings explaining Random Forest loop logic
 [2026-05-31T10:38:02] feat: write model selector comparator logic in forecaster
+[2026-05-31T10:42:28] feat: compare Prophet and Random Forest RMSE validations
