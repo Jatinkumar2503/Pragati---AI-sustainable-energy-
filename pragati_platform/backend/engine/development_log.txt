@@ -280,3 +280,4 @@
 [2026-05-31T11:31:54] feat: add forecast prediction chart wrappers in HTML
 [2026-05-31T11:37:46] feat: add workload shifting inputs and results panel
 [2026-05-31T11:53:24] feat: add digital twin sliders container component
+[2026-05-31T12:17:22] feat: add copilot chat message history list and inputs
