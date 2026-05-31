@@ -292,3 +292,4 @@
 [2026-05-31T15:47:58] style: style modal container with blur filter glass effect
 [2026-05-31T15:54:11] fix: adjust font weights for headings in dark mode
 [2026-05-31T16:21:19] docs: update index.html structure comments
+[2026-05-31T16:40:41] style: add micro-animations for card hovers and focus
