@@ -285,3 +285,4 @@
 [2026-05-31T13:42:25] style: style chat bubbles and copilot inputs in CSS
 [2026-05-31T13:52:35] style: add fade-in animations for widgets on page load
 [2026-05-31T13:57:31] docs: comment frontend design system in css variables
+[2026-05-31T14:17:58] refactor: add descriptive IDs to all interactive UI components
