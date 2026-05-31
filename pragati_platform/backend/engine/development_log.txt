@@ -276,3 +276,4 @@
 [2026-05-30T18:52:24] test: check pipeline validation scores
 [2026-05-31T10:07:36] feat: add UI widget containers to dashboard html layout
 [2026-05-31T10:50:15] feat: add metric KPI card structures in HTML
+[2026-05-31T11:02:01] feat: add anomaly alert table components in index.html
