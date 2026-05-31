@@ -290,3 +290,4 @@
 [2026-05-31T14:55:04] style: adjust margins and padding inside metrics widgets
 [2026-05-31T14:56:13] feat: add modal overlay components for alerts detail view
 [2026-05-31T15:47:58] style: style modal container with blur filter glass effect
+[2026-05-31T15:54:11] fix: adjust font weights for headings in dark mode
