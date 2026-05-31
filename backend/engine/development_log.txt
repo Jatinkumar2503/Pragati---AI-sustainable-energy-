@@ -235,3 +235,4 @@
 [2026-05-31T13:37:51] feat: write forecast outputs caching utility to disk
 [2026-05-31T14:56:29] fix: handle cases when both forecast engines fail
 [2026-05-31T15:27:43] style: format forecaster modules methods in black format
+[2026-05-31T16:10:30] test: verify forecaster payload outputs match API types
