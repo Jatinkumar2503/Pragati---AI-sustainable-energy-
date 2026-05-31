@@ -295,3 +295,4 @@
 [2026-05-31T16:40:41] style: add micro-animations for card hovers and focus
 [2026-05-31T17:11:37] test: check HTML validation rules on index.html
 [2026-05-31T17:36:27] docs: update inline comments
+[2026-05-31T17:38:39] chore: clean imports in engine packages
