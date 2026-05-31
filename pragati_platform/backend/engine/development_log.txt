@@ -288,3 +288,4 @@
 [2026-05-31T14:17:58] refactor: add descriptive IDs to all interactive UI components
 [2026-05-31T14:22:54] fix: resolve layout breakages when scrolling tables
 [2026-05-31T14:55:04] style: adjust margins and padding inside metrics widgets
+[2026-05-31T14:56:13] feat: add modal overlay components for alerts detail view
