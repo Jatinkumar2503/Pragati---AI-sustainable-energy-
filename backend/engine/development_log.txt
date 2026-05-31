@@ -232,3 +232,4 @@
 [2026-05-31T10:42:28] feat: compare Prophet and Random Forest RMSE validations
 [2026-05-31T11:33:57] feat: return model results with lowest RMSE validation scores
 [2026-05-31T13:05:41] feat: package final forecasting payload dictionary outputs
+[2026-05-31T13:37:51] feat: write forecast outputs caching utility to disk
