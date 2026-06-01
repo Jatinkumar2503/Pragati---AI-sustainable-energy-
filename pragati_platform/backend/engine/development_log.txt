@@ -304,3 +304,4 @@
 [2026-06-01T10:41:16] feat: handle loading screens and state updates in UI
 [2026-06-01T11:25:35] feat: integrate Chart.js for real-time telemetry curves
 [2026-06-01T12:03:46] feat: draw daily active power consumption trend chart
+[2026-06-01T12:28:17] feat: draw forecast projection curves comparing models
