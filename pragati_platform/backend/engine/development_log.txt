@@ -306,3 +306,4 @@
 [2026-06-01T12:03:46] feat: draw daily active power consumption trend chart
 [2026-06-01T12:28:17] feat: draw forecast projection curves comparing models
 [2026-06-01T12:54:54] feat: draw real-time anomaly highlight markers on chart
+[2026-06-01T14:05:40] refactor: bind digital twin range sliders to fetch calls
