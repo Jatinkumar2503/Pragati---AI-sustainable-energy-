@@ -305,3 +305,4 @@
 [2026-06-01T11:25:35] feat: integrate Chart.js for real-time telemetry curves
 [2026-06-01T12:03:46] feat: draw daily active power consumption trend chart
 [2026-06-01T12:28:17] feat: draw forecast projection curves comparing models
+[2026-06-01T12:54:54] feat: draw real-time anomaly highlight markers on chart
