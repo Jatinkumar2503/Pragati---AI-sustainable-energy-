@@ -314,3 +314,4 @@
 [2026-06-01T15:07:07] docs: add docstrings explaining UI update routines in app.js
 [2026-06-01T15:10:25] refactor: structure app state object to hold local telemetry
 [2026-06-01T16:24:25] fix: handle case when backend API returns server errors
+[2026-06-01T16:36:30] test: verify app.js parses API responses cleanly without crash
