@@ -302,3 +302,4 @@
 [2026-06-01T09:33:54] feat: implement app.js frontend logic controller script
 [2026-06-01T09:59:39] feat: write data fetch routines to backend API routes
 [2026-06-01T10:41:16] feat: handle loading screens and state updates in UI
+[2026-06-01T11:25:35] feat: integrate Chart.js for real-time telemetry curves
