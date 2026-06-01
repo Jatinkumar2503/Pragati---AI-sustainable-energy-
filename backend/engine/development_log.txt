@@ -239,3 +239,4 @@
 [2026-05-31T17:33:07] test: run forecaster unit tests confirming green status
 [2026-05-31T17:38:39] docs: write model selector criteria inside PRD documents
 [2026-06-01T10:55:47] feat: create engine/scheduler.py optimizer module
+[2026-06-01T11:51:55] feat: define hourly solar generation factors constants
