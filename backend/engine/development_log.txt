@@ -247,3 +247,4 @@
 [2026-06-01T14:23:02] feat: implement get_carbon_intensity factor lookup
 [2026-06-01T14:28:02] feat: define solar grid mix carbon intensity (250g)
 [2026-06-01T15:23:49] feat: define evening grid mix carbon intensity (450g)
+[2026-06-01T16:53:40] docs: document time-of-use tariffs schedule mapping tables
