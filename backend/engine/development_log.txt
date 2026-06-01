@@ -243,3 +243,4 @@
 [2026-06-01T12:24:07] feat: implement get_tariff rate lookup functions
 [2026-06-01T12:59:53] feat: define peak hour tariff rate ($0.18 per kWh)
 [2026-06-01T13:11:14] feat: define mid-peak hour tariff rate ($0.12 per kWh)
+[2026-06-01T13:41:47] feat: define off-peak hour tariff rate ($0.06 per kWh)
