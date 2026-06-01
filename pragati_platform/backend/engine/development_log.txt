@@ -311,3 +311,4 @@
 [2026-06-01T14:48:42] refactor: bind copilot chat input button to fetch answers
 [2026-06-01T15:05:06] fix: handle connection timeouts by showing offline state in UI
 [2026-06-01T15:06:31] fix: prevent Chart.js canvas memory leaks on updates
+[2026-06-01T15:07:07] docs: add docstrings explaining UI update routines in app.js
