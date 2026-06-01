@@ -246,3 +246,4 @@
 [2026-06-01T13:41:47] feat: define off-peak hour tariff rate ($0.06 per kWh)
 [2026-06-01T14:23:02] feat: implement get_carbon_intensity factor lookup
 [2026-06-01T14:28:02] feat: define solar grid mix carbon intensity (250g)
+[2026-06-01T15:23:49] feat: define evening grid mix carbon intensity (450g)
