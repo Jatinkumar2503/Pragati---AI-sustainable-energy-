@@ -249,3 +249,4 @@
 [2026-06-01T15:23:49] feat: define evening grid mix carbon intensity (450g)
 [2026-06-01T16:53:40] docs: document time-of-use tariffs schedule mapping tables
 [2026-06-02T09:19:34] feat: define business grid mix carbon intensity (320g)
+[2026-06-02T09:23:51] feat: define base fossil grid mix carbon intensity (520g)
