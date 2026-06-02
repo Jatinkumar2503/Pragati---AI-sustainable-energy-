@@ -333,3 +333,4 @@
 [2026-06-02T12:03:35] refactor: compile PDF script and generate 15-page final report
 [2026-06-02T12:23:15] fix: resolve page height overlaps by managing pagebreaks
 [2026-06-02T12:33:58] fix: fix rowHeight reference bug in development team table
+[2026-06-02T13:44:44] docs: add detailed comments describing PDF compiler setup
