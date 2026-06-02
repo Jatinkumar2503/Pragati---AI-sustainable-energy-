@@ -321,3 +321,4 @@
 [2026-06-01T18:08:45] test: mock API fetch requests to run UI in stand-alone test
 [2026-06-01T18:52:19] style: refine button hovers
 [2026-06-01T18:55:32] chore: clean imports in engine packages
+[2026-06-02T09:00:17] feat: implement generate_report.js Node PDF compiler
