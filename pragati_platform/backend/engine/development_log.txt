@@ -327,3 +327,4 @@
 [2026-06-02T10:20:28] feat: draw system architecture modular flowchart diagrams
 [2026-06-02T10:39:15] feat: write mathematical derivation sections for Isolation Forest
 [2026-06-02T10:42:04] feat: write mathematical derivation sections for Prophet model
+[2026-06-02T11:00:34] feat: write load optimization scoring equations in PDF
