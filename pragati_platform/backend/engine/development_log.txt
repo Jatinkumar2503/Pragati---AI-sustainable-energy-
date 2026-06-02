@@ -345,3 +345,4 @@
 [2026-06-02T17:24:15] style: refine button hovers
 [2026-06-02T17:54:35] docs: update inline comments
 [2026-06-02T17:56:18] docs: update inline comments
+[2026-06-02T18:25:51] test: check pipeline validation scores
