@@ -255,3 +255,4 @@
 [2026-06-02T10:36:06] feat: integrate solar generation outputs in metrics calculations
 [2026-06-02T11:03:20] feat: compute net grid draw from solar panel yield offsets
 [2026-06-02T12:17:01] fix: cap net grid draw at minimum boundary of 0.0
+[2026-06-02T14:04:23] refactor: group cost and carbon calculations hourly splits
