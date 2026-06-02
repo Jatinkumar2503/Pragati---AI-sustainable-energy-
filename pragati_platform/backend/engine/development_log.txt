@@ -323,3 +323,4 @@
 [2026-06-01T18:55:32] chore: clean imports in engine packages
 [2026-06-02T09:00:17] feat: implement generate_report.js Node PDF compiler
 [2026-06-02T09:55:23] feat: write PDF document setup and standard margins layouts
+[2026-06-02T10:19:27] feat: draw cover page containing team info and registry headers
