@@ -343,3 +343,4 @@
 [2026-06-02T16:11:34] test: verify output PDF matches exactly 15 pages in length
 [2026-06-02T16:34:13] test: check pipeline validation scores
 [2026-06-02T17:24:15] style: refine button hovers
+[2026-06-02T17:54:35] docs: update inline comments
