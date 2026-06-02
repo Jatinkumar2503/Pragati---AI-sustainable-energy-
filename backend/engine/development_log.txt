@@ -251,3 +251,4 @@
 [2026-06-02T09:19:34] feat: define business grid mix carbon intensity (320g)
 [2026-06-02T09:23:51] feat: define base fossil grid mix carbon intensity (520g)
 [2026-06-02T10:25:31] feat: write calculate_schedule_metrics helper algorithm
+[2026-06-02T10:27:26] feat: implement task duration iterations inside calculator
