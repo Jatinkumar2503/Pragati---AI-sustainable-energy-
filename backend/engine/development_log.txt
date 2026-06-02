@@ -257,3 +257,4 @@
 [2026-06-02T12:17:01] fix: cap net grid draw at minimum boundary of 0.0
 [2026-06-02T14:04:23] refactor: group cost and carbon calculations hourly splits
 [2026-06-02T15:23:13] test: assert get_tariff returns correct peak rates
+[2026-06-02T17:04:03] docs: write comments explaining solar output offset logic
