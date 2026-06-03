@@ -362,3 +362,4 @@
 [2026-06-03T14:24:08] docs: update inline comments
 [2026-06-03T14:52:11] docs: update inline comments
 [2026-06-03T15:17:14] docs: update inline comments
+[2026-06-03T15:21:40] style: refine button hovers
