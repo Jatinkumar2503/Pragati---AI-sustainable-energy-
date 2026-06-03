@@ -259,3 +259,4 @@
 [2026-06-02T15:23:13] test: assert get_tariff returns correct peak rates
 [2026-06-02T17:04:03] docs: write comments explaining solar output offset logic
 [2026-06-03T09:49:11] feat: implement optimize_shift_schedule search algorithm
+[2026-06-03T10:03:26] feat: iterate start hours over all 24 possible timeframes
