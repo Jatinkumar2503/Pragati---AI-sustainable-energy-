@@ -263,3 +263,4 @@
 [2026-06-03T10:03:49] feat: compute cost index scores for each start hour option
 [2026-06-03T10:37:40] feat: convert carbon emissions metrics from grams to kilograms
 [2026-06-03T11:15:27] feat: configure environmental weighting parameters in score
+[2026-06-03T14:00:46] tweak: set default environmental optimization weight to 0.15
