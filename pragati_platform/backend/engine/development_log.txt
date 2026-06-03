@@ -364,3 +364,4 @@
 [2026-06-03T15:17:14] docs: update inline comments
 [2026-06-03T15:21:40] style: refine button hovers
 [2026-06-03T15:40:51] refactor: optimize processing speed
+[2026-06-03T16:09:10] test: check pipeline validation scores
