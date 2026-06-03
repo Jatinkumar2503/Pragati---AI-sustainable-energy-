@@ -262,3 +262,4 @@
 [2026-06-03T10:03:26] feat: iterate start hours over all 24 possible timeframes
 [2026-06-03T10:03:49] feat: compute cost index scores for each start hour option
 [2026-06-03T10:37:40] feat: convert carbon emissions metrics from grams to kilograms
+[2026-06-03T11:15:27] feat: configure environmental weighting parameters in score
