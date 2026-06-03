@@ -356,3 +356,4 @@
 [2026-06-03T10:39:36] refactor: optimize runtime memory footprint in database queries
 [2026-06-03T11:15:12] style: improve sidebar link highlights animations
 [2026-06-03T11:28:40] docs: clean up developer local installation guide
+[2026-06-03T11:37:20] fix: solve type warnings in fastapi model schemas
