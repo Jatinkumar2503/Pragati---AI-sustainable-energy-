@@ -354,3 +354,4 @@
 [2026-06-03T10:04:40] fix: handle null exceptions in inputs calculations
 [2026-06-03T10:33:44] chore: format python file packages using black standard
 [2026-06-03T10:39:36] refactor: optimize runtime memory footprint in database queries
+[2026-06-03T11:15:12] style: improve sidebar link highlights animations
