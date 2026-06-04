@@ -274,3 +274,4 @@
 [2026-06-04T13:26:05] feat: compute cost and carbon savings percentages ratios
 [2026-06-04T14:18:51] fix: handle division-by-zero when baseline cost is zero
 [2026-06-04T14:30:07] refactor: clean up output result dictionary payload keys
+[2026-06-04T14:43:25] feat: define default task load configuration profiles
