@@ -272,3 +272,4 @@
 [2026-06-04T12:12:40] feat: calculate financial savings differences in dollars
 [2026-06-04T12:13:48] feat: calculate carbon abatement savings in kilograms
 [2026-06-04T13:26:05] feat: compute cost and carbon savings percentages ratios
+[2026-06-04T14:18:51] fix: handle division-by-zero when baseline cost is zero
