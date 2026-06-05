@@ -278,3 +278,4 @@
 [2026-06-04T14:50:01] test: assert scheduler outputs strictly cheaper runtimes
 [2026-06-04T16:14:02] test: check scheduler results contain correct keys structures
 [2026-06-04T16:59:19] docs: update shift scheduler specs inside project readme
+[2026-06-05T09:52:37] feat: add Digital Twin ROI calculations in backend
