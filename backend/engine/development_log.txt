@@ -285,3 +285,4 @@
 [2026-06-05T14:20:00] feat: define base solar self-consumption rate index to 60%
 [2026-06-05T14:22:42] feat: compute battery capacity solar boost ratios
 [2026-06-05T15:58:42] tweak: set solar capex cost coefficient to $850 per kW
+[2026-06-05T16:43:44] tweak: set battery capex cost coefficient to $450 per kWh
