@@ -283,3 +283,4 @@
 [2026-06-05T10:44:01] tweak: set annual solar generation yield multiplier to 1320
 [2026-06-05T13:07:45] feat: write battery self-consumption rates lookup loops
 [2026-06-05T14:20:00] feat: define base solar self-consumption rate index to 60%
+[2026-06-05T14:22:42] feat: compute battery capacity solar boost ratios
