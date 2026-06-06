@@ -291,3 +291,4 @@
 [2026-06-06T10:36:48] feat: calculate annual financial bill savings projections
 [2026-06-06T11:53:22] tweak: set baseline commercial utility tariff to $0.13
 [2026-06-06T12:58:25] feat: calculate annual carbon offsets reductions kilograms
+[2026-06-06T15:09:50] feat: compute simple payback periods years indices
