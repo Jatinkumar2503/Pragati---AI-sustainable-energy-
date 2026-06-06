@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PRAGATI AI — AI-powered industrial sustainability intelligence platform for energy forecasting, anomaly detection, renewable workload shifting, and ESG compliance. Built for the Cambridge Sustainability Hackathon 2026.">
     <title>PRAGATI AI — Industrial Sustainability Intelligence Platform</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" type="image/svg+xml">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
@@ -58,7 +60,7 @@
                     <p class="description" id="tab-subtitle">Real-time telemetry and key sustainability metrics from DAEWOO Steel facility.</p>
                 </div>
                 <div class="header-actions">
-                    <div class="date-badge">📅 June 3, 2026</div>
+                    <div class="date-badge" id="date-badge">📅 Loading...</div>
                 </div>
             </header>
             
@@ -158,33 +160,88 @@
                             <input type="range" id="forecast-hours" min="24" max="168" value="48" step="24" class="premium-slider">
                             <div class="slider-val"><span id="forecast-hours-val">48</span> hours (2 days)</div>
                         </div>
+                        <div class="input-group">
+                            <label for="backtest-folds">Rolling Backtest Folds</label>
+                            <select id="backtest-folds" class="premium-select" style="width: 100%;">
+                                <option value="3" selected>3 Folds (Standard)</option>
+                                <option value="5">5 Folds (Rigorous)</option>
+                                <option value="7">7 Folds (Ultra Rigorous)</option>
+                            </select>
+                        </div>
                         <button id="run-forecast-btn" class="premium-btn">Run Forecasting Models</button>
                         
                         <hr class="divider">
                         
-                        <h4>Validation Metrics</h4>
+                        <h4>Statistical Indicators</h4>
                         <div class="metric-row">
-                            <span>Prophet RMSE:</span>
+                            <span>ADF p-value:</span>
+                            <strong id="metric-adf-p">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>ADF Stationarity:</span>
+                            <span class="badge green-bg" id="metric-adf-status">—</span>
+                        </div>
+                        
+                        <hr class="divider">
+                        
+                        <h4>Validation RMSE (Single Split)</h4>
+                        <div class="metric-row">
+                            <span>Prophet:</span>
                             <strong id="metric-prophet-rmse">—</strong>
                         </div>
                         <div class="metric-row">
-                            <span>Random Forest RMSE:</span>
+                            <span>Random Forest:</span>
                             <strong id="metric-rf-rmse">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Recurrent Neural Network (RNN):</span>
+                            <strong id="metric-rnn-rmse">—</strong>
                         </div>
                         <div class="metric-row">
                             <span>Best Fit Selection:</span>
                             <span class="badge green-bg" id="metric-best-model">—</span>
                         </div>
+                        
+                        <hr class="divider">
+                        
+                        <h4 id="backtest-title-header">Rolling Backtest RMSE (3 Folds)</h4>
+                        <div class="metric-row">
+                            <span>Prophet Backtest:</span>
+                            <strong id="metric-bt-prophet">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Random Forest Backtest:</span>
+                            <strong id="metric-bt-rf">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>RNN Backtest:</span>
+                            <strong id="metric-bt-rnn">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Persistence Baseline:</span>
+                            <strong id="metric-bt-persistence">—</strong>
+                        </div>
                     </div>
                     
-                    <div class="forecast-results card">
-                        <div class="card-header">
-                            <h2>Prophet vs. Random Forest Load Projections</h2>
+                    <div class="forecast-results" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2>Dynamic Demand Projections vs. Naive Persistence Baseline</h2>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
                         </div>
-                        <div class="chart-wrapper">
-                            <canvas id="forecastChart"></canvas>
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2>Scientific Model Validation — Rolling Backtest RMSE Comparison</h2>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="backtestChart"></canvas>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
             
@@ -213,6 +270,40 @@
                                 <option value="0.5">High Decarbonization Weight</option>
                             </select>
                         </div>
+                        
+                        <!-- Collapsible Advanced Settings -->
+                        <details class="advanced-settings-details" style="margin-top: 15px; margin-bottom: 15px;">
+                            <summary style="cursor: pointer; color: #10B981; font-weight: 500; font-size: 0.9rem; user-select: none;">
+                                ⚙️ Advanced Grid & Battery Specs
+                            </summary>
+                            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px; padding: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08);">
+                                <div class="input-group">
+                                    <label for="sched-task-pf" style="font-size: 0.8rem; color: #94A3B8;">Task Power Factor (Lagging)</label>
+                                    <input type="number" id="sched-task-pf" value="0.80" min="0.40" max="1.00" step="0.05" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-cap" style="font-size: 0.8rem; color: #94A3B8;">Battery Capacity (kWh)</label>
+                                    <input type="number" id="sched-battery-cap" value="50.0" min="0" max="2000" step="10" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-rate" style="font-size: 0.8rem; color: #94A3B8;">Battery Charge/Discharge Rate (kW)</label>
+                                    <input type="number" id="sched-battery-rate" value="25.0" min="0" max="1000" step="5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-eff" style="font-size: 0.8rem; color: #94A3B8;">Battery Roundtrip Efficiency (%)</label>
+                                    <input type="number" id="sched-battery-eff" value="95.0" min="50" max="100" step="1" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-solar-yield-mult" style="font-size: 0.8rem; color: #94A3B8;">Solar System Yield Coeff (%)</label>
+                                    <input type="number" id="sched-solar-yield-mult" value="12.0" min="1" max="50" step="0.5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-pf-penalty" style="font-size: 0.8rem; color: #94A3B8;">PF Surcharge Multiplier</label>
+                                    <input type="number" id="sched-pf-penalty" value="2.0" min="0.0" max="10.0" step="0.5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                            </div>
+                        </details>
+                        
                         <button id="optimize-schedule-btn" class="premium-btn">Calculate Optimal Schedule</button>
                     </div>
                     

@@ -656,3 +656,33 @@ body {
     width: auto;
     padding: 10px 24px;
 }
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-secondary { color: var(--text-secondary); }
+.text-danger { color: #EF4444; }
+.red { color: #EF4444; }
+
+/* Disabled button state */
+.premium-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive breakpoints for smaller screens */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+        padding: 16px;
+    }
+    .main-content {
+        margin-left: 220px;
+        padding: 24px;
+    }
+    .forecasting-layout,
+    .scheduler-layout,
+    .twin-layout {
+        grid-template-columns: 1fr;
+    }
+}

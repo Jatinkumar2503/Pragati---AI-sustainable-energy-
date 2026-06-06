@@ -1,18 +1,17 @@
+import logging
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
 
-def run_anomaly_detection(df, contamination=0.01):
+logger = logging.getLogger(__name__)
+
+def run_anomaly_detection(df, contamination="auto"):
     """
     Fits an Isolation Forest model to detect multivariate energy anomalies.
     Also applies rule-based heuristic checks for specific anomaly types.
     
-    Args:
-        df (pd.DataFrame): Preprocessed steel industry dataframe.
-        contamination (float): Contamination rate for Isolation Forest.
-        
-    Returns:
-        list: A list of dicts, each representing a classified anomaly with metadata.
+    If contamination is "auto", it dynamically calculates the expected anomaly rate
+    using a robust multivariate Median Absolute Deviation (MAD) outlier estimator.
     """
     df_copy = df.copy()
     
@@ -28,8 +27,35 @@ def run_anomaly_detection(df, contamination=0.01):
     # Fill any NaNs with column means
     df_features = df_copy[features].fillna(df_copy[features].mean())
     
+    # Dynamic contamination estimation using robust Median Absolute Deviation (MAD)
+    if contamination == "auto":
+        logger.info("Dynamically estimating anomaly contamination rate using robust MAD statistics...")
+        
+        N = len(df_features)
+        outlier_flags = np.zeros(N, dtype=bool)
+        
+        for feat in features:
+            values = df_features[feat].values
+            median_val = np.median(values)
+            mad_val = np.median(np.abs(values - median_val))
+            
+            if mad_val > 1e-5:
+                # Calculate Modified Z-score (0.6745 scale factor corresponds to Normal distribution)
+                modified_z_scores = 0.6745 * (values - median_val) / mad_val
+                # Flag extreme outliers (> 3.0 scale)
+                outlier_flags = outlier_flags | (np.abs(modified_z_scores) > 3.0)
+                
+        # Proportional outlier rate across the multivariate feature space
+        calculated_rate = np.mean(outlier_flags)
+        
+        # Enforce realistic industrial operational bounds [0.5%, 4.0%]
+        contamination_rate = float(np.clip(calculated_rate, 0.005, 0.040))
+        logger.info(f"Estimated multivariate outlier rate: {calculated_rate:.4f}. Selected contamination rate: {contamination_rate:.4f}")
+    else:
+        contamination_rate = float(contamination)
+        
     # Fit Isolation Forest
-    iso_forest = IsolationForest(contamination=contamination, random_state=42, n_jobs=-1)
+    iso_forest = IsolationForest(contamination=contamination_rate, random_state=42, n_jobs=-1)
     df_copy['is_outlier'] = iso_forest.fit_predict(df_features)
     df_copy['anomaly_score'] = iso_forest.decision_function(df_features)
     

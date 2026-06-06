@@ -5,9 +5,24 @@ const API_BASE = "http://127.0.0.1:8000/api";
 let telemetryChart = null;
 let forecastChart = null;
 let scheduleChart = null;
+let backtestChart = null;
+
+// Utility: Sanitize user input to prevent XSS injection
+function sanitizeHTML(str) {
+    const temp = document.createElement("div");
+    temp.textContent = str;
+    return temp.innerHTML;
+}
 
 // Application Initialization
 document.addEventListener("DOMContentLoaded", () => {
+    // Set dynamic date badge
+    const dateBadge = document.getElementById("date-badge");
+    if (dateBadge) {
+        const now = new Date();
+        dateBadge.innerText = `📅 ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    }
+    
     initTabNavigation();
     checkBackendStatus();
     loadTelemetry(7);
@@ -109,6 +124,7 @@ function initTabNavigation() {
             // Specific chart resizing on tab reveal
             if (targetTab === "tab-forecasting" && forecastChart) {
                 forecastChart.resize();
+                if (backtestChart) backtestChart.resize();
             } else if (targetTab === "tab-scheduler" && scheduleChart) {
                 scheduleChart.resize();
             }
@@ -278,30 +294,61 @@ async function loadAnomalies() {
 async function runForecasting() {
     const btn = document.getElementById("run-forecast-btn");
     const hours = parseInt(document.getElementById("forecast-hours").value);
+    const folds = parseInt(document.getElementById("backtest-folds").value);
     
     btn.disabled = true;
     btn.innerText = "Training models, compiling curves...";
+    
+    // Dynamically update UI header
+    document.getElementById("backtest-title-header").innerText = `Rolling Backtest RMSE (${folds} Folds)`;
     
     try {
         const res = await fetch(`${API_BASE}/forecast`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hours: hours })
+            body: JSON.stringify({ hours: hours, backtest_folds: folds })
         });
         
         if (!res.ok) throw new Error("Forecasting calculations failed");
         
         const data = await res.json();
         
-        // Update metrics
-        document.getElementById("metric-prophet-rmse").innerText = `${data.metrics.prophet_rmse} kW`;
+        // Determine the seasonal model name (Prophet or Exponential Smoothing)
+        const seasonalName = data.seasonal_model_name || "Prophet";
+        
+        // Update Statistical Indicators
+        document.getElementById("metric-adf-p").innerText = data.adf.p_value;
+        const adfStatusEl = document.getElementById("metric-adf-status");
+        if (data.adf.is_stationary) {
+            adfStatusEl.className = "badge green-bg";
+            adfStatusEl.innerText = "Stationary (p < 0.05)";
+        } else {
+            adfStatusEl.className = "badge orange-bg";
+            adfStatusEl.innerText = "Non-Stationary";
+        }
+
+        // Update Validation RMSE (Single Split)
+        const prophetRmseEl = document.getElementById("metric-prophet-rmse");
+        if (data.metrics.prophet_rmse !== null) {
+            prophetRmseEl.innerText = `${data.metrics.prophet_rmse} kW`;
+        } else {
+            prophetRmseEl.innerText = "N/A";
+        }
         document.getElementById("metric-rf-rmse").innerText = `${data.metrics.rf_rmse} kW`;
+        document.getElementById("metric-rnn-rmse").innerText = `${data.metrics.rnn_rmse} kW`;
         
         const bestBadge = document.getElementById("metric-best-model");
         bestBadge.innerText = data.metrics.best_model;
+
+        // Update Rolling Backtest RMSE
+        document.getElementById("metric-bt-prophet").innerText = `${data.backtest.prophet_rmse} kW`;
+        document.getElementById("metric-bt-rf").innerText = `${data.backtest.rf_rmse} kW`;
+        document.getElementById("metric-bt-rnn").innerText = `${data.backtest.rnn_rmse} kW`;
+        document.getElementById("metric-bt-persistence").innerText = `${data.backtest.persistence_rmse} kW`;
         
-        // Render forecast chart
-        renderForecastChart(data);
+        // Render charts
+        renderForecastChart(data, seasonalName);
+        renderBacktestChart(data, seasonalName);
     } catch (e) {
         alert("Failed to compile forecast predictions.");
     } finally {
@@ -310,43 +357,75 @@ async function runForecasting() {
     }
 }
 
-function renderForecastChart(data) {
+
+function renderForecastChart(data, seasonalName = "Prophet") {
     const ctx = document.getElementById("forecastChart").getContext("2d");
     if (forecastChart) {
         forecastChart.destroy();
+    }
+    
+    // Build datasets — always include actuals and RF
+    const datasets = [
+        {
+            label: 'Actual Telemetry (kWh)',
+            data: data.actuals,
+            borderColor: '#94A3B8',
+            borderWidth: 2.2,
+            borderDash: [3, 3],
+            tension: 0.1,
+            fill: false
+        }
+    ];
+    
+    if (data.persistence_forecast && data.persistence_forecast.length > 0) {
+        datasets.push({
+            label: 'Persistence Baseline (t-24)',
+            data: data.persistence_forecast,
+            borderColor: '#64748B', // Dotted Slate Grey
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            tension: 0.1,
+            fill: false
+        });
+    }
+    
+    // Only add seasonal model (Prophet/ExpSmoothing) if data exists
+    if (data.prophet_forecast && data.prophet_forecast.length > 0) {
+        datasets.push({
+            label: `${seasonalName} (Forecast)`,
+            data: data.prophet_forecast,
+            borderColor: '#10B981', // Emerald
+            borderWidth: 2.5,
+            tension: 0.3,
+            fill: false
+        });
+    }
+    
+    datasets.push({
+        label: 'Random Forest (Forecast)',
+        data: data.rf_forecast,
+        borderColor: '#8B5CF6', // Violet
+        borderWidth: 2,
+        tension: 0.2,
+        fill: false
+    });
+    
+    if (data.rnn_forecast && data.rnn_forecast.length > 0) {
+        datasets.push({
+            label: 'RNN (Forecast)',
+            data: data.rnn_forecast,
+            borderColor: '#EC4899', // Pink
+            borderWidth: 2,
+            tension: 0.2,
+            fill: false
+        });
     }
     
     forecastChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
-            datasets: [
-                {
-                    label: 'Actual Telemetry (kWh)',
-                    data: data.actuals,
-                    borderColor: '#94A3B8',
-                    borderWidth: 2,
-                    borderDash: [3, 3],
-                    tension: 0.1,
-                    fill: false
-                },
-                {
-                    label: 'Meta Prophet (Forecast)',
-                    data: data.prophet_forecast,
-                    borderColor: '#10B981', // Emerald
-                    borderWidth: 2.5,
-                    tension: 0.3,
-                    fill: false
-                },
-                {
-                    label: 'Random Forest (Forecast)',
-                    data: data.rf_forecast,
-                    borderColor: '#8B5CF6', // Violet
-                    borderWidth: 2,
-                    tension: 0.2,
-                    fill: false
-                }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -371,12 +450,85 @@ function renderForecastChart(data) {
     });
 }
 
+function renderBacktestChart(data, seasonalName = "Prophet") {
+    const ctx = document.getElementById("backtestChart").getContext("2d");
+    if (backtestChart) {
+        backtestChart.destroy();
+    }
+    
+    backtestChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [seasonalName, 'Random Forest', 'RNN', 'Persistence Baseline'],
+            datasets: [{
+                label: 'Rolling Backtest RMSE (kW)',
+                data: [
+                    data.backtest.prophet_rmse,
+                    data.backtest.rf_rmse,
+                    data.backtest.rnn_rmse,
+                    data.backtest.persistence_rmse
+                ],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.65)', // Emerald
+                    'rgba(139, 92, 246, 0.65)', // Violet
+                    'rgba(236, 72, 153, 0.65)', // Pink
+                    'rgba(100, 116, 139, 0.65)'  // Slate Grey
+                ],
+                borderColor: [
+                    '#10B981',
+                    '#8B5CF6',
+                    '#EC4899',
+                    '#64748B'
+                ],
+                borderWidth: 1.5,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#94A3B8', font: { family: 'Inter', weight: '500' } }
+                },
+                y: {
+                    title: { display: true, text: 'RMSE (kW)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                }
+            }
+        }
+    });
+}
+
+
 // Tab 4: Workload Scheduling Optimizer
 async function runScheduler() {
     const load = parseFloat(document.getElementById("sched-load").value);
     const duration = parseInt(document.getElementById("sched-duration").value);
     const solar = parseFloat(document.getElementById("sched-solar").value);
     const weight = parseFloat(document.getElementById("sched-weight").value);
+    
+    // Parse Advanced settings with safe fallback defaults
+    const elTaskPf = document.getElementById("sched-task-pf");
+    const elBatCap = document.getElementById("sched-battery-cap");
+    const elBatRate = document.getElementById("sched-battery-rate");
+    const elBatEff = document.getElementById("sched-battery-eff");
+    const elSolarYield = document.getElementById("sched-solar-yield-mult");
+    const elPfPenalty = document.getElementById("sched-pf-penalty");
+    
+    const task_power_factor = elTaskPf ? parseFloat(elTaskPf.value) : 0.80;
+    const battery_capacity_kwh = elBatCap ? parseFloat(elBatCap.value) : 50.0;
+    const battery_rate_kw = elBatRate ? parseFloat(elBatRate.value) : 25.0;
+    const battery_efficiency = elBatEff ? parseFloat(elBatEff.value) / 100.0 : 0.95;
+    const solar_yield_coeff = elSolarYield ? parseFloat(elSolarYield.value) / 100.0 : 0.12;
+    const pf_penalty_mult = elPfPenalty ? parseFloat(elPfPenalty.value) : 2.0;
     
     try {
         const res = await fetch(`${API_BASE}/schedule`, {
@@ -386,7 +538,13 @@ async function runScheduler() {
                 task_load_kw: load,
                 task_duration_h: duration,
                 solar_capacity_kw: solar,
-                environmental_weight: weight
+                environmental_weight: weight,
+                battery_capacity_kwh: battery_capacity_kwh,
+                battery_rate_kw: battery_rate_kw,
+                battery_efficiency: battery_efficiency,
+                solar_yield_coeff: solar_yield_coeff,
+                task_power_factor: task_power_factor,
+                pf_penalty_mult: pf_penalty_mult
             })
         });
         
@@ -521,10 +679,10 @@ async function sendCopilotMessage() {
     
     if (!msg) return;
     
-    // Add user message bubble
+    // Add user message bubble (sanitized to prevent XSS)
     const userBubble = document.createElement("div");
     userBubble.className = "message user";
-    userBubble.innerHTML = `<div class="message-content">${msg}</div>`;
+    userBubble.innerHTML = `<div class="message-content">${sanitizeHTML(msg)}</div>`;
     container.appendChild(userBubble);
     
     input.value = "";
