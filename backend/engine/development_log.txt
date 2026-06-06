@@ -289,3 +289,4 @@
 [2026-06-05T17:03:34] fix: prevent division-by-zero risks in simple payback math
 [2026-06-05T17:31:10] docs: document commercial solar capex estimations in code
 [2026-06-06T10:36:48] feat: calculate annual financial bill savings projections
+[2026-06-06T11:53:22] tweak: set baseline commercial utility tariff to $0.13
