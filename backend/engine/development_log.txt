@@ -293,3 +293,4 @@
 [2026-06-06T12:58:25] feat: calculate annual carbon offsets reductions kilograms
 [2026-06-06T15:09:50] feat: compute simple payback periods years indices
 [2026-06-06T15:21:54] fix: constrain battery capacity metrics to realistic limits
+[2026-06-06T15:29:57] refactor: group digital twin simulation results payload
