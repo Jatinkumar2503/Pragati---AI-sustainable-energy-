@@ -302,3 +302,4 @@
 [2026-06-07T11:35:23] feat: add fastapi and uvicorn dependencies imports in api
 [2026-06-07T12:41:11] feat: instantiate FastAPI application instance
 [2026-06-07T13:03:24] feat: add CORSMiddleware configurations to server
+[2026-06-07T14:10:42] feat: allow wildcard origins parameters in dev environments
