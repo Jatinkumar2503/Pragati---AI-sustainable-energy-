@@ -308,3 +308,4 @@
 [2026-06-07T16:42:13] fix: solve path issues when running python server locally
 [2026-06-07T17:22:52] test: assert api health check response returns 200 OK
 [2026-06-07T17:56:07] docs: document FastAPI routing layouts in api comments
+[2026-06-08T09:02:20] feat: write get_cached_data helper loader in api
