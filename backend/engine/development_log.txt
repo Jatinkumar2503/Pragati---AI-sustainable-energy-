@@ -314,3 +314,4 @@
 [2026-06-08T11:16:45] feat: apply hourly downsampling filters to query returns
 [2026-06-08T13:11:02] feat: write GET /api/anomalies endpoint returning alerts
 [2026-06-08T13:25:37] feat: write get_cached_anomalies helper loader in api
+[2026-06-08T13:47:48] feat: limit telemetry anomalies training rows to 15000
