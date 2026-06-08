@@ -311,3 +311,4 @@
 [2026-06-08T09:02:20] feat: write get_cached_data helper loader in api
 [2026-06-08T09:43:09] feat: write GET /api/telemetry database retrieval endpoint
 [2026-06-08T11:11:43] feat: add telemetry days range parameter filter logic
+[2026-06-08T11:16:45] feat: apply hourly downsampling filters to query returns
