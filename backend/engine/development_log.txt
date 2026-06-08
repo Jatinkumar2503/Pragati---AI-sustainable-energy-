@@ -313,3 +313,4 @@
 [2026-06-08T11:11:43] feat: add telemetry days range parameter filter logic
 [2026-06-08T11:16:45] feat: apply hourly downsampling filters to query returns
 [2026-06-08T13:11:02] feat: write GET /api/anomalies endpoint returning alerts
+[2026-06-08T13:25:37] feat: write get_cached_anomalies helper loader in api
