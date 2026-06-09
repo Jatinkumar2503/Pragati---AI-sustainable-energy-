@@ -321,3 +321,4 @@
 [2026-06-09T09:01:19] feat: add pydantic request schemas models in api.py
 [2026-06-09T09:25:47] feat: define ForecastRequest pydantic validation model
 [2026-06-09T11:12:58] feat: define ScheduleRequest pydantic validation model
+[2026-06-09T13:24:56] feat: write POST /api/forecast endpoint routing logic
