@@ -325,3 +325,4 @@
 [2026-06-09T14:34:46] refactor: wire dataset forecaster core into forecast route
 [2026-06-09T14:41:15] feat: write POST /api/schedule endpoint routing logic
 [2026-06-09T15:15:34] refactor: wire shift scheduler core into schedule route
+[2026-06-09T15:56:36] fix: resolve JSON validation formatting exception crashes
