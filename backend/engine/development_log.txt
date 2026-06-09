@@ -327,3 +327,4 @@
 [2026-06-09T15:15:34] refactor: wire shift scheduler core into schedule route
 [2026-06-09T15:56:36] fix: resolve JSON validation formatting exception crashes
 [2026-06-09T15:58:07] test: check POST forecast/schedule endpoints return 200 OK
+[2026-06-09T16:11:08] docs: write pydantic request/response comments details
