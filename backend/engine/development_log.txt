@@ -329,3 +329,4 @@
 [2026-06-09T15:58:07] test: check POST forecast/schedule endpoints return 200 OK
 [2026-06-09T16:11:08] docs: write pydantic request/response comments details
 [2026-06-10T09:07:55] feat: define SimulateRequest pydantic validation model
+[2026-06-10T09:26:38] feat: write POST /api/simulate endpoint routing logic
