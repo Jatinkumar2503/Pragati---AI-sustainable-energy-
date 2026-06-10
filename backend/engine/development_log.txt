@@ -330,3 +330,4 @@
 [2026-06-09T16:11:08] docs: write pydantic request/response comments details
 [2026-06-10T09:07:55] feat: define SimulateRequest pydantic validation model
 [2026-06-10T09:26:38] feat: write POST /api/simulate endpoint routing logic
+[2026-06-10T10:31:31] refactor: wire digital twin roi core into simulate route
