@@ -335,3 +335,4 @@
 [2026-06-10T11:27:53] feat: write POST /api/copilot NLP chat endpoint routing
 [2026-06-10T11:38:11] feat: write intent-based keyword NLP router in copilot
 [2026-06-10T11:45:04] feat: write static response strings templates for chat
+[2026-06-10T16:10:20] fix: fallback to generic help suggestions on empty intents
