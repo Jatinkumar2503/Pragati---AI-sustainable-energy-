@@ -339,3 +339,4 @@
 [2026-06-10T16:14:24] test: verify POST simulate/copilot endpoints return 200 OK
 [2026-06-10T17:53:22] docs: write developer api deployment guidelines in README
 [2026-06-11T09:11:20] feat: create frontend/index.html layout boilerplate
+[2026-06-11T09:52:53] feat: declare html5 character encoding metadata tags
