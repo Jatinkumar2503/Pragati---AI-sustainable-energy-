@@ -346,3 +346,4 @@
 [2026-06-11T15:00:16] feat: write core dashboard wrapper container panels
 [2026-06-11T15:01:29] feat: write brand logo and sidebar titles sections
 [2026-06-11T15:42:47] feat: write active connection status dot element
+[2026-06-11T16:55:37] feat: add navigation sidebar links items templates
