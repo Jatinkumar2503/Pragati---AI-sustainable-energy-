@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PRAGATI AI — AI-powered industrial sustainability intelligence platform for energy forecasting, anomaly detection, renewable workload shifting, and ESG compliance. Built for the Cambridge Sustainability Hackathon 2026.">
+    <title>PRAGATI AI — Industrial Sustainability Intelligence Platform</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" type="image/svg+xml">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo-text">PRAGATI<span class="accent-text"> AI</span></span>
+                <span class="subtitle">Sustainability Portal</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="tab-dashboard" id="nav-dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-anomalies" id="nav-anomalies">
+                    <span class="icon">⚠️</span> Anomaly Alerts
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-forecasting" id="nav-forecasting">
+                    <span class="icon">📈</span> Load Forecasting
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-scheduler" id="nav-scheduler">
+                    <span class="icon">⚙️</span> Shift Scheduler
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-digital-twin" id="nav-digital-twin">
+                    <span class="icon">☀️</span> Digital Twin
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-copilot" id="nav-copilot">
+                    <span class="icon">💬</span> AI Copilot
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="pulse-dot green" id="status-dot"></span>
+                    <span id="status-text">Backend Connected</span>
+                </div>
+                <div class="role-selector-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px;">
+                    <span style="font-size: 0.8rem; color: #94A3B8; font-weight: 500;">User Role:</span>
+                    <select id="user-role-select" class="premium-select" style="padding: 2px 6px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #E2E8F0; cursor: pointer; width: auto; font-family: 'Inter';">
+                        <option value="Operator" selected>Operator 🔧</option>
+                        <option value="Manager">Manager 📈</option>
+                        <option value="Admin">Admin 👑</option>
+                    </select>
+                </div>
+                <div class="version">v1.0.0 — Hackathon Edition</div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-title">
+                    <h1 id="tab-title">Operational Dashboard</h1>
+                    <p class="description" id="tab-subtitle">Real-time telemetry and key sustainability metrics from DAEWOO Steel facility.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="date-badge" id="date-badge">📅 Loading...</div>
+                </div>
+            </header>
+            
+            <!-- TAB 1: DASHBOARD -->
+            <div class="tab-panel active" id="tab-dashboard">
+                <!-- KPI Grid -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Active Grid Load</span>
+                            <span class="kpi-icon">⚡</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-load">— kW</div>
+                        <div class="kpi-footer green">● Normal Operations</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Carbon Audit (Scope 1/2/3)</span>
+                            <span class="kpi-icon">🌿</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-carbon">— kg CO₂</div>
+                        <div class="kpi-carbon-breakdown">
+                            <div class="breakdown-item">S1: <span id="kpi-scope1">— kg</span></div>
+                            <div class="breakdown-item">S2: <span id="kpi-scope2">— kg</span></div>
+                            <div class="breakdown-item">S3: <span id="kpi-scope3">— kg</span></div>
+                        </div>
+                        <div class="kpi-footer" id="kpi-carbon-rate">Current: — g/kWh</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Power Factor (Lag)</span>
+                            <span class="kpi-icon">📉</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-pf">— %</div>
+                        <div class="kpi-footer" id="kpi-pf-status">Target: > 90%</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Active Anomalies</span>
+                            <span class="kpi-icon">⚠️</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-anomalies-count">—</div>
+                        <div class="kpi-footer red" id="kpi-anomalies-status">Requires attention</div>
+                    </div>
+                </div>
+                
+                <!-- Telemetry Chart -->
+                <div class="chart-container card">
+                    <div class="card-header">
+                        <h2>Power Consumption Telemetry (Last 7 Days)</h2>
+                        <div class="card-actions">
+                            <select id="telemetry-days-select" class="premium-select">
+                                <option value="3">Last 3 Days</option>
+                                <option value="7" selected>Last 7 Days</option>
+                                <option value="14">Last 14 Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CSV Telemetry Dataset Upload -->
+                <div class="card" id="upload-dataset-card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2>Import Custom Telemetry Dataset (CSV)</h2>
+                        <span class="badge green-bg" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Retraining Enabled</span>
+                    </div>
+                    <div class="uploader-container" id="csv-dropzone" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 24px; text-align: center; background: rgba(255, 255, 255, 0.01); transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 2.5rem;">📁</span>
+                        <p style="font-weight: 500; font-size: 0.95rem; margin: 0; color: #E2E8F0;">Drag & drop your factory telemetry CSV here, or click to upload</p>
+                        <p style="font-size: 0.8rem; margin: 0; color: #64748B;">Supported columns: timestamp/date, usage/kwh, power_factor (auto-aligned & carbon scopes computed)</p>
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                        <div id="upload-status" style="margin-top: 10px; font-weight: 500; font-size: 0.9rem; display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 2: ANOMALIES -->
+            <div class="tab-panel" id="tab-anomalies">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Detected Energy Anomalies</h2>
+                        <span class="badge red-bg" id="anomalies-badge">0 Flagged</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="premium-table" id="anomalies-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Anomaly Type</th>
+                                    <th>Severity</th>
+                                    <th>Power (kW)</th>
+                                    <th>PF (%)</th>
+                                    <th>Explanation</th>
+                                    <th>Action Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center">Loading anomalies from ML engine...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Power Quality & THD Monitoring Chart -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2>Power Quality & Harmonic Distortion (THD) Monitoring</h2>
+                    </div>
+                    <div class="chart-wrapper" style="height: 300px;">
+                        <canvas id="thdChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 3: FORECASTING -->
+            <div class="tab-panel" id="tab-forecasting">
+                <div class="forecasting-layout">
+                    <div class="forecast-settings card">
+                        <h3>Forecast Parameters</h3>
+                        <div class="input-group">
+                            <label for="forecast-hours">Prediction Range (Hours)</label>
+                            <input type="range" id="forecast-hours" min="24" max="168" value="48" step="24" class="premium-slider">
+                            <div class="slider-val"><span id="forecast-hours-val">48</span> hours (2 days)</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="backtest-folds">Rolling Backtest Folds</label>
+                            <select id="backtest-folds" class="premium-select" style="width: 100%;">
+                                <option value="3" selected>3 Folds (Standard)</option>
+                                <option value="5">5 Folds (Rigorous)</option>
+                                <option value="7">7 Folds (Ultra Rigorous)</option>
+                            </select>
+                        </div>
+                        <button id="run-forecast-btn" class="premium-btn">Run Forecasting Models</button>
+                        
+                        <hr class="divider">
+                        
+                        <h4>Statistical Indicators</h4>
+                        <div class="metric-row">
+                            <span>ADF p-value:</span>
+                            <strong id="metric-adf-p">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>ADF Stationarity:</span>
+                            <span class="badge green-bg" id="metric-adf-status">—</span>
+                        </div>
+                        
+                        <hr class="divider">
+                        
+                        <h4>Validation RMSE (Single Split)</h4>
+                        <div class="metric-row">
+                            <span>Prophet:</span>
+                            <strong id="metric-prophet-rmse">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Random Forest:</span>
+                            <strong id="metric-rf-rmse">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Recurrent Neural Network (RNN):</span>
+                            <strong id="metric-rnn-rmse">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Best Fit Selection:</span>
+                            <span class="badge green-bg" id="metric-best-model">—</span>
+                        </div>
+                        
+                        <hr class="divider">
+                        
+                        <h4 id="backtest-title-header">Rolling Backtest RMSE (3 Folds)</h4>
+                        <div class="metric-row">
+                            <span>Prophet Backtest:</span>
+                            <strong id="metric-bt-prophet">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Random Forest Backtest:</span>
+                            <strong id="metric-bt-rf">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>RNN Backtest:</span>
+                            <strong id="metric-bt-rnn">—</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Persistence Baseline:</span>
+                            <strong id="metric-bt-persistence">—</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-results" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2>Dynamic Demand Projections vs. Naive Persistence Baseline</h2>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card" style="margin-bottom: 0;">
+                            <div class="card-header">
+                                <h2>Scientific Model Validation — Rolling Backtest RMSE Comparison</h2>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="backtestChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- TAB 4: SCHEDULER -->
+            <div class="tab-panel" id="tab-scheduler">
+                <div class="scheduler-layout">
+                    <!-- Operator Role Lock Notification -->
+                    <div class="role-lock-warning" id="scheduler-role-lock" style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; box-sizing: border-box; width: 100%;">
+                        <span style="font-size: 1.25rem;">🔒</span>
+                        <div>
+                            <strong style="color: #F87171; font-size: 0.9rem;">Operational Controls Locked</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Your current role (Operator) has read-only access. Switch role to Manager or Admin to modify inputs.</p>
+                        </div>
+                    </div>
+                    <div class="scheduler-settings card">
+                        <h3>Shift Optimization Input</h3>
+                        <div class="input-group">
+                            <label for="sched-load">Process Power Load (kW)</label>
+                            <input type="number" id="sched-load" value="100.0" min="10" max="1000" class="premium-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="sched-duration">Process Run Duration (Hours)</label>
+                            <input type="number" id="sched-duration" value="4" min="1" max="24" class="premium-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="sched-solar">Solar Capacity (kW)</label>
+                            <input type="number" id="sched-solar" value="150.0" min="0" max="1000" class="premium-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="sched-weight">Optimization Balance (Carbon vs. Cost)</label>
+                            <select id="sched-weight" class="premium-select">
+                                <option value="0.0">Minimize Cost Only</option>
+                                <option value="0.15" selected>Balanced (Standard Weight)</option>
+                                <option value="0.5">High Decarbonization Weight</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Collapsible Advanced Settings -->
+                        <details class="advanced-settings-details" style="margin-top: 15px; margin-bottom: 15px;">
+                            <summary style="cursor: pointer; color: #10B981; font-weight: 500; font-size: 0.9rem; user-select: none;">
+                                ⚙️ Advanced Grid & Battery Specs
+                            </summary>
+                            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px; padding: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08);">
+                                <div class="input-group">
+                                    <label for="sched-task-pf" style="font-size: 0.8rem; color: #94A3B8;">Task Power Factor (Lagging)</label>
+                                    <input type="number" id="sched-task-pf" value="0.80" min="0.40" max="1.00" step="0.05" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-cap" style="font-size: 0.8rem; color: #94A3B8;">Battery Capacity (kWh)</label>
+                                    <input type="number" id="sched-battery-cap" value="50.0" min="0" max="2000" step="10" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-rate" style="font-size: 0.8rem; color: #94A3B8;">Battery Charge/Discharge Rate (kW)</label>
+                                    <input type="number" id="sched-battery-rate" value="25.0" min="0" max="1000" step="5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-battery-eff" style="font-size: 0.8rem; color: #94A3B8;">Battery Roundtrip Efficiency (%)</label>
+                                    <input type="number" id="sched-battery-eff" value="95.0" min="50" max="100" step="1" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-solar-yield-mult" style="font-size: 0.8rem; color: #94A3B8;">Solar System Yield Coeff (%)</label>
+                                    <input type="number" id="sched-solar-yield-mult" value="12.0" min="1" max="50" step="0.5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                                <div class="input-group">
+                                    <label for="sched-pf-penalty" style="font-size: 0.8rem; color: #94A3B8;">PF Surcharge Multiplier</label>
+                                    <input type="number" id="sched-pf-penalty" value="2.0" min="0.0" max="10.0" step="0.5" class="premium-input" style="padding: 6px 10px; font-size: 0.85rem;">
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <button id="optimize-schedule-btn" class="premium-btn">Calculate Optimal Schedule</button>
+                    </div>
+                    
+                    <div class="scheduler-results card">
+                        <div class="card-header">
+                            <h2>Optimization Recommendations</h2>
+                        </div>
+                        
+                        <div class="recommendation-badge" id="sched-recommendation">
+                            Optimal Start Hour: <span class="highlight">—</span>
+                        </div>
+                        
+                        <div class="savings-grid">
+                            <div class="savings-card">
+                                <span class="savings-label">Financial Savings ($)</span>
+                                <span class="savings-val" id="sched-cost-save">$—</span>
+                                <span class="savings-pct" id="sched-cost-pct">—% lower cost</span>
+                            </div>
+                            <div class="savings-card">
+                                <span class="savings-label">Carbon Abatement (kg)</span>
+                                <span class="savings-val" id="sched-carbon-save">— kg</span>
+                                <span class="savings-pct" id="sched-carbon-pct">—% lower CO₂</span>
+                            </div>
+                            <div class="savings-card">
+                                <span class="savings-label">Battery Health Degradation</span>
+                                <span class="savings-val" id="sched-battery-soh">—% SoH</span>
+                                <span class="savings-pct" id="sched-battery-deg">—% daily wear</span>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-wrapper">
+                            <canvas id="scheduleChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 5: DIGITAL TWIN -->
+            <div class="tab-panel" id="tab-digital-twin">
+                <div class="twin-layout">
+                    <!-- Operator Role Lock Notification -->
+                    <div class="role-lock-warning" id="twin-role-lock" style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; box-sizing: border-box; width: 100%;">
+                        <span style="font-size: 1.25rem;">🔒</span>
+                        <div>
+                            <strong style="color: #F87171; font-size: 0.9rem;">Sandbox Controls Locked</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Your current role (Operator) has read-only access. Switch role to Manager or Admin to modify inputs.</p>
+                        </div>
+                    </div>
+                    <div class="twin-settings card">
+                        <h3>Sandbox Parameters</h3>
+                        <div class="input-group">
+                            <label for="twin-solar">Target Solar Array Capacity (kW)</label>
+                            <input type="range" id="twin-solar" min="0" max="500" value="150" step="10" class="premium-slider">
+                            <div class="slider-val"><span id="twin-solar-val">150</span> kW</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="twin-battery">Target Battery Pack Capacity (kWh)</label>
+                            <input type="range" id="twin-battery" min="0" max="250" value="50" step="10" class="premium-slider">
+                            <div class="slider-val"><span id="twin-battery-val">50</span> kWh</div>
+                        </div>
+                    </div>
+                    
+                    <div class="twin-results card">
+                        <div class="twin-kpis">
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Annual Solar Gen.</div>
+                                <div class="twin-kpi-val" id="twin-val-gen">— kWh</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Solar Self-Consumption</div>
+                                <div class="twin-kpi-val" id="twin-val-self">— %</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Annual Bill Reduction</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-savings">$—</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Carbon Offset (Annual)</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-co2">— kg</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Net Present Value (NPV)</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-npv">$—</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Levelized Cost (LCOE)</div>
+                                <div class="twin-kpi-val" id="twin-val-lcoe">— /kWh</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">MACRS Tax Shield (5-yr)</div>
+                                <div class="twin-kpi-val" id="twin-val-macrs">$—</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label">Monthly Peak Shaving</div>
+                                <div class="twin-kpi-val" id="twin-val-peak">— kW</div>
+                            </div>
+                        </div>
+                        
+                        <hr class="divider">
+                        
+                        <div class="twin-roi-section">
+                            <div class="twin-roi-metric">
+                                <span class="roi-label">Capital Expenditure (Est.):</span>
+                                <strong id="twin-val-capex">$—</strong>
+                            </div>
+                            <div class="twin-roi-metric highlight-box">
+                                <span class="roi-label">Simple Payback Period:</span>
+                                <strong id="twin-val-payback">— Years</strong>
+                            </div>
+                        </div>
+
+                        <!-- 20-Year Cash Flow Chart -->
+                        <div class="card" style="margin-top: 24px; border: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0, 0, 0, 0.2);">
+                            <div class="card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">
+                                <h2>20-Year Cash Flow Projections (incl. MACRS, O&M & Inverter replacement)</h2>
+                            </div>
+                            <div class="chart-wrapper" style="height: 300px; padding-top: 15px;">
+                                <canvas id="twinCashFlowChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 6: AI COPILOT -->
+            <div class="tab-panel" id="tab-copilot">
+                <div class="chat-container card">
+                    <div class="chat-header">
+                        <div class="chat-bot-info">
+                            <span class="bot-avatar">🤖</span>
+                            <div>
+                                <h3>PRAGATI AI Copilot</h3>
+                                <span class="bot-status">Online — Analysis Engine Connected</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chat-messages-container">
+                        <div class="message bot">
+                            <div class="message-content">
+                                👋 **Hello! I am your PRAGATI AI Sustainability Copilot.**
+                                <br><br>
+                                I can analyze your factory telemetry logs and provide advice. Try asking me:
+                                <ul>
+                                    <li>*“Where are we wasting energy or leaking power?”*</li>
+                                    <li>*“Tell me about our recent critical spikes and anomalies.”*</li>
+                                    <li>*“Show me tomorrow's load forecasts.”*</li>
+                                    <li>*“What is the ROI of installing a 200kW solar panel array?”*</li>
+                                    <li>*“How do we optimize our smelting shift schedule?”*</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Ask about energy leaks, forecast peaks, scheduler optimization..." class="premium-input">
+                        <button id="chat-send-btn" class="premium-btn">Send Message</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
