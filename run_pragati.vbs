@@ -1,8 +1,8 @@
 Set WshShell = CreateObject("WScript.Shell")
 
 ' Configure paths (VBScript handles backslashes on Windows)
-backendPath = "c:\Users\Asus\Documents\sustainable platform\pragati_platform\backend"
-frontendPath = "c:\Users\Asus\Documents\sustainable platform\pragati_platform\frontend\index.html"
+backendPath = "c:\Users\Asus\Documents\sustainable platform\backend"
+frontendPath = "c:\Users\Asus\Documents\sustainable platform\frontend\index.html"
 
 ' Change working directory to backend
 WshShell.CurrentDirectory = backendPath
