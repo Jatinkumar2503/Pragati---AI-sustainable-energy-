@@ -360,3 +360,4 @@
 [2026-06-12T16:23:20] docs: document HTML template files organization
 [2026-06-13T09:03:09] style: create frontend/style.css stylesheet file
 [2026-06-13T09:16:12] style: reset base margins padding and box sizing rules
+[2026-06-13T09:45:56] style: define core HSL theme color parameters
