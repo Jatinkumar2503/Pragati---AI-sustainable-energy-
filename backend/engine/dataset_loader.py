@@ -5,6 +5,7 @@ import requests
 import json
 import pandas as pd
 import numpy as np
+from engine.scheduler import get_carbon_intensity
 
 logger = logging.getLogger(__name__)
 
@@ -263,18 +264,23 @@ def preprocess_and_align_dataframe(df):
     else:
         df['ambient_temperature_c'] = pd.to_numeric(df['ambient_temperature_c'], errors='coerce').fillna(20.0)
         
-    if 'co2_tco2' not in df.columns:
-        # Calculate tCO2 based on grid intensity
-        df['co2_tco2'] = np.round(df['usage_kwh'] * 0.000350, 4)
-        
     # Scope 1, 2, 3 carbon compliance calculations
-    df["scope2_co2_kg"] = np.round(df["usage_kwh"] * 0.350, 3)
+    # 1. Scope 2 Carbon Intensity: Dynamic, hourly grid carbon intensity curve
+    grid_intensity_g_kwh = df["date"].dt.hour.map(get_carbon_intensity)
+    df["scope2_co2_kg"] = np.round(df["usage_kwh"] * (grid_intensity_g_kwh / 1000.0), 3)
     
-    np.random.seed(42)
-    s1_noise = np.random.normal(0.0, 0.4, len(df))
-    df["scope1_co2_kg"] = np.round(np.clip(df["usage_kwh"] * 0.120 + s1_noise, 0.0, None), 3)
+    # 2. Scope 1 Furnace thermodynamic lag and natural gas combustion
+    # usage_smooth_t = 0.8 * usage_smooth_{t-1} + 0.2 * usage_kwh_t
+    usage_smooth = df["usage_kwh"].ewm(alpha=0.2, adjust=False).mean()
+    # Assuming furnace gas consumption is proportional to smoothed factory workload (0.062176 m3/kWh proxy)
+    # Natural gas combustion density = 1.93 kg CO2 / m3
+    df["scope1_co2_kg"] = np.round(usage_smooth * 0.062176 * 1.93, 3)
     
+    # 3. Scope 3 supply chain logistics
     df["scope3_co2_kg"] = np.round(df["usage_kwh"] * 0.220 + 5.0 * (df["nsm"] / 86400.0), 3)
+
+    # 4. Total CO2 emissions in metric tons (tCO2)
+    df['co2_tco2'] = np.round((df['scope1_co2_kg'] + df['scope2_co2_kg'] + df['scope3_co2_kg']) / 1000.0, 4)
     
     # Return cleaned and sorted dataframe
     return df.sort_values('date').reset_index(drop=True)

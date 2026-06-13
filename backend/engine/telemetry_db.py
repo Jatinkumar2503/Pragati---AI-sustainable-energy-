@@ -12,6 +12,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from engine.dataset_loader import load_dataset
+from engine.scheduler import get_carbon_intensity
 
 logger = logging.getLogger(__name__)
 
@@ -116,20 +117,55 @@ class TelemetryDB:
         param_list = []
         for r in records:
             usage = float(r.get("usage_kwh", 0.0))
-            # Fallbacks for Scope 1, 2, 3 calculations
-            scope2 = float(r.get("scope2_co2_kg", round(usage * 0.350, 3)))
-            scope1 = float(r.get("scope1_co2_kg", round(usage * 0.120, 3)))
-            scope3 = float(r.get("scope3_co2_kg", round(usage * 0.220, 3)))
+            
+            # Resolve hour for dynamic Scope 2 grid intensity calculation
+            try:
+                dt_val = pd.to_datetime(r.get("date"))
+                hour_val = dt_val.hour
+            except Exception:
+                hour_val = 12
+                
+            # Scope 2: Dynamic Grid Intensity
+            scope2_intensity = get_carbon_intensity(hour_val)
+            scope2 = float(r.get("scope2_co2_kg", round(usage * (scope2_intensity / 1000.0), 3)))
+            
+            # Scope 1: Furnace thermodynamic lag and natural gas combustion
+            if getattr(self, "_last_usage_smooth", None) is None:
+                try:
+                    with self.get_connection() as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT scope1_co2_kg FROM telemetry ORDER BY date DESC LIMIT 1;")
+                        row = cursor.fetchone()
+                        if row and row[0] is not None:
+                            self._last_usage_smooth = row[0] / (0.062176 * 1.93)
+                except Exception:
+                    pass
+
+            if getattr(self, "_last_usage_smooth", None) is None:
+                self._last_usage_smooth = usage
+            else:
+                self._last_usage_smooth = 0.8 * self._last_usage_smooth + 0.2 * usage
+                
+            calc_scope1 = round(self._last_usage_smooth * 0.062176 * 1.93, 3)
+            scope1 = float(r.get("scope1_co2_kg", calc_scope1))
+            
+            # Scope 3: Supply chain logistics
+            nsm_val = int(r.get("nsm", hour_val * 3600))
+            scope3 = float(r.get("scope3_co2_kg", round(usage * 0.220 + 5.0 * (nsm_val / 86400.0), 3)))
+            
+            # Total CO2 in metric tons (tCO2)
+            calc_co2_tco2 = round((scope1 + scope2 + scope3) / 1000.0, 4)
+            co2_tco2 = float(r.get("co2_tco2", calc_co2_tco2))
             
             param_list.append((
                 r.get("date"),
                 usage,
                 float(r.get("reactive_lagging_kvarh", 0.0)),
                 float(r.get("reactive_leading_kvarh", 0.0)),
-                float(r.get("co2_tco2", 0.0)),
+                co2_tco2,
                 float(r.get("power_factor_lagging", 100.0)),
                 float(r.get("power_factor_leading", 100.0)),
-                int(r.get("nsm", 0)),
+                nsm_val,
                 r.get("week_status", "Weekday"),
                 r.get("day_of_week", "Monday"),
                 r.get("load_type", "Light_Load"),
