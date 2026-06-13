@@ -3,7 +3,11 @@ import sys
 import logging
 import threading
 import requests
-from fastapi import FastAPI, HTTPException, Query
+import asyncio
+import io
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, Query, Security, Depends, UploadFile, File
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -24,15 +28,40 @@ from engine.scheduler import optimize_shift_schedule
 from engine.telemetry_db import TelemetryDB
 from engine.privacy_shield import privacy_shield
 
-# Initialize transactional relational database backed pipeline
+# Initialize database instance container
 DB_INSTANCE = TelemetryDB()
-DB_INSTANCE.init_db()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize DB schema and seed
+    logger.info("FastAPI lifespan: Initializing telemetry database...")
+    DB_INSTANCE.init_db()
+    yield
+    # Shutdown: Safely stop background thread workers and close handles
+    logger.info("FastAPI lifespan: Stopping background database threads...")
+    DB_INSTANCE.close()
 
 app = FastAPI(
     title="PRAGATI AI Backend API",
     description="FastAPI endpoints for industrial energy forecasting, anomaly detection, and load balancing.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
+
+# Security: API Key validation settings
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def get_api_key(header_key: str = Depends(api_key_header)):
+    expected_key = os.environ.get("PRAGATI_API_KEY", "pragati_sec_2026")
+    # For testing and backwards compatibility, allow bypassing if in local development mode
+    if os.environ.get("PRAGATI_ENV") == "test":
+        return header_key
+    if not header_key:
+        raise HTTPException(status_code=401, detail="API Key header (X-API-Key) is missing.")
+    if header_key != expected_key:
+        raise HTTPException(status_code=403, detail="Invalid API Key credentials.")
+    return header_key
 
 # Enable CORS for frontend integration
 app.add_middleware(
@@ -45,17 +74,7 @@ app.add_middleware(
 
 # Thread-safe cache variables with locking to prevent race conditions under concurrent requests
 _cache_lock = threading.RLock()
-DATA_CACHE = None
 ANOMALIES_CACHE = None
-
-def get_cached_data():
-    """
-    Query all telemetry data directly from the SQLite database.
-    """
-    try:
-        return DB_INSTANCE.query_all_telemetry()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load dataset from SQL: {str(e)}")
 
 def get_cached_anomalies():
     global ANOMALIES_CACHE
@@ -109,6 +128,9 @@ class TelemetryIngestRequest(BaseModel):
     day_of_week: str = Field(..., description="Name of day (e.g. Monday)")
     load_type: str = Field(..., description="Light_Load, Medium_Load, or Maximum_Load")
     ambient_temperature_c: float = Field(..., description="Ambient temperature in Celsius")
+    scope1_co2_kg: float = Field(default=None, description="Scope 1 carbon in kg (optional)")
+    scope2_co2_kg: float = Field(default=None, description="Scope 2 carbon in kg (optional)")
+    scope3_co2_kg: float = Field(default=None, description="Scope 3 carbon in kg (optional)")
 
 @app.get("/api/status")
 def get_status():
@@ -122,7 +144,7 @@ def get_status():
         return {
             "status": "healthy",
             "dataset_rows": count,
-            "columns": ["date", "usage_kwh", "reactive_lagging_kvarh", "reactive_leading_kvarh", "co2_tco2", "power_factor_lagging", "power_factor_leading", "nsm", "week_status", "day_of_week", "load_type", "ambient_temperature_c"]
+            "columns": ["date", "usage_kwh", "reactive_lagging_kvarh", "reactive_leading_kvarh", "co2_tco2", "power_factor_lagging", "power_factor_leading", "nsm", "week_status", "day_of_week", "load_type", "ambient_temperature_c", "scope1_co2_kg", "scope2_co2_kg", "scope3_co2_kg"]
         }
     except Exception as e:
         logger.error(f"Status check failed: {e}")
@@ -137,7 +159,7 @@ def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days
         df_filtered = DB_INSTANCE.query_recent_telemetry(days)
         
         # Resample to hourly averages to keep network payload light and charts readable
-        numeric_cols = ['date', 'usage_kwh', 'reactive_lagging_kvarh', 'power_factor_lagging', 'co2_tco2']
+        numeric_cols = ['date', 'usage_kwh', 'reactive_lagging_kvarh', 'power_factor_lagging', 'co2_tco2', 'scope1_co2_kg', 'scope2_co2_kg', 'scope3_co2_kg']
         df_hourly = df_filtered[numeric_cols].set_index('date').resample('h').mean().ffill().bfill().fillna(0.0).reset_index()
         
         timestamps = df_hourly['date'].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
@@ -145,28 +167,35 @@ def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days
         reactive_lagging = [round(float(x), 2) for x in df_hourly['reactive_lagging_kvarh'].tolist()]
         power_factor = [round(float(x), 2) for x in df_hourly['power_factor_lagging'].tolist()]
         co2 = [round(float(x), 4) for x in df_hourly['co2_tco2'].tolist()]
+        scope1 = [round(float(x), 3) for x in df_hourly['scope1_co2_kg'].tolist()]
+        scope2 = [round(float(x), 3) for x in df_hourly['scope2_co2_kg'].tolist()]
+        scope3 = [round(float(x), 3) for x in df_hourly['scope3_co2_kg'].tolist()]
         
         return {
             "timestamps": timestamps,
             "usage_kwh": usage,
             "reactive_lagging_kvarh": reactive_lagging,
             "power_factor_lagging": power_factor,
-            "co2_tco2": co2
+            "co2_tco2": co2,
+            "scope1_co2_kg": scope1,
+            "scope2_co2_kg": scope2,
+            "scope3_co2_kg": scope3
         }
     except Exception as e:
         logger.error(f"Failed to query telemetry logs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/telemetry/ingest")
-def post_telemetry_ingest(req: TelemetryIngestRequest):
+def post_telemetry_ingest(
+    req: TelemetryIngestRequest,
+    api_key: str = Depends(get_api_key)
+):
     """
     Ingests a live telemetry log entry from IoT smart meters into the database.
     """
     try:
         record = req.dict()
         rows_inserted = DB_INSTANCE.insert_telemetry_records([record])
-        if rows_inserted == 0:
-            return {"status": "ignored", "message": "Telemetry record with this timestamp already exists."}
         
         # Invalidate the anomalies cache so new records can trigger new anomaly scans
         global ANOMALIES_CACHE
@@ -179,38 +208,91 @@ def post_telemetry_ingest(req: TelemetryIngestRequest):
         logger.error(f"Failed to ingest telemetry: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to ingest telemetry: {str(e)}")
 
+@app.post("/api/telemetry/upload")
+async def post_telemetry_upload(
+    file: UploadFile = File(...),
+    api_key: str = Depends(get_api_key)
+):
+    """
+    Accepts a CSV file of historical factory telemetry logs, parses it dynamically,
+    re-calculates emissions/weather, clears the current db, and inserts in bulk.
+    This dynamically retrains all caching and ML models on the new dataset coordinates.
+    """
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files (.csv) are supported.")
+        
+    try:
+        content = await file.read()
+        df_uploaded = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        
+        from engine.dataset_loader import preprocess_and_align_dataframe
+        # Perform dynamic header translation, date parsing, weather engineering, and carbon scope auditing
+        df_processed = preprocess_and_align_dataframe(df_uploaded)
+        
+        # Clear database and ingest new records
+        # Sync-write to ensure immediate DB availability for retrained pipelines
+        DB_INSTANCE.clear_all_telemetry()
+        
+        # Convert date to string format for SQLite storage
+        df_to_save = df_processed.copy()
+        df_to_save['date'] = df_to_save['date'].dt.strftime("%Y-%m-%d %H:%M:%S")
+        records = df_to_save.to_dict(orient="records")
+        
+        # Insert synchronously
+        inserted_count = DB_INSTANCE.insert_telemetry_records(records, sync=True)
+        
+        # Invalidate the anomalies cache to trigger fresh ML training on new dataset coords
+        global ANOMALIES_CACHE
+        with _cache_lock:
+            ANOMALIES_CACHE = None
+            
+        logger.info(f"Successfully uploaded and aligned custom telemetry dataset. Ingested {inserted_count} rows.")
+        return {
+            "status": "success",
+            "message": f"Successfully parsed custom dataset. Ingested {inserted_count} rows and retrained ML models.",
+            "rows_inserted": inserted_count
+        }
+    except Exception as e:
+        logger.error(f"Failed to process uploaded CSV: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse CSV: {str(e)}")
+
 @app.get("/api/anomalies")
-def get_anomalies():
+async def get_anomalies():
     """
     Returns anomalies identified by machine learning model and expert rule engine.
+    Runs asynchronously to remain non-blocking.
     """
-    anomalies = get_cached_anomalies()
+    anomalies = await asyncio.to_thread(get_cached_anomalies)
     return anomalies
 
 @app.post("/api/forecast")
-def post_forecast(req: ForecastRequest):
+async def post_forecast(req: ForecastRequest):
     """
-    Executes Prophet, Random Forest, and RNN forecasts, comparing validation RMSE.
+    Executes Prophet, Random Forest, and custom GRU forecasts, comparing validation RMSE.
+    Runs asynchronously via asyncio.to_thread.
     """
     try:
         with DB_INSTANCE.get_connection() as conn:
             # Load first 20,000 rows directly from SQL DB
             df_train = pd.read_sql_query("SELECT * FROM telemetry ORDER BY date ASC LIMIT 20000", conn)
             df_train['date'] = pd.to_datetime(df_train['date'])
-        results = generate_forecast(df_train, forecast_hours=req.hours, backtest_folds=req.backtest_folds)
-
+        
+        # Execute forecasting CPU-bound routine in background thread pool
+        results = await asyncio.to_thread(generate_forecast, df_train, forecast_hours=req.hours, backtest_folds=req.backtest_folds)
         return results
     except Exception as e:
         logger.error(f"Forecasting calculation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Forecasting calculation failed: {str(e)}")
 
 @app.post("/api/schedule")
-def post_schedule(req: ScheduleRequest):
+async def post_schedule(req: ScheduleRequest):
     """
     Recommends optimal run hours to load-balance and minimize cost & carbon.
+    Runs asynchronously via asyncio.to_thread.
     """
     try:
-        recommendations = optimize_shift_schedule(
+        recommendations = await asyncio.to_thread(
+            optimize_shift_schedule,
             task_load_kw=req.task_load_kw,
             task_duration_h=req.task_duration_h,
             solar_capacity_kw=req.solar_capacity_kw,
@@ -228,20 +310,14 @@ def post_schedule(req: ScheduleRequest):
         raise HTTPException(status_code=500, detail=f"Load balancing optimization failed: {str(e)}")
 
 @app.post("/api/simulate")
-def post_simulate(req: SimulateRequest):
+async def post_simulate(req: SimulateRequest):
     """
     Runs solar/battery investment ROI calculations based on industry financial models.
-    
-    Financial model assumptions (based on IRENA 2024 industrial solar benchmarks):
-      - Annual solar yield: 1320 kWh per kW installed capacity (average for mid-latitude commercial)
-      - Base self-consumption rate: 60% (typical without storage), up to 88% with optimal battery sizing
-      - Average industrial grid tariff: $0.13/kWh (US EIA industrial average)
-      - Solar panel installed cost: $850/kW (utility-scale, IRENA benchmark)
-      - Battery pack installed cost: $450/kWh (lithium-ion, BNEF 2024 survey)
-      - Grid CO₂ offset factor: 350g CO₂ per kWh displaced (EPA eGRID US average)
+    Runs asynchronously via asyncio.to_thread.
     """
     try:
-        return run_roi_simulator_logic(req.solar_capacity_kw, req.battery_capacity_kwh)
+        results = await asyncio.to_thread(run_roi_simulator_logic, req.solar_capacity_kw, req.battery_capacity_kwh)
+        return results
     except Exception as e:
         logger.error(f"Investment simulation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Investment simulation failed: {str(e)}")
@@ -309,7 +385,6 @@ def call_gemini_api(api_key: str, user_message: str, context_data: str) -> str:
     Calls Google's Gemini API directly with tool-calling schemas, wrapping the entire turn
     with the local Industrial Privacy Shield to redact sensitive values before transmission.
     """
-    # 1. Establish unique session identifier and run local privacy shield
     session_id = f"sess_{threading.get_ident()}"
     anon_user_message = privacy_shield.anonymize(user_message, session_id)
     
@@ -491,8 +566,7 @@ def call_gemini_api(api_key: str, user_message: str, context_data: str) -> str:
 
 def build_copilot_context() -> str:
     """
-    Aggregates active telemetry statistics, recent anomaly records, and scheduling outputs
-    to serve as high-fidelity context for the Copilot reasoning agent.
+    Aggregates active telemetry statistics, recent anomaly records, and scheduling outputs.
     """
     context = ""
     try:
@@ -542,34 +616,18 @@ def build_copilot_context() -> str:
         
     return context
 
-@app.post("/api/copilot")
-def post_copilot(req: ChatRequest):
+def run_copilot_logic(msg: str) -> str:
     """
-    AI sustainability copilot that routes queries to the actual ML engine outputs.
-    Utilizes an 8-Billion parameter LLM API when GEMINI_API_KEY is present in the environment,
-    and falls back to a highly robust keyword semantic-grounded router otherwise.
+    Encapsulated conversational keyword routing logic.
     """
-    msg = req.message
-    api_key = os.environ.get("GEMINI_API_KEY")
-    
-    # Compile dynamic telemetry/anomaly context
-    context = build_copilot_context()
-    
-    if api_key:
-        logger.info("GEMINI_API_KEY found in environment. Querying 8-Billion Parameter LLM Copilot reasoning agent...")
-        reply = call_gemini_api(api_key, msg, context)
-        if reply:
-            return {"reply": reply}
-        logger.warning("Gemini LLM API failed. Falling back to rule-based routing.")
-        
-    msg = msg.lower()
+    msg_lower = msg.lower()
     
     # 1. Regex Parameter-Extracting for Smelting Schedule queries
-    load_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kw|kilowatt|load)', msg)
-    duration_match = re.search(r'(\d+)\s*(?:hour|hr|h|duration)', msg)
-    solar_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kw\s*solar|solar\s*capacity|solar)', msg)
+    load_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kw|kilowatt|load)', msg_lower)
+    duration_match = re.search(r'(\d+)\s*(?:hour|hr|h|duration)', msg_lower)
+    solar_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kw\s*solar|solar\s*capacity|solar)', msg_lower)
     
-    if "schedule" in msg or "shift" in msg or "optimize" in msg:
+    if "schedule" in msg_lower or "shift" in msg_lower or "optimize" in msg_lower:
         if load_match and duration_match:
             try:
                 load = float(load_match.group(1))
@@ -591,14 +649,14 @@ def post_copilot(req: ChatRequest):
                     f"  • **Carbon Abatement:** **{carbon_save:.2f} kg CO₂** per run\n\n"
                     f"This optimal schedule accounts for time-of-use tariffs, solar yields, and active battery storage pack (50 kWh, 25 kW rate) peak-shaving dynamics."
                 )
-                return {"reply": reply}
+                return reply
             except Exception as e:
                 logger.error(f"Fallback scheduler execution failed: {e}")
                 
     # 2. Regex Parameter-Extracting for Solar/Battery ROI Sandbox queries
-    battery_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kwh\s*battery|battery|storage)', msg)
+    battery_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:kwh\s*battery|battery|storage)', msg_lower)
     
-    if any(kw in msg for kw in ("solar", "roi", "payback", "invest")):
+    if any(kw in msg_lower for kw in ("solar", "roi", "payback", "invest")):
         if solar_match or battery_match:
             try:
                 solar = float(solar_match.group(1)) if solar_match else 150.0
@@ -623,22 +681,17 @@ def post_copilot(req: ChatRequest):
                     f"  • **Carbon Offset (Annual):** **{co2:,.1f} kg CO₂**\n\n"
                     f"Adjust these values interactively in the Digital Twin Sandbox tab for real-time visualization."
                 )
-                return {"reply": reply}
+                return reply
             except Exception as e:
                 logger.error(f"Fallback simulator execution failed: {e}")
     
-    # -------------------------------------------------------------------
-    # Intent: Energy leaks / waste
-    # Grounded in: real anomaly detection results (Isolation Forest output)
-    # -------------------------------------------------------------------
-    if any(kw in msg for kw in ("leak", "wast", "idle", "standby", "phantom")):
+    if any(kw in msg_lower for kw in ("leak", "wast", "idle", "standby", "phantom")):
         try:
             anomalies = get_cached_anomalies()
             leak_anomalies = [a for a in anomalies if a["anomaly_type"] in ("Idle Energy Leak", "Weekend Energy Leak", "Machinery Idling")]
             total_leak_kwh = sum(a["usage_kwh"] for a in leak_anomalies)
             
             if leak_anomalies:
-                # Show top 3 most recent leak events
                 top_leaks = leak_anomalies[:3]
                 leak_details = "\n".join([
                     f"  • **{a['anomaly_type']}** at `{a['timestamp']}` — {a['usage_kwh']} kWh ({a['load_type']} load, {a['day_of_week']})"
@@ -657,14 +710,11 @@ def post_copilot(req: ChatRequest):
                     "Our anomaly classifier did not detect any significant idle energy leaks "
                     "in the current telemetry dataset. All load patterns appear within normal operating bounds."
                 )
+            return reply
         except Exception:
-            reply = "⚠️ Unable to run leak analysis. The anomaly detection engine may still be loading."
+            return "⚠️ Unable to run leak analysis. The anomaly detection engine may still be loading."
     
-    # -------------------------------------------------------------------
-    # Intent: Anomalies / spikes
-    # Grounded in: real anomaly detection results (Isolation Forest output)
-    # -------------------------------------------------------------------
-    elif "anomaly" in msg or "spike" in msg or "alert" in msg:
+    elif "anomaly" in msg_lower or "spike" in msg_lower or "alert" in msg_lower:
         try:
             anomalies = get_cached_anomalies()
             critical = [a for a in anomalies if a["severity"] == "Critical"]
@@ -689,16 +739,13 @@ def post_copilot(req: ChatRequest):
                 reply += f"\n**Top critical spikes:**\n{spike_details}\n"
             if critical:
                 reply += f"\n**Recommendation:** {critical[0]['recommendation']}"
+            return reply
         except Exception:
-            reply = "⚠️ Unable to retrieve anomaly data. The ML engine may still be processing."
+            return "⚠️ Unable to retrieve anomaly data. The ML engine may still be processing."
     
-    # -------------------------------------------------------------------
-    # Intent: Forecasting / future demand
-    # Grounded in: real telemetry statistics from the loaded dataset
-    # -------------------------------------------------------------------
-    elif "forecast" in msg or "future" in msg or "predict" in msg or "demand" in msg:
+    elif "forecast" in msg_lower or "future" in msg_lower or "predict" in msg_lower or "demand" in msg_lower:
         try:
-            recent = DB_INSTANCE.query_recent_telemetry(1)  # Last 24 hours (at 15-min intervals)
+            recent = DB_INSTANCE.query_recent_telemetry(1)
             avg_load = recent['usage_kwh'].mean()
             peak_load = recent['usage_kwh'].max()
             peak_time = recent.loc[recent['usage_kwh'].idxmax(), 'date']
@@ -708,20 +755,16 @@ def post_copilot(req: ChatRequest):
                 f"Based on the last 24 hours of telemetry data:\n"
                 f"  • Average grid load: **{avg_load:.2f} kWh**\n"
                 f"  • Peak demand: **{peak_load:.2f} kWh** at `{peak_time.strftime('%A %H:%M')}`\n\n"
-                f"To generate a full multi-day forecast with Prophet, Random Forest, and Recurrent Neural Network (RNN) models, "
+                f"To generate a full multi-day forecast with Prophet, Random Forest, and Gated Recurrent Unit (GRU) models, "
                 f"navigate to the **Load Forecasting** tab and click \"Run Forecasting Models\". "
                 f"The models will train on your full dataset and project future demand curves with RMSE validation."
             )
+            return reply
         except Exception:
-            reply = "📈 Navigate to the **Load Forecasting** tab to run demand projections with our tri-model pipeline."
+            return "📈 Navigate to the **Load Forecasting** tab to run demand projections with our tri-model pipeline."
     
-    # -------------------------------------------------------------------
-    # Intent: Solar / ROI / payback
-    # Grounded in: live calculation from the /api/simulate endpoint model
-    # -------------------------------------------------------------------
-    elif "solar" in msg or "roi" in msg or "payback" in msg or "invest" in msg:
+    elif "solar" in msg_lower or "roi" in msg_lower or "payback" in msg_lower or "invest" in msg_lower:
         try:
-            # Run the actual simulation model with default parameters
             solar_kw = 150.0
             battery_kwh = 50.0
             annual_gen = solar_kw * 1320.0
@@ -730,7 +773,7 @@ def post_copilot(req: ChatRequest):
             annual_savings = annual_gen * self_consumption * 0.13
             total_capex = (solar_kw * 850.0) + (battery_kwh * 450.0)
             payback = total_capex / annual_savings if annual_savings > 0 else 0
-
+            
             reply = (
                 f"☀️ **Investment Model Results (150 kW Solar + 50 kWh Battery):**\n\n"
                 f"  • Annual solar generation: **{annual_gen:,.0f} kWh**\n"
@@ -741,14 +784,11 @@ def post_copilot(req: ChatRequest):
                 f"Use the **Digital Twin Sandbox** tab to adjust solar/battery sizes with interactive sliders "
                 f"and see how the ROI changes in real-time."
             )
+            return reply
         except Exception:
-            reply = "☀️ Use the **Digital Twin Sandbox** tab to model solar and battery investment scenarios."
+            return "☀️ Use the **Digital Twin Sandbox** tab to model solar and battery investment scenarios."
     
-    # -------------------------------------------------------------------
-    # Intent: Schedule / shift optimization
-    # Grounded in: real scheduler engine output
-    # -------------------------------------------------------------------
-    elif "schedule" in msg or "shift" in msg or "optimize" in msg:
+    elif "schedule" in msg_lower or "shift" in msg_lower or "optimize" in msg_lower:
         try:
             result = optimize_shift_schedule(
                 task_load_kw=100.0,
@@ -769,12 +809,10 @@ def post_copilot(req: ChatRequest):
                 f"  • **Carbon savings:** {carbon_save:.2f} kg CO₂ per run\n\n"
                 f"Adjust parameters on the **Shift Scheduler** tab for custom process configurations."
             )
+            return reply
         except Exception:
-            reply = "⚙️ Navigate to the **Shift Scheduler** tab to calculate optimal run windows for your processes."
-    
-    # -------------------------------------------------------------------
-    # Default: Help message
-    # -------------------------------------------------------------------
+            return "⚙️ Navigate to the **Shift Scheduler** tab to calculate optimal run windows for your processes."
+            
     else:
         reply = (
             "👋 **Hello! I am your PRAGATI AI Sustainability Copilot.**\n\n"
@@ -785,7 +823,29 @@ def post_copilot(req: ChatRequest):
             "- *\"What is the ROI of installing a solar panel array?\"*\n"
             "- *\"How do we optimize our smelting shift schedule?\"*"
         )
+        return reply
+
+@app.post("/api/copilot")
+async def post_copilot(req: ChatRequest):
+    """
+    AI sustainability copilot that routes queries to the actual ML engine outputs.
+    Runs asynchronously via asyncio.to_thread.
+    """
+    msg = req.message
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    # Compile dynamic telemetry/anomaly context
+    context = await asyncio.to_thread(build_copilot_context)
+    
+    if api_key:
+        logger.info("GEMINI_API_KEY found in environment. Querying 8-Billion Parameter LLM Copilot reasoning agent...")
+        reply = await asyncio.to_thread(call_gemini_api, api_key, msg, context)
+        if reply:
+            return {"reply": reply}
+        logger.warning("Gemini LLM API failed. Falling back to rule-based routing.")
         
+    # Execute fallback logic in thread pool
+    reply = await asyncio.to_thread(run_copilot_logic, msg)
     return {"reply": reply}
 
 # Mount the static frontend directory

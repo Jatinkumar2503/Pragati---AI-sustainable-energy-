@@ -47,6 +47,14 @@
                     <span class="pulse-dot green" id="status-dot"></span>
                     <span id="status-text">Backend Connected</span>
                 </div>
+                <div class="role-selector-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px;">
+                    <span style="font-size: 0.8rem; color: #94A3B8; font-weight: 500;">User Role:</span>
+                    <select id="user-role-select" class="premium-select" style="padding: 2px 6px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #E2E8F0; cursor: pointer; width: auto; font-family: 'Inter';">
+                        <option value="Operator" selected>Operator 🔧</option>
+                        <option value="Manager">Manager 📈</option>
+                        <option value="Admin">Admin 👑</option>
+                    </select>
+                </div>
                 <div class="version">v1.0.0 — Hackathon Edition</div>
             </div>
         </aside>
@@ -78,10 +86,15 @@
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span class="kpi-title">Carbon Intensity</span>
+                            <span class="kpi-title">Carbon Audit (Scope 1/2/3)</span>
                             <span class="kpi-icon">🌿</span>
                         </div>
                         <div class="kpi-value" id="kpi-carbon">— kg CO₂</div>
+                        <div class="kpi-carbon-breakdown">
+                            <div class="breakdown-item">S1: <span id="kpi-scope1">— kg</span></div>
+                            <div class="breakdown-item">S2: <span id="kpi-scope2">— kg</span></div>
+                            <div class="breakdown-item">S3: <span id="kpi-scope3">— kg</span></div>
+                        </div>
                         <div class="kpi-footer" id="kpi-carbon-rate">Current: — g/kWh</div>
                     </div>
                     <div class="kpi-card">
@@ -116,6 +129,21 @@
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CSV Telemetry Dataset Upload -->
+                <div class="card" id="upload-dataset-card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2>Import Custom Telemetry Dataset (CSV)</h2>
+                        <span class="badge green-bg" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Retraining Enabled</span>
+                    </div>
+                    <div class="uploader-container" id="csv-dropzone" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 24px; text-align: center; background: rgba(255, 255, 255, 0.01); transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 2.5rem;">📁</span>
+                        <p style="font-weight: 500; font-size: 0.95rem; margin: 0; color: #E2E8F0;">Drag & drop your factory telemetry CSV here, or click to upload</p>
+                        <p style="font-size: 0.8rem; margin: 0; color: #64748B;">Supported columns: timestamp/date, usage/kwh, power_factor (auto-aligned & carbon scopes computed)</p>
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                        <div id="upload-status" style="margin-top: 10px; font-weight: 500; font-size: 0.9rem; display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -248,6 +276,14 @@
             <!-- TAB 4: SCHEDULER -->
             <div class="tab-panel" id="tab-scheduler">
                 <div class="scheduler-layout">
+                    <!-- Operator Role Lock Notification -->
+                    <div class="role-lock-warning" id="scheduler-role-lock" style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; box-sizing: border-box; width: 100%;">
+                        <span style="font-size: 1.25rem;">🔒</span>
+                        <div>
+                            <strong style="color: #F87171; font-size: 0.9rem;">Operational Controls Locked</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Your current role (Operator) has read-only access. Switch role to Manager or Admin to modify inputs.</p>
+                        </div>
+                    </div>
                     <div class="scheduler-settings card">
                         <h3>Shift Optimization Input</h3>
                         <div class="input-group">
@@ -339,6 +375,14 @@
             <!-- TAB 5: DIGITAL TWIN -->
             <div class="tab-panel" id="tab-digital-twin">
                 <div class="twin-layout">
+                    <!-- Operator Role Lock Notification -->
+                    <div class="role-lock-warning" id="twin-role-lock" style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; box-sizing: border-box; width: 100%;">
+                        <span style="font-size: 1.25rem;">🔒</span>
+                        <div>
+                            <strong style="color: #F87171; font-size: 0.9rem;">Sandbox Controls Locked</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Your current role (Operator) has read-only access. Switch role to Manager or Admin to modify inputs.</p>
+                        </div>
+                    </div>
                     <div class="twin-settings card">
                         <h3>Sandbox Parameters</h3>
                         <div class="input-group">

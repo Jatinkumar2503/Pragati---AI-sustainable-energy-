@@ -7,6 +7,10 @@ let forecastChart = null;
 let scheduleChart = null;
 let backtestChart = null;
 
+// Global state variables
+let currentUserRole = "Operator";
+const API_KEY = "pragati_sec_2026";
+
 // Utility: Sanitize user input to prevent XSS injection
 function sanitizeHTML(str) {
     const temp = document.createElement("div");
@@ -67,7 +71,161 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("chat-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendCopilotMessage();
     });
+
+    // Role Switcher listener
+    const roleSelect = document.getElementById("user-role-select");
+    if (roleSelect) {
+        roleSelect.addEventListener("change", (e) => {
+            applyRolePermissions(e.target.value);
+        });
+        // Initial application of default role ("Operator")
+        applyRolePermissions(roleSelect.value);
+    }
+    
+    initCSVUploader();
 });
+
+// Role Permissions Control
+function applyRolePermissions(role) {
+    currentUserRole = role;
+    const isLocked = role === "Operator";
+    
+    // Toggle Scheduler Lock Warning
+    const schedLock = document.getElementById("scheduler-role-lock");
+    if (schedLock) {
+        schedLock.style.display = isLocked ? "flex" : "none";
+    }
+    
+    // Toggle Twin Lock Warning
+    const twinLock = document.getElementById("twin-role-lock");
+    if (twinLock) {
+        twinLock.style.display = isLocked ? "flex" : "none";
+    }
+    
+    // Enable/disable inputs on Scheduler Tab
+    const schedulerInputs = [
+        "sched-load", "sched-duration", "sched-solar", "sched-weight",
+        "sched-task-pf", "sched-battery-cap", "sched-battery-rate",
+        "sched-battery-eff", "sched-solar-yield-mult", "sched-pf-penalty",
+        "optimize-schedule-btn"
+    ];
+    schedulerInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isLocked;
+    });
+    
+    // Enable/disable inputs on Digital Twin Tab
+    const twinInputs = ["twin-solar", "twin-battery"];
+    twinInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isLocked;
+    });
+    
+    // Style uploader card based on permissions
+    const dropzone = document.getElementById("csv-dropzone");
+    if (dropzone) {
+        if (isLocked) {
+            dropzone.style.opacity = "0.5";
+            dropzone.style.cursor = "not-allowed";
+        } else {
+            dropzone.style.opacity = "1";
+            dropzone.style.cursor = "pointer";
+        }
+    }
+}
+
+// Drag & Drop Telemetry CSV Ingestion
+function initCSVUploader() {
+    const dropzone = document.getElementById("csv-dropzone");
+    const fileInput = document.getElementById("csv-file-input");
+    const statusEl = document.getElementById("upload-status");
+    
+    if (!dropzone || !fileInput) return;
+    
+    dropzone.addEventListener("click", () => {
+        if (currentUserRole === "Operator") {
+            alert("🔒 Action restricted. Please switch to Manager or Admin role in the sidebar to upload datasets.");
+            return;
+        }
+        fileInput.click();
+    });
+    
+    dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "#10B981";
+        dropzone.style.background = "rgba(16, 185, 129, 0.05)";
+    });
+    
+    dropzone.addEventListener("dragleave", () => {
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        dropzone.style.background = "rgba(255, 255, 255, 0.01)";
+    });
+    
+    dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        dropzone.style.background = "rgba(255, 255, 255, 0.01)";
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleCSVUpload(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener("change", (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleCSVUpload(files[0]);
+        }
+    });
+}
+
+async function handleCSVUpload(file) {
+    const statusEl = document.getElementById("upload-status");
+    if (!statusEl) return;
+    
+    if (!file.name.endsWith('.csv')) {
+        statusEl.style.display = "block";
+        statusEl.style.color = "#EF4444";
+        statusEl.innerText = "❌ Only CSV files (.csv) are supported.";
+        return;
+    }
+    
+    statusEl.style.display = "block";
+    statusEl.style.color = "#06B6D4";
+    statusEl.innerText = "⏳ Retraining machine learning forecasting models on custom data coordinates...";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+        const res = await fetch(`${API_BASE}/telemetry/upload`, {
+            method: "POST",
+            headers: {
+                "X-API-Key": API_KEY
+            },
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            statusEl.style.color = "#10B981";
+            statusEl.innerText = `✅ Ingestion Complete: Retrained on ${data.rows_inserted} records!`;
+            // Refresh telemetry dashboard data
+            loadTelemetry(7);
+            loadAnomalies();
+        } else {
+            statusEl.style.color = "#EF4444";
+            statusEl.innerText = `❌ Ingestion Failed: ${data.detail || "Failed to process custom dataset columns."}`;
+        }
+    } catch (e) {
+        statusEl.style.color = "#EF4444";
+        statusEl.innerText = "❌ Network connection error. Backend is unreachable.";
+    }
+}
 
 // Sidebar Navigation Control
 function initTabNavigation() {

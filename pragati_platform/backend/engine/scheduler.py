@@ -22,7 +22,7 @@ def get_tariff(hour):
     """
     if 10 <= hour <= 15:
         return 0.18  # On-Peak: highest demand, highest tariff
-    elif 9 <= hour <= 9 or 16 <= hour <= 21:
+    elif hour == 9 or 16 <= hour <= 21:
         return 0.12  # Mid-Peak: shoulder hours
     else:
         return 0.06  # Off-Peak: overnight
@@ -114,13 +114,15 @@ def solve_milp_schedule(
     battery_capacity_kwh=50.0,
     battery_rate_kw=25.0,
     battery_efficiency=0.95,
-    solar_yield_coeff=0.12
+    solar_yield_coeff=0.12,
+    task_power_factor=0.80,
+    pf_penalty_mult=2.0
 ):
     """
     Formulates and solves the scheduling task shift as a Mixed-Integer Linear Program (MILP).
     Integrates industrial battery charging/discharging logic dynamically.
     
-    Variables vector z (192 variables):
+    Variables vector z (216 variables):
       - 0..23: s_t (binary start)
       - 24..47: x_t (task active state)
       - 48..71: g_t (grid draw in kW)
@@ -129,15 +131,18 @@ def solve_milp_schedule(
       - 120..143: c_t (battery charging power in kW)
       - 144..167: d_t (battery discharging power in kW)
       - 168..191: s_ch_t (solar power routed to battery charging in kW)
+      - 192..215: s_pf_t (Power Factor penalty slack variables, representing active draw deficit)
     """
-    n_vars = 192
+    n_vars = 216
     
-    # 1. Objective: Minimize total cost + weighted carbon (in kg)
+    # 1. Objective: Minimize total cost + weighted carbon (in kg) + linearized PF penalty cost
     c = np.zeros(n_vars)
     for t in range(24):
         tariff = get_tariff(t)
         carbon_int = get_carbon_intensity(t)
         c[48 + t] = tariff + environmental_weight * (carbon_int / 1000.0)
+        # Power Factor penalty linear approximation coefficient
+        c[192 + t] = tariff * pf_penalty_mult * 0.35
         
     # 2. Integrality: s_t is binary (integer)
     integrality = np.zeros(n_vars)
@@ -195,6 +200,10 @@ def solve_milp_schedule(
         lb[168 + t] = 0.0
         ub[168 + t] = solar_t
         
+    # Slack variables for PF penalty
+    lb[192:216] = 0.0
+    ub[192:216] = np.inf
+    
     bounds = Bounds(lb, ub)
     
     # 4. Constraints Matrices
@@ -261,6 +270,20 @@ def solve_milp_schedule(
         lb_c.append(0.0)
         ub_c.append(0.0)
         
+    # Constraint 7: Linearized Power Factor Constraint
+    # To maintain PF >= 0.90, grid active draw g_t must satisfy: g_t >= 2.064 * q_task * x_t.
+    # We write: g_t - 2.064 * q_task * x_t + s_pf_t >= 0
+    # where s_pf_t is the active draw deficit slack variable.
+    q_task = task_load_kw * np.sqrt(1.0 - task_power_factor**2) / task_power_factor if task_power_factor < 1.0 else 0.0
+    for t in range(24):
+        row = np.zeros(n_vars)
+        row[24 + t] = -2.064 * q_task  # x_t
+        row[48 + t] = 1.0              # g_t
+        row[192 + t] = 1.0             # s_pf_t
+        A.append(row)
+        lb_c.append(0.0)
+        ub_c.append(np.inf)
+        
     A = np.array(A)
     constraints = LinearConstraint(A, lb_c, ub_c)
     
@@ -292,7 +315,9 @@ def calculate_schedule_metrics_milp(
         battery_capacity_kwh=battery_capacity_kwh,
         battery_rate_kw=battery_rate_kw,
         battery_efficiency=battery_efficiency,
-        solar_yield_coeff=solar_yield_coeff
+        solar_yield_coeff=solar_yield_coeff,
+        task_power_factor=task_power_factor,
+        pf_penalty_mult=pf_penalty_mult
     )
     if not res.success:
         raise ValueError(f"MILP solver failed with status: {res.status}")
@@ -355,12 +380,25 @@ def optimize_shift_schedule(
     pf_penalty_mult=2.0
 ):
     """
-    Calculates the mathematically optimal starting hours for energy-intensive tasks
-    using Mixed-Integer Linear Programming (MILP), incorporating battery and PF parameters.
+    Calculates the mathematically optimal starting hours for energy-intensive tasks.
+    Solves via linear-relaxation MILP, then validates and corrects results against 
+    the exact non-linear global grid search to resolve Power Factor non-linearities.
     """
     logger.info("Executing Mixed-Integer Linear Programming (MILP) shift scheduler...")
+    
+    # Run exact global grid-search baseline (safeguard validation)
+    exact_grid_results = optimize_shift_schedule_fallback(
+        task_load_kw=task_load_kw,
+        task_duration_h=task_duration_h,
+        solar_capacity_kw=solar_capacity_kw,
+        environmental_weight=environmental_weight,
+        solar_yield_coeff=solar_yield_coeff,
+        task_power_factor=task_power_factor,
+        pf_penalty_mult=pf_penalty_mult
+    )
+    
     try:
-        # 1. Run MILP solver
+        # Run MILP solver with our linearized constraints
         res_opt = solve_milp_schedule(
             task_load_kw,
             task_duration_h,
@@ -369,22 +407,21 @@ def optimize_shift_schedule(
             battery_capacity_kwh=battery_capacity_kwh,
             battery_rate_kw=battery_rate_kw,
             battery_efficiency=battery_efficiency,
-            solar_yield_coeff=solar_yield_coeff
+            solar_yield_coeff=solar_yield_coeff,
+            task_power_factor=task_power_factor,
+            pf_penalty_mult=pf_penalty_mult
         )
         
         if not res_opt.success:
-            logger.warning(f"MILP solver failed (status={res_opt.status}). Falling back to grid search.")
-            return optimize_shift_schedule_fallback(
-                task_load_kw, task_duration_h, solar_capacity_kw, environmental_weight,
-                solar_yield_coeff=solar_yield_coeff, task_power_factor=task_power_factor, pf_penalty_mult=pf_penalty_mult
-            )
+            logger.warning(f"MILP solver failed (status={res_opt.status}). Falling back directly to grid search.")
+            return exact_grid_results
             
         s_vals = res_opt.x[0:24]
-        best_hour = int(np.argmax(s_vals))
+        milp_hour = int(np.argmax(s_vals))
         
-        # 2. Extract metrics for the optimal start
-        best_cost, best_carbon, best_details = calculate_schedule_metrics_milp(
-            best_hour, task_load_kw, task_duration_h, solar_capacity_kw, environmental_weight,
+        # Extract metrics for the MILP optimal start
+        milp_cost, milp_carbon, milp_details = calculate_schedule_metrics_milp(
+            milp_hour, task_load_kw, task_duration_h, solar_capacity_kw, environmental_weight,
             battery_capacity_kwh=battery_capacity_kwh,
             battery_rate_kw=battery_rate_kw,
             battery_efficiency=battery_efficiency,
@@ -393,48 +430,60 @@ def optimize_shift_schedule(
             pf_penalty_mult=pf_penalty_mult
         )
         
-        # 3. Extract metrics for baseline (9 AM start)
-        base_hour = 9
-        base_cost, base_carbon, base_details = calculate_schedule_metrics_milp(
-            base_hour, task_load_kw, task_duration_h, solar_capacity_kw, environmental_weight,
-            battery_capacity_kwh=battery_capacity_kwh,
-            battery_rate_kw=battery_rate_kw,
-            battery_efficiency=battery_efficiency,
-            solar_yield_coeff=solar_yield_coeff,
-            task_power_factor=task_power_factor,
-            pf_penalty_mult=pf_penalty_mult
-        )
+        # Compare MILP vs Grid Search validation scores
+        milp_score = milp_cost + (milp_carbon / 1000.0) * environmental_weight
+        grid_hour = exact_grid_results["best_start_hour"]
+        grid_cost = exact_grid_results["best_cost"]
+        grid_carbon_kg = exact_grid_results["best_carbon_kg"]
+        grid_score = grid_cost + grid_carbon_kg * environmental_weight
+        
+        # Correction logic
+        if grid_score < milp_score - 0.01:
+            logger.info(f"Non-linear Power Factor validation triggered correction: Shifted MILP hour {milp_hour} -> Grid-search hour {grid_hour}.")
+            best_hour = grid_hour
+            best_cost = grid_cost
+            best_carbon = grid_carbon_kg * 1000.0
+            best_details = exact_grid_results["best_hourly_details"]
+            correction_applied = True
+        else:
+            best_hour = milp_hour
+            best_cost = milp_cost
+            best_carbon = milp_carbon
+            best_details = milp_details
+            correction_applied = False
+            
+        base_hour = exact_grid_results["baseline"]["start_hour"]
+        base_cost = exact_grid_results["baseline"]["cost"]
+        base_carbon = exact_grid_results["baseline"]["carbon_kg"] * 1000.0
         
         cost_savings = base_cost - best_cost
         carbon_savings = base_carbon - best_carbon
-        
-        logger.info(f"MILP optimization successful. Optimal Start Hour: {best_hour:02d}:00")
         
         return {
             "best_start_hour": int(best_hour),
             "best_cost": float(round(best_cost, 2)),
             "best_carbon_kg": float(round(best_carbon / 1000.0, 2)),
             "best_hourly_details": best_details,
-            "baseline": {
-                "start_hour": int(base_hour),
-                "cost": float(round(base_cost, 2)),
-                "carbon_kg": float(round(base_carbon / 1000.0, 2)),
-                "details": base_details
-            },
+            "baseline": exact_grid_results["baseline"],
             "savings": {
                 "cost_dollars": float(round(max(0.0, cost_savings), 2)),
                 "carbon_kg": float(round(max(0.0, carbon_savings / 1000.0), 2)),
                 "cost_percent": float(round(max(0.0, (cost_savings / base_cost) * 100.0), 2)) if base_cost > 0 else 0.0,
                 "carbon_percent": float(round(max(0.0, (carbon_savings / base_carbon) * 100.0), 2)) if base_carbon > 0 else 0.0
+            },
+            "validation": {
+                "milp_hour": milp_hour,
+                "milp_score": float(round(milp_score, 4)),
+                "grid_hour": grid_hour,
+                "grid_score": float(round(grid_score, 4)),
+                "milp_validated_against_grid_search": True,
+                "correction_applied": correction_applied
             }
         }
         
     except Exception as e:
         logger.error(f"Error executing MILP scheduler: {e}. Falling back to grid search.")
-        return optimize_shift_schedule_fallback(
-            task_load_kw, task_duration_h, solar_capacity_kw, environmental_weight,
-            solar_yield_coeff=solar_yield_coeff, task_power_factor=task_power_factor, pf_penalty_mult=pf_penalty_mult
-        )
+        return exact_grid_results
 
 def optimize_shift_schedule_fallback(
     task_load_kw=100.0,
@@ -446,7 +495,7 @@ def optimize_shift_schedule_fallback(
     pf_penalty_mult=2.0
 ):
     """
-    Fallback grid-search optimizer when the MILP solver fails.
+    Fallback grid-search optimizer when the MILP solver fails, evaluating exact non-linear costs.
     """
     best_hour = 9
     best_score = float('inf')
@@ -499,7 +548,8 @@ def optimize_shift_schedule_fallback(
     }
 
 if __name__ == "__main__":
-    # Test execution
     res = optimize_shift_schedule(task_load_kw=200.0, task_duration_h=6, solar_capacity_kw=150.0)
     print(f"Optimal Start Hour: {res['best_start_hour']}:00")
     print("Savings:", res["savings"])
+    if "validation" in res:
+        print("Validation:", res["validation"])

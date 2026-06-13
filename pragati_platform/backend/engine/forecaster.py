@@ -236,17 +236,33 @@ def adf_test(series, max_lag=4):
         return 0.0, 1.0
 
 
-class NumpyRNN:
+def sigmoid(x):
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -50.0, 50.0)))
+
+
+class NumpyGRU:
+    """
+    A custom Gated Recurrent Unit (GRU) neural network implemented from scratch in NumPy.
+    Uses update and reset gates to manage gradient flow and model long-term sequence dependencies.
+    """
     def __init__(self, input_dim=7, hidden_dim=16, output_dim=1, lr=0.005):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
         self.lr = lr
         
-        # Xavier initialization
         np.random.seed(42)
-        self.Wx = np.random.randn(hidden_dim, input_dim) * np.sqrt(2.0 / (hidden_dim + input_dim))
-        self.Wh = np.random.randn(hidden_dim, hidden_dim) * np.sqrt(2.0 / (hidden_dim + hidden_dim))
+        # Initialize gate weights (Xavier method)
+        self.Wz = np.random.randn(hidden_dim, input_dim) * np.sqrt(2.0 / (hidden_dim + input_dim))
+        self.Uz = np.random.randn(hidden_dim, hidden_dim) * np.sqrt(2.0 / (hidden_dim + hidden_dim))
+        self.bz = np.zeros((hidden_dim, 1))
+        
+        self.Wr = np.random.randn(hidden_dim, input_dim) * np.sqrt(2.0 / (hidden_dim + input_dim))
+        self.Ur = np.random.randn(hidden_dim, hidden_dim) * np.sqrt(2.0 / (hidden_dim + hidden_dim))
+        self.br = np.zeros((hidden_dim, 1))
+        
+        self.Wh = np.random.randn(hidden_dim, input_dim) * np.sqrt(2.0 / (hidden_dim + input_dim))
+        self.Uh = np.random.randn(hidden_dim, hidden_dim) * np.sqrt(2.0 / (hidden_dim + hidden_dim))
         self.bh = np.zeros((hidden_dim, 1))
         
         self.Wy = np.random.randn(output_dim, hidden_dim) * np.sqrt(2.0 / (output_dim + hidden_dim))
@@ -258,11 +274,22 @@ class NumpyRNN:
         
         self.xs = {}
         self.hs = {-1: h}
+        self.zs = {}
+        self.rs = {}
+        self.h_tildes = {}
         
         for t in range(seq_len):
             x = X_seq[t].reshape(-1, 1)
             self.xs[t] = x
-            h = np.tanh(np.dot(self.Wx, x) + np.dot(self.Wh, h) + self.bh)
+            
+            z = sigmoid(np.dot(self.Wz, x) + np.dot(self.Uz, h) + self.bz)
+            r = sigmoid(np.dot(self.Wr, x) + np.dot(self.Ur, h) + self.br)
+            h_tilde = np.tanh(np.dot(self.Wh, x) + np.dot(self.Uh, r * h) + self.bh)
+            h = (1 - z) * h + z * h_tilde
+            
+            self.zs[t] = z
+            self.rs[t] = r
+            self.h_tildes[t] = h_tilde
             self.hs[t] = h
             
         y_pred = np.dot(self.Wy, h) + self.by
@@ -272,34 +299,75 @@ class NumpyRNN:
         dWy = np.dot(dy, self.hs[len(self.hs)-2].T)
         dby = dy
         
-        dWx = np.zeros_like(self.Wx)
+        dWz = np.zeros_like(self.Wz)
+        dUz = np.zeros_like(self.Uz)
+        dbz = np.zeros_like(self.bz)
+        
+        dWr = np.zeros_like(self.Wr)
+        dUr = np.zeros_like(self.Ur)
+        dbr = np.zeros_like(self.br)
+        
         dWh = np.zeros_like(self.Wh)
+        dUh = np.zeros_like(self.Uh)
         dbh = np.zeros_like(self.bh)
         
         dh = np.dot(self.Wy.T, dy)
         seq_len = len(self.xs)
         
         for t in reversed(range(seq_len)):
-            dtanh = (1.0 - self.hs[t]**2) * dh
-            dWx += np.dot(dtanh, self.xs[t].T)
-            dWh += np.dot(dtanh, self.hs[t-1].T)
-            dbh += dtanh
-            dh = np.dot(self.Wh.T, dtanh)
+            h_prev = self.hs[t-1]
+            z = self.zs[t]
+            r = self.rs[t]
+            h_tilde = self.h_tildes[t]
+            x = self.xs[t]
             
-        return dWx, dWh, dbh, dWy, dby
+            dh_tilde = dh * z
+            dz = dh * (h_tilde - h_prev)
+            
+            dtanh = dh_tilde * (1.0 - h_tilde**2)
+            dWh += np.dot(dtanh, x.T)
+            dUh += np.dot(dtanh, (r * h_prev).T)
+            dbh += dtanh
+            
+            dr_hprev = np.dot(self.Uh.T, dtanh)
+            dr = dr_hprev * h_prev
+            
+            dsig_z = dz * z * (1.0 - z)
+            dWz += np.dot(dsig_z, x.T)
+            dUz += np.dot(dsig_z, h_prev.T)
+            dbz += dsig_z
+            
+            dsig_r = dr * r * (1.0 - r)
+            dWr += np.dot(dsig_r, x.T)
+            dUr += np.dot(dsig_r, h_prev.T)
+            dbr += dsig_r
+            
+            dh = dh * (1.0 - z) + dr_hprev * r + np.dot(self.Uz.T, dsig_z) + np.dot(self.Ur.T, dsig_r)
+            
+        return dWz, dUz, dbz, dWr, dUr, dbr, dWh, dUh, dbh, dWy, dby
         
-    def fit(self, X_train_seq, y_train, epochs=4, batch_size=32):
+    def fit(self, X_train_seq, y_train, epochs=10, batch_size=32):
         n = len(X_train_seq)
         for epoch in range(epochs):
             indices = np.arange(n)
             np.random.shuffle(indices)
             
+            epoch_loss = 0.0
             for idx in range(0, n, batch_size):
                 batch_indices = indices[idx:idx+batch_size]
                 
-                gWx = np.zeros_like(self.Wx)
+                gWz = np.zeros_like(self.Wz)
+                gUz = np.zeros_like(self.Uz)
+                gbz = np.zeros_like(self.bz)
+                
+                gWr = np.zeros_like(self.Wr)
+                gUr = np.zeros_like(self.Ur)
+                gbr = np.zeros_like(self.br)
+                
                 gWh = np.zeros_like(self.Wh)
+                gUh = np.zeros_like(self.Uh)
                 gbh = np.zeros_like(self.bh)
+                
                 gWy = np.zeros_like(self.Wy)
                 gby = np.zeros_like(self.by)
                 
@@ -307,22 +375,41 @@ class NumpyRNN:
                     pred = self.forward(X_train_seq[i])
                     target = y_train[i].reshape(-1, 1)
                     dy = pred - target
+                    epoch_loss += np.sum(dy**2)
                     
-                    dWx, dWh, dbh, dWy, dby = self.backward(dy)
-                    gWx += dWx
+                    dWz, dUz, dbz, dWr, dUr, dbr, dWh, dUh, dbh, dWy, dby = self.backward(dy)
+                    gWz += dWz
+                    gUz += dUz
+                    gbz += dbz
+                    gWr += dWr
+                    gUr += dUr
+                    gbr += dbr
                     gWh += dWh
+                    gUh += dUh
                     gbh += dbh
                     gWy += dWy
                     gby += dby
                     
-                for g in [gWx, gWh, gbh, gWy, gby]:
+                for g in [gWz, gUz, gbz, gWr, gUr, gbr, gWh, gUh, gbh, gWy, gby]:
                     np.clip(g, -1.0, 1.0, out=g)
                     
-                self.Wx -= self.lr * gWx / len(batch_indices)
+                self.Wz -= self.lr * gWz / len(batch_indices)
+                self.Uz -= self.lr * gUz / len(batch_indices)
+                self.bz -= self.lr * gbz / len(batch_indices)
+                
+                self.Wr -= self.lr * gWr / len(batch_indices)
+                self.Ur -= self.lr * gUr / len(batch_indices)
+                self.br -= self.lr * gbr / len(batch_indices)
+                
                 self.Wh -= self.lr * gWh / len(batch_indices)
+                self.Uh -= self.lr * gUh / len(batch_indices)
                 self.bh -= self.lr * gbh / len(batch_indices)
+                
                 self.Wy -= self.lr * gWy / len(batch_indices)
                 self.by -= self.lr * gby / len(batch_indices)
+            
+            logger.info(f"NumPy GRU Epoch {epoch+1}/{epochs} Completed. Average Loss: {epoch_loss/n:.4f}")
+
 
 
 def prepare_rnn_sequences(X, y, seq_len=24):
@@ -432,8 +519,8 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         # Build windowed sequences for sequential learning
         X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train, seq_len=24)
         
-        rnn = NumpyRNN(input_dim=7, hidden_dim=16, output_dim=1)
-        rnn.fit(X_train_seq, y_train_seq, epochs=4, batch_size=32)
+        rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1)
+        rnn.fit(X_train_seq, y_train_seq, epochs=10, batch_size=32)
         
         rnn_forecast = []
         history_rnn = df_hourly.iloc[:split_idx]['usage_kwh'].tolist()
@@ -619,9 +706,9 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     # Build windowed sequences for sequential learning
     X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train, seq_len=24)
     
-    # Train NumpyRNN
-    rnn = NumpyRNN(input_dim=7, hidden_dim=16, output_dim=1)
-    rnn.fit(X_train_seq, y_train_seq, epochs=4, batch_size=32)
+    # Train NumpyGRU
+    rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1)
+    rnn.fit(X_train_seq, y_train_seq, epochs=10, batch_size=32)
     
     # Recursive autoregressive forecast for validation subset with RNN
     rnn_forecast_list = []
