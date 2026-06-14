@@ -377,3 +377,4 @@
 [2026-06-14T16:31:47] style: configure CSS media query layout dimensions
 [2026-06-14T16:35:43] fix: solve flex layout wraps overlaps on narrow screens
 [2026-06-14T16:51:34] fix: adjust standard text line-heights settings
+[2026-06-14T17:38:49] docs: write layout style conventions in comments
