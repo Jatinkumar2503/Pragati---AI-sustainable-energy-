@@ -379,3 +379,4 @@
 [2026-06-14T16:51:34] fix: adjust standard text line-heights settings
 [2026-06-14T17:38:49] docs: write layout style conventions in comments
 [2026-06-15T10:10:41] feat: create frontend/app.js client controller script
+[2026-06-15T10:40:46] feat: define base backend API URL prefix constants
