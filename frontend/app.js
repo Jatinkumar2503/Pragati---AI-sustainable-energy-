@@ -1,0 +1,1037 @@
+// PRAGATI AI Web Dashboard Controller
+const API_BASE = "http://127.0.0.1:8000/api";
+
+// State variables to hold Chart instances
+let telemetryChart = null;
+let forecastChart = null;
+let scheduleChart = null;
+let backtestChart = null;
+let thdChart = null;
+let twinCashFlowChart = null;
+
+// Global state variables
+let currentUserRole = "Operator";
+const API_KEY = "pragati_sec_2026";
+
+// Utility: Sanitize user input to prevent XSS injection
+function sanitizeHTML(str) {
+    const temp = document.createElement("div");
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+// Application Initialization
+document.addEventListener("DOMContentLoaded", () => {
+    // Set dynamic date badge
+    const dateBadge = document.getElementById("date-badge");
+    if (dateBadge) {
+        const now = new Date();
+        dateBadge.innerText = `📅 ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    }
+    
+    initTabNavigation();
+    checkBackendStatus();
+    loadTelemetry(7);
+    loadAnomalies();
+    
+    // Bind Event Listeners
+    document.getElementById("telemetry-days-select").addEventListener("change", (e) => {
+        loadTelemetry(parseInt(e.target.value));
+    });
+    
+    document.getElementById("run-forecast-btn").addEventListener("click", () => {
+        runForecasting();
+    });
+    
+    document.getElementById("forecast-hours").addEventListener("input", (e) => {
+        document.getElementById("forecast-hours-val").innerText = e.target.value;
+    });
+    
+    document.getElementById("optimize-schedule-btn").addEventListener("click", () => {
+        runScheduler();
+    });
+    
+    // Digital Twin sliders
+    const solarSlider = document.getElementById("twin-solar");
+    const batterySlider = document.getElementById("twin-battery");
+    
+    solarSlider.addEventListener("input", (e) => {
+        document.getElementById("twin-solar-val").innerText = e.target.value;
+        runDigitalTwin();
+    });
+    
+    batterySlider.addEventListener("input", (e) => {
+        document.getElementById("twin-battery-val").innerText = e.target.value;
+        runDigitalTwin();
+    });
+    
+    // Initial Twin call
+    runDigitalTwin();
+    
+    // Chat Event listeners
+    document.getElementById("chat-send-btn").addEventListener("click", sendCopilotMessage);
+    document.getElementById("chat-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendCopilotMessage();
+    });
+
+    // Role Switcher listener
+    const roleSelect = document.getElementById("user-role-select");
+    if (roleSelect) {
+        roleSelect.addEventListener("change", (e) => {
+            applyRolePermissions(e.target.value);
+        });
+        // Initial application of default role ("Operator")
+        applyRolePermissions(roleSelect.value);
+    }
+    
+    initCSVUploader();
+});
+
+// Role Permissions Control
+function applyRolePermissions(role) {
+    currentUserRole = role;
+    const isLocked = role === "Operator";
+    
+    // Toggle Scheduler Lock Warning
+    const schedLock = document.getElementById("scheduler-role-lock");
+    if (schedLock) {
+        schedLock.style.display = isLocked ? "flex" : "none";
+    }
+    
+    // Toggle Twin Lock Warning
+    const twinLock = document.getElementById("twin-role-lock");
+    if (twinLock) {
+        twinLock.style.display = isLocked ? "flex" : "none";
+    }
+    
+    // Enable/disable inputs on Scheduler Tab
+    const schedulerInputs = [
+        "sched-load", "sched-duration", "sched-solar", "sched-weight",
+        "sched-task-pf", "sched-battery-cap", "sched-battery-rate",
+        "sched-battery-eff", "sched-solar-yield-mult", "sched-pf-penalty",
+        "optimize-schedule-btn"
+    ];
+    schedulerInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isLocked;
+    });
+    
+    // Enable/disable inputs on Digital Twin Tab
+    const twinInputs = ["twin-solar", "twin-battery"];
+    twinInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isLocked;
+    });
+    
+    // Style uploader card based on permissions
+    const dropzone = document.getElementById("csv-dropzone");
+    if (dropzone) {
+        if (isLocked) {
+            dropzone.style.opacity = "0.5";
+            dropzone.style.cursor = "not-allowed";
+        } else {
+            dropzone.style.opacity = "1";
+            dropzone.style.cursor = "pointer";
+        }
+    }
+}
+
+// Drag & Drop Telemetry CSV Ingestion
+function initCSVUploader() {
+    const dropzone = document.getElementById("csv-dropzone");
+    const fileInput = document.getElementById("csv-file-input");
+    const statusEl = document.getElementById("upload-status");
+    
+    if (!dropzone || !fileInput) return;
+    
+    dropzone.addEventListener("click", () => {
+        if (currentUserRole === "Operator") {
+            alert("🔒 Action restricted. Please switch to Manager or Admin role in the sidebar to upload datasets.");
+            return;
+        }
+        fileInput.click();
+    });
+    
+    dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "#10B981";
+        dropzone.style.background = "rgba(16, 185, 129, 0.05)";
+    });
+    
+    dropzone.addEventListener("dragleave", () => {
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        dropzone.style.background = "rgba(255, 255, 255, 0.01)";
+    });
+    
+    dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (currentUserRole === "Operator") return;
+        dropzone.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        dropzone.style.background = "rgba(255, 255, 255, 0.01)";
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleCSVUpload(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener("change", (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleCSVUpload(files[0]);
+        }
+    });
+}
+
+async function handleCSVUpload(file) {
+    const statusEl = document.getElementById("upload-status");
+    if (!statusEl) return;
+    
+    if (!file.name.endsWith('.csv')) {
+        statusEl.style.display = "block";
+        statusEl.style.color = "#EF4444";
+        statusEl.innerText = "❌ Only CSV files (.csv) are supported.";
+        return;
+    }
+    
+    statusEl.style.display = "block";
+    statusEl.style.color = "#06B6D4";
+    statusEl.innerText = "⏳ Retraining machine learning forecasting models on custom data coordinates...";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+        const res = await fetch(`${API_BASE}/telemetry/upload`, {
+            method: "POST",
+            headers: {
+                "X-API-Key": API_KEY
+            },
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            statusEl.style.color = "#10B981";
+            statusEl.innerText = `✅ Ingestion Complete: Retrained on ${data.rows_inserted} records!`;
+            // Refresh telemetry dashboard data
+            loadTelemetry(7);
+            loadAnomalies();
+        } else {
+            statusEl.style.color = "#EF4444";
+            statusEl.innerText = `❌ Ingestion Failed: ${data.detail || "Failed to process custom dataset columns."}`;
+        }
+    } catch (e) {
+        statusEl.style.color = "#EF4444";
+        statusEl.innerText = "❌ Network connection error. Backend is unreachable.";
+    }
+}
+
+// Sidebar Navigation Control
+function initTabNavigation() {
+    const navItems = document.querySelectorAll(".nav-item");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    const tabTitle = document.getElementById("tab-title");
+    const tabSubtitle = document.getElementById("tab-subtitle");
+    
+    const tabMetadata = {
+        "tab-dashboard": {
+            title: "Operational Dashboard",
+            sub: "Real-time telemetry and key sustainability metrics from DAEWOO Steel facility."
+        },
+        "tab-anomalies": {
+            title: "Anomaly Alerts Engine",
+            sub: "Multivariate machine learning anomalies and rule-based operational diagnostics."
+        },
+        "tab-forecasting": {
+            title: "Demand Forecasting Engine",
+            sub: "Future energy projections using Prophet curve fitting and Random Forest models."
+        },
+        "tab-scheduler": {
+            title: "Load Shifting Scheduler",
+            sub: "Reschedule heavy factory workloads to minimize financial bills and grid CO₂ intensity."
+        },
+        "tab-digital-twin": {
+            title: "Digital Twin Sandbox",
+            sub: "Model hypothetical solar capacity and battery packs to calculate CapEx payback periods."
+        },
+        "tab-copilot": {
+            title: "AI Sustainability Copilot",
+            sub: "Chat with PRAGATI AI to audit energy leaks and receive operational recommendations."
+        }
+    };
+    
+    navItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.preventDefault();
+            const targetTab = item.getAttribute("data-tab");
+            
+            // Toggle active classes
+            navItems.forEach(n => n.classList.remove("active"));
+            tabPanels.forEach(p => p.classList.remove("active"));
+            
+            item.classList.add("active");
+            document.getElementById(targetTab).classList.add("active");
+            
+            // Set dynamic header titles
+            if (tabMetadata[targetTab]) {
+                tabTitle.innerText = tabMetadata[targetTab].title;
+                tabSubtitle.innerText = tabMetadata[targetTab].sub;
+            }
+            
+            // Specific chart resizing on tab reveal
+            if (targetTab === "tab-forecasting" && forecastChart) {
+                forecastChart.resize();
+                if (backtestChart) backtestChart.resize();
+            } else if (targetTab === "tab-scheduler" && scheduleChart) {
+                scheduleChart.resize();
+            } else if (targetTab === "tab-anomalies" && thdChart) {
+                thdChart.resize();
+            } else if (targetTab === "tab-digital-twin" && twinCashFlowChart) {
+                twinCashFlowChart.resize();
+            }
+        });
+    });
+}
+
+// Check Backend API Connection Health
+async function checkBackendStatus() {
+    const dot = document.getElementById("status-dot");
+    const text = document.getElementById("status-text");
+    
+    try {
+        const res = await fetch(`${API_BASE}/status`);
+        if (res.ok) {
+            dot.className = "pulse-dot green";
+            text.innerText = "Backend Connected";
+        } else {
+            throw new Error();
+        }
+    } catch (e) {
+        dot.className = "pulse-dot red";
+        text.innerText = "Backend Offline";
+    }
+}
+
+// Tab 1: Load and Render Telemetry Data
+async function loadTelemetry(days = 7) {
+    try {
+        const res = await fetch(`${API_BASE}/telemetry?days=${days}`);
+        if (!res.ok) throw new Error("Failed to fetch telemetry");
+        
+        const data = await res.json();
+        
+        // Update KPIs with the latest values
+        const lastIdx = data.usage_kwh.length - 1;
+        if (lastIdx >= 0) {
+            document.getElementById("kpi-load").innerText = `${data.usage_kwh[lastIdx]} kW`;
+            document.getElementById("kpi-carbon").innerText = `${data.co2_tco2[lastIdx]} t`;
+            document.getElementById("kpi-pf").innerText = `${data.power_factor_lagging[lastIdx]} %`;
+            
+            // Scope 1/2/3 breakdown binding
+            document.getElementById("kpi-scope1").innerText = `${data.scope1_co2_kg[lastIdx]} kg`;
+            document.getElementById("kpi-scope2").innerText = `${data.scope2_co2_kg[lastIdx]} kg`;
+            document.getElementById("kpi-scope3").innerText = `${data.scope3_co2_kg[lastIdx]} kg`;
+            
+            // Dynamic carbon rate mapping
+            const currentHour = new Date(data.timestamps[lastIdx]).getHours();
+            let carbonRateText = "Grid base load";
+            if (currentHour >= 10 && currentHour <= 15) {
+                carbonRateText = "Solar intensity peak (250g/kWh)";
+            } else if (currentHour >= 17 && currentHour <= 22) {
+                carbonRateText = "Evening peak demand (450g/kWh)";
+            }
+            document.getElementById("kpi-carbon-rate").innerText = carbonRateText;
+        }
+        
+        // Render Chart.js
+        renderTelemetryChart(data);
+        renderTHDChart(data);
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function renderTelemetryChart(data) {
+    const ctx = document.getElementById("telemetryChart").getContext("2d");
+    
+    if (telemetryChart) {
+        telemetryChart.destroy();
+    }
+    
+    telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
+            datasets: [
+                {
+                    label: 'Grid Load (kW)',
+                    data: data.usage_kwh,
+                    borderColor: '#10B981', // Emerald
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Power Factor (%)',
+                    data: data.power_factor_lagging,
+                    borderColor: '#06B6D4', // Cyan
+                    borderWidth: 1.5,
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B', maxTicksLimit: 12 }
+                },
+                y: {
+                    title: { display: true, text: 'Active Power (kW)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Power Factor (%)', color: '#94A3B8' },
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: '#64748B', min: 40, max: 100 }
+                }
+            }
+        }
+    });
+}
+
+function renderTHDChart(data) {
+    const ctx = document.getElementById("thdChart");
+    if (!ctx) return;
+    
+    if (thdChart) {
+        thdChart.destroy();
+    }
+    
+    thdChart = new Chart(ctx.getContext("2d"), {
+        type: 'line',
+        data: {
+            labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
+            datasets: [
+                {
+                    label: 'Total Harmonic Distortion (THD %)',
+                    data: data.thd_pct,
+                    borderColor: '#F59E0B', // Amber
+                    backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Grid Voltage (V)',
+                    data: data.voltage_v,
+                    borderColor: '#EF4444', // Red
+                    borderWidth: 1.5,
+                    tension: 0.2,
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B', maxTicksLimit: 12 }
+                },
+                y: {
+                    title: { display: true, text: 'THD (%)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Voltage (V)', color: '#94A3B8' },
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: '#64748B', min: 380, max: 440 }
+                }
+            }
+        }
+    });
+}
+
+// Tab 2: Load and Display Anomalies Table
+async function loadAnomalies() {
+    const tableBody = document.querySelector("#anomalies-table tbody");
+    try {
+        const res = await fetch(`${API_BASE}/anomalies`);
+        if (!res.ok) throw new Error("Failed to fetch anomalies");
+        
+        const anomalies = await res.json();
+        
+        // Update Anomaly badges
+        document.getElementById("kpi-anomalies-count").innerText = anomalies.length;
+        document.getElementById("anomalies-badge").innerText = `${anomalies.length} Flagged`;
+        
+        if (anomalies.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No anomalies detected in recent telemetry.</td></tr>`;
+            return;
+        }
+        
+        let rowsHtml = "";
+        anomalies.forEach(a => {
+            let severityClass = "orange-bg";
+            if (a.severity === "Critical") severityClass = "red-bg";
+            else if (a.severity === "High") severityClass = "red-bg";
+            
+            rowsHtml += `
+                <tr>
+                    <td><strong>${a.timestamp}</strong></td>
+                    <td><span class="badge ${severityClass}">${a.anomaly_type}</span></td>
+                    <td><span class="badge ${a.severity === 'Critical' ? 'red-bg' : 'orange-bg'}">${a.severity}</span></td>
+                    <td>${a.usage_kwh} kW</td>
+                    <td>${a.power_factor_lagging}%</td>
+                    <td class="text-secondary">${a.explanation}</td>
+                    <td style="color: #10B981; font-weight: 500;">${a.recommendation}</td>
+                </tr>
+            `;
+        });
+        
+        tableBody.innerHTML = rowsHtml;
+    } catch (e) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center red">Failed to connect to ML anomaly engine.</td></tr>`;
+    }
+}
+
+// Tab 3: Run Forecasting Models
+async function runForecasting() {
+    const btn = document.getElementById("run-forecast-btn");
+    const hours = parseInt(document.getElementById("forecast-hours").value);
+    const folds = parseInt(document.getElementById("backtest-folds").value);
+    
+    btn.disabled = true;
+    btn.innerText = "Training models, compiling curves...";
+    
+    // Dynamically update UI header
+    document.getElementById("backtest-title-header").innerText = `Rolling Backtest RMSE (${folds} Folds)`;
+    
+    try {
+        const res = await fetch(`${API_BASE}/forecast`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hours: hours, backtest_folds: folds })
+        });
+        
+        if (!res.ok) throw new Error("Forecasting calculations failed");
+        
+        const data = await res.json();
+        
+        // Determine the seasonal model name (Prophet or Exponential Smoothing)
+        const seasonalName = data.seasonal_model_name || "Prophet";
+        
+        // Update Statistical Indicators
+        document.getElementById("metric-adf-p").innerText = data.adf.p_value;
+        const adfStatusEl = document.getElementById("metric-adf-status");
+        if (data.adf.is_stationary) {
+            adfStatusEl.className = "badge green-bg";
+            adfStatusEl.innerText = "Stationary (p < 0.05)";
+        } else {
+            adfStatusEl.className = "badge orange-bg";
+            adfStatusEl.innerText = "Non-Stationary";
+        }
+
+        // Update Validation RMSE (Single Split)
+        const prophetRmseEl = document.getElementById("metric-prophet-rmse");
+        if (data.metrics.prophet_rmse !== null) {
+            prophetRmseEl.innerText = `${data.metrics.prophet_rmse} kW`;
+        } else {
+            prophetRmseEl.innerText = "N/A";
+        }
+        document.getElementById("metric-rf-rmse").innerText = `${data.metrics.rf_rmse} kW`;
+        document.getElementById("metric-rnn-rmse").innerText = `${data.metrics.rnn_rmse} kW`;
+        
+        const bestBadge = document.getElementById("metric-best-model");
+        bestBadge.innerText = data.metrics.best_model;
+
+        // Update Rolling Backtest RMSE
+        document.getElementById("metric-bt-prophet").innerText = `${data.backtest.prophet_rmse} kW`;
+        document.getElementById("metric-bt-rf").innerText = `${data.backtest.rf_rmse} kW`;
+        document.getElementById("metric-bt-rnn").innerText = `${data.backtest.rnn_rmse} kW`;
+        document.getElementById("metric-bt-persistence").innerText = `${data.backtest.persistence_rmse} kW`;
+        
+        // Render charts
+        renderForecastChart(data, seasonalName);
+        renderBacktestChart(data, seasonalName);
+    } catch (e) {
+        alert("Failed to compile forecast predictions.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Run Forecasting Models";
+    }
+}
+
+
+function renderForecastChart(data, seasonalName = "Prophet") {
+    const ctx = document.getElementById("forecastChart").getContext("2d");
+    if (forecastChart) {
+        forecastChart.destroy();
+    }
+    
+    // Build datasets — always include actuals and RF
+    const datasets = [
+        {
+            label: 'Actual Telemetry (kWh)',
+            data: data.actuals,
+            borderColor: '#94A3B8',
+            borderWidth: 2.2,
+            borderDash: [3, 3],
+            tension: 0.1,
+            fill: false
+        }
+    ];
+    
+    if (data.persistence_forecast && data.persistence_forecast.length > 0) {
+        datasets.push({
+            label: 'Persistence Baseline (t-24)',
+            data: data.persistence_forecast,
+            borderColor: '#64748B', // Dotted Slate Grey
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            tension: 0.1,
+            fill: false
+        });
+    }
+    
+    // Only add seasonal model (Prophet/ExpSmoothing) if data exists
+    if (data.prophet_forecast && data.prophet_forecast.length > 0) {
+        datasets.push({
+            label: `${seasonalName} (Forecast)`,
+            data: data.prophet_forecast,
+            borderColor: '#10B981', // Emerald
+            borderWidth: 2.5,
+            tension: 0.3,
+            fill: false
+        });
+    }
+    
+    datasets.push({
+        label: 'Random Forest (Forecast)',
+        data: data.rf_forecast,
+        borderColor: '#8B5CF6', // Violet
+        borderWidth: 2,
+        tension: 0.2,
+        fill: false
+    });
+    
+    if (data.rnn_forecast && data.rnn_forecast.length > 0) {
+        datasets.push({
+            label: 'RNN (Forecast)',
+            data: data.rnn_forecast,
+            borderColor: '#EC4899', // Pink
+            borderWidth: 2,
+            tension: 0.2,
+            fill: false
+        });
+    }
+    
+    forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B', maxTicksLimit: 12 }
+                },
+                y: {
+                    title: { display: true, text: 'Active Power (kWh)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                }
+            }
+        }
+    });
+}
+
+function renderBacktestChart(data, seasonalName = "Prophet") {
+    const ctx = document.getElementById("backtestChart").getContext("2d");
+    if (backtestChart) {
+        backtestChart.destroy();
+    }
+    
+    backtestChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [seasonalName, 'Random Forest', 'RNN', 'Persistence Baseline'],
+            datasets: [{
+                label: 'Rolling Backtest RMSE (kW)',
+                data: [
+                    data.backtest.prophet_rmse,
+                    data.backtest.rf_rmse,
+                    data.backtest.rnn_rmse,
+                    data.backtest.persistence_rmse
+                ],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.65)', // Emerald
+                    'rgba(139, 92, 246, 0.65)', // Violet
+                    'rgba(236, 72, 153, 0.65)', // Pink
+                    'rgba(100, 116, 139, 0.65)'  // Slate Grey
+                ],
+                borderColor: [
+                    '#10B981',
+                    '#8B5CF6',
+                    '#EC4899',
+                    '#64748B'
+                ],
+                borderWidth: 1.5,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#94A3B8', font: { family: 'Inter', weight: '500' } }
+                },
+                y: {
+                    title: { display: true, text: 'RMSE (kW)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                }
+            }
+        }
+    });
+}
+
+
+// Tab 4: Workload Scheduling Optimizer
+async function runScheduler() {
+    const load = parseFloat(document.getElementById("sched-load").value);
+    const duration = parseInt(document.getElementById("sched-duration").value);
+    const solar = parseFloat(document.getElementById("sched-solar").value);
+    const weight = parseFloat(document.getElementById("sched-weight").value);
+    
+    // Parse Advanced settings with safe fallback defaults
+    const elTaskPf = document.getElementById("sched-task-pf");
+    const elBatCap = document.getElementById("sched-battery-cap");
+    const elBatRate = document.getElementById("sched-battery-rate");
+    const elBatEff = document.getElementById("sched-battery-eff");
+    const elSolarYield = document.getElementById("sched-solar-yield-mult");
+    const elPfPenalty = document.getElementById("sched-pf-penalty");
+    
+    const task_power_factor = elTaskPf ? parseFloat(elTaskPf.value) : 0.80;
+    const battery_capacity_kwh = elBatCap ? parseFloat(elBatCap.value) : 50.0;
+    const battery_rate_kw = elBatRate ? parseFloat(elBatRate.value) : 25.0;
+    const battery_efficiency = elBatEff ? parseFloat(elBatEff.value) / 100.0 : 0.95;
+    const solar_yield_coeff = elSolarYield ? parseFloat(elSolarYield.value) / 100.0 : 0.12;
+    const pf_penalty_mult = elPfPenalty ? parseFloat(elPfPenalty.value) : 2.0;
+    
+    try {
+        const res = await fetch(`${API_BASE}/schedule`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                task_load_kw: load,
+                task_duration_h: duration,
+                solar_capacity_kw: solar,
+                environmental_weight: weight,
+                battery_capacity_kwh: battery_capacity_kwh,
+                battery_rate_kw: battery_rate_kw,
+                battery_efficiency: battery_efficiency,
+                solar_yield_coeff: solar_yield_coeff,
+                task_power_factor: task_power_factor,
+                pf_penalty_mult: pf_penalty_mult
+            })
+        });
+        
+        if (!res.ok) throw new Error("Optimizer failed");
+        
+        const data = await res.json();
+        
+        // Update UI
+        const optHourStr = `${data.best_start_hour.toString().padStart(2, '0')}:00`;
+        document.getElementById("sched-recommendation").innerHTML = `Optimal Start Hour: <span class="highlight">${optHourStr}</span>`;
+        
+        document.getElementById("sched-cost-save").innerText = `$${data.savings.cost_dollars.toFixed(2)}`;
+        document.getElementById("sched-cost-pct").innerText = `${data.savings.cost_percent}% lower utility tariff`;
+        
+        document.getElementById("sched-carbon-save").innerText = `${data.savings.carbon_kg.toFixed(1)} kg CO₂`;
+        document.getElementById("sched-carbon-pct").innerText = `${data.savings.carbon_percent}% lower emissions`;
+        
+        // Update Battery Health indicators
+        if (data.battery_final_soh_pct !== undefined) {
+            document.getElementById("sched-battery-soh").innerText = `${data.battery_final_soh_pct.toFixed(4)}% SoH`;
+            document.getElementById("sched-battery-deg").innerText = `${data.battery_degradation_pct.toFixed(6)}% daily wear`;
+        }
+        
+        // Render scheduler comparison chart
+        renderSchedulerChart(data);
+    } catch (e) {
+        alert("Failed to compute optimal schedule.");
+    }
+}
+
+function renderSchedulerChart(data) {
+    const ctx = document.getElementById("scheduleChart").getContext("2d");
+    if (scheduleChart) {
+        scheduleChart.destroy();
+    }
+    
+    // Compile hourly loads
+    const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+    
+    // We map grid draw curves for baseline vs optimized
+    const baselineDraw = Array(24).fill(0);
+    const optimizedDraw = Array(24).fill(0);
+    const batterySoC = Array(24).fill(0);
+    
+    // Fill baseline task run (starts at 9 AM)
+    const baseStart = data.baseline.start_hour;
+    for (let k = 0; k < data.baseline.details.length; k++) {
+        const h = (baseStart + k) % 24;
+        baselineDraw[h] = data.baseline.details[k].grid_draw_kwh;
+    }
+    
+    // Fill optimized task run and battery SoC
+    const optStart = data.best_start_hour;
+    for (let k = 0; k < data.best_hourly_details.length; k++) {
+        const h = (optStart + k) % 24;
+        optimizedDraw[h] = data.best_hourly_details[k].grid_draw_kwh;
+        batterySoC[h] = data.best_hourly_details[k].battery_soc_kwh;
+    }
+    
+    scheduleChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: hours,
+            datasets: [
+                {
+                    label: 'Baseline Shift Grid Draw (kW)',
+                    data: baselineDraw,
+                    backgroundColor: 'rgba(239, 68, 68, 0.4)', // Muted Red
+                    borderColor: '#EF4444',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Optimized Shift Grid Draw (kW)',
+                    data: optimizedDraw,
+                    backgroundColor: 'rgba(16, 185, 129, 0.4)', // Muted Emerald
+                    borderColor: '#10B981',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Battery SoC (kWh)',
+                    data: batterySoC,
+                    type: 'line',
+                    borderColor: '#06B6D4', // Cyan
+                    backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                },
+                y: {
+                    title: { display: true, text: 'Energy Drawn from Grid (kWh)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Battery SoC (kWh)', color: '#94A3B8' },
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: '#64748B' }
+                }
+            }
+        }
+    });
+}
+
+// Tab 5: Digital Twin Sandbox
+async function runDigitalTwin() {
+    const solar = parseFloat(document.getElementById("twin-solar").value);
+    const battery = parseFloat(document.getElementById("twin-battery").value);
+    
+    try {
+        const res = await fetch(`${API_BASE}/simulate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                solar_capacity_kw: solar,
+                battery_capacity_kwh: battery
+            })
+        });
+        
+        if (!res.ok) throw new Error("Simulator failed");
+        
+        const data = await res.json();
+        
+        // Update DOM
+        document.getElementById("twin-val-gen").innerText = `${data.annual_solar_generation_kwh.toLocaleString()} kWh/yr`;
+        document.getElementById("twin-val-self").innerText = `${data.self_consumption_percent}%`;
+        document.getElementById("twin-val-savings").innerText = `$${data.annual_financial_savings_dollars.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+        document.getElementById("twin-val-co2").innerText = `${data.annual_co2_offset_kg.toLocaleString(undefined, {maximumFractionDigits: 0})} kg CO₂`;
+        document.getElementById("twin-val-capex").innerText = `$${data.capital_investment_dollars.toLocaleString()}`;
+        document.getElementById("twin-val-payback").innerText = `${data.simple_payback_period_years} Years`;
+        
+        // Bind new Ph.D. levelized cost / cash flows / NPV
+        if (data.net_present_value_dollars !== undefined) {
+            document.getElementById("twin-val-npv").innerText = `$${data.net_present_value_dollars.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            document.getElementById("twin-val-lcoe").innerText = `$${data.lcoe_dollars_per_kwh.toFixed(4)} /kWh`;
+            document.getElementById("twin-val-macrs").innerText = `$${data.macrs_tax_shield_dollars.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            document.getElementById("twin-val-peak").innerText = `${data.peak_shaving_kw.toFixed(1)} kW`;
+            
+            // Render 20-Year Cash Flow chart
+            renderTwinCashFlowChart(data.yearly_cash_flows);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function renderTwinCashFlowChart(cashFlows) {
+    const ctx = document.getElementById("twinCashFlowChart");
+    if (!ctx) return;
+    
+    if (twinCashFlowChart) {
+        twinCashFlowChart.destroy();
+    }
+    
+    const years = Array.from({ length: 20 }, (_, i) => `Yr ${i + 1}`);
+    
+    twinCashFlowChart = new Chart(ctx.getContext("2d"), {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [{
+                label: 'Annual Net Cash Flow ($)',
+                data: cashFlows,
+                backgroundColor: cashFlows.map(val => val >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+                borderColor: cashFlows.map(val => val >= 0 ? '#10B981' : '#EF4444'),
+                borderWidth: 1.5,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#94A3B8' }
+                },
+                y: {
+                    title: { display: true, text: 'Net Cash Flow ($)', color: '#94A3B8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    ticks: { color: '#64748B' }
+                }
+            }
+        }
+    });
+}
+
+// Tab 6: AI Copilot Chat Engine
+async function sendCopilotMessage() {
+    const input = document.getElementById("chat-input");
+    const container = document.getElementById("chat-messages-container");
+    const msg = input.value.trim();
+    
+    if (!msg) return;
+    
+    // Add user message bubble (sanitized to prevent XSS)
+    const userBubble = document.createElement("div");
+    userBubble.className = "message user";
+    userBubble.innerHTML = `<div class="message-content">${sanitizeHTML(msg)}</div>`;
+    container.appendChild(userBubble);
+    
+    input.value = "";
+    container.scrollTop = container.scrollHeight;
+    
+    // Add typing loader for bot
+    const botBubble = document.createElement("div");
+    botBubble.className = "message bot";
+    botBubble.innerHTML = `<div class="message-content">Thinking and checking telemetry logs...</div>`;
+    container.appendChild(botBubble);
+    container.scrollTop = container.scrollHeight;
+    
+    try {
+        const res = await fetch(`${API_BASE}/copilot`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg })
+        });
+        
+        if (!res.ok) throw new Error("Chat api failed");
+        
+        const data = await res.json();
+        
+        // Replace typing loader with real reply
+        // Simple markdown formatter helper for bold formatting
+        let replyHtml = data.reply
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+            
+        botBubble.innerHTML = `<div class="message-content">${replyHtml}</div>`;
+    } catch (e) {
+        botBubble.innerHTML = `<div class="message-content text-danger">Failed to connect to AI Copilot engine.</div>`;
+    } finally {
+        container.scrollTop = container.scrollHeight;
+    }
+}
