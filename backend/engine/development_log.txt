@@ -380,3 +380,4 @@
 [2026-06-14T17:38:49] docs: write layout style conventions in comments
 [2026-06-15T10:10:41] feat: create frontend/app.js client controller script
 [2026-06-15T10:40:46] feat: define base backend API URL prefix constants
+[2026-06-15T10:57:54] feat: declare Chart.js global instances cache registers
