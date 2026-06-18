@@ -37,3 +37,7 @@ package-lock.json
 
 # Logs
 *.log
+
+# Word documents and lock files
+*.docx
+~$*.docx
