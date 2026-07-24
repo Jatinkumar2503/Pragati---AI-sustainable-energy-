@@ -40,6 +40,9 @@
                 <a href="#" class="nav-item" data-tab="tab-copilot" id="nav-copilot">
                     <span class="icon">💬</span> AI Copilot
                 </a>
+                <a href="#" class="nav-item" data-tab="tab-subscriptions" id="nav-subscriptions">
+                    <span class="icon">💳</span> Startup Plans
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -509,7 +512,121 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- TAB 7: STARTUP SUBSCRIPTION PLANS -->
+            <div class="tab-panel" id="tab-subscriptions">
+                <div class="sub-header-banner" style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1)); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h2 style="font-size: 1.4rem; color: #F8FAFC; margin-bottom: 6px;">PRAGATI AI for Sustainable & Renewable Startups 🌿</h2>
+                        <p style="color: #94A3B8; font-size: 0.9rem;">Deploy active sustainability intelligence across your client sites. Choose a monthly plan to unlock full ML prediction engines & REST APIs.</p>
+                    </div>
+                    <div class="currency-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--primary); color: #10B981; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">
+                        🇮🇳 Billing in INR (₹)
+                    </div>
+                </div>
+
+                <!-- Pricing Cards Grid -->
+                <div class="pricing-grid">
+                    <!-- TIER 1: STARTER -->
+                    <div class="pricing-card">
+                        <div class="card-tier-title">Starter Tier</div>
+                        <div class="card-tier-target">Early-stage Cleantech & Energy Management Startups</div>
+                        <div class="card-price">₹2,999 <span class="price-period">/ month</span></div>
+                        <ul class="pricing-features">
+                            <li><span class="check">✓</span> Up to 10 Client Sites / Meters</li>
+                            <li><span class="check">✓</span> Isolation Forest Anomaly Engine</li>
+                            <li><span class="check">✓</span> Prophet & Random Forest Forecasting</li>
+                            <li><span class="check">✓</span> Scope 1 & Scope 2 Carbon Audit</li>
+                            <li><span class="check">✓</span> Basic Read REST APIs</li>
+                            <li class="disabled"><span class="cross">✕</span> Renewable Workload Shift Optimizer</li>
+                            <li class="disabled"><span class="cross">✕</span> Battery Degradation Simulator</li>
+                            <li class="disabled"><span class="cross">✕</span> Differential Privacy Shield</li>
+                        </ul>
+                        <button class="premium-btn plan-btn" onclick="openPaymentModal('Starter Tier', 2999)">Select Starter Plan</button>
+                    </div>
+
+                    <!-- TIER 2: PRO GROWTH (POPULAR) -->
+                    <div class="pricing-card popular">
+                        <div class="popular-tag">MOST POPULAR 🔥</div>
+                        <div class="card-tier-title">Pro Growth Tier</div>
+                        <div class="card-tier-target">Growing Microgrid & Renewable Energy Aggregators</div>
+                        <div class="card-price">₹3,999 <span class="price-period">/ month</span></div>
+                        <ul class="pricing-features">
+                            <li><span class="check">✓</span> Up to 35 Client Sites / Meters</li>
+                            <li><span class="check">✓</span> Isolation Forest Anomaly Engine</li>
+                            <li><span class="check">✓</span> Prophet, Random Forest & GRU ML Models</li>
+                            <li><span class="check">✓</span> <strong>Renewable Workload Shift Optimizer</strong></li>
+                            <li><span class="check">✓</span> <strong>Battery Degradation (SOH) Simulator</strong></li>
+                            <li><span class="check">✓</span> <strong>AI Copilot Natural Language Assistant</strong></li>
+                            <li><span class="check">✓</span> Standard REST API & Webhooks</li>
+                            <li class="disabled"><span class="cross">✕</span> Differential Privacy Shield</li>
+                        </ul>
+                        <button class="premium-btn plan-btn popular-btn" onclick="openPaymentModal('Pro Growth Tier', 3999)">Choose Pro Plan</button>
+                    </div>
+
+                    <!-- TIER 3: WHITE-LABEL & ENTERPRISE -->
+                    <div class="pricing-card">
+                        <div class="card-tier-title">White-Label & Enterprise API</div>
+                        <div class="card-tier-target">Enterprise Cleantech Platforms & SaaS Integrators</div>
+                        <div class="card-price">₹4,999 <span class="price-period">/ month</span></div>
+                        <ul class="pricing-features">
+                            <li><span class="check">✓</span> <strong>Unlimited Client Sites & Multi-Tenant Orgs</strong></li>
+                            <li><span class="check">✓</span> <strong>Full TFT (Temporal Fusion Transformer) ML</strong></li>
+                            <li><span class="check">✓</span> <strong>Differential Privacy Shield Engine</strong></li>
+                            <li><span class="check">✓</span> <strong>Full White-Labeling & Custom Domain</strong></li>
+                            <li><span class="check">✓</span> Headless REST API Keys & Webhook Triggers</li>
+                            <li><span class="check">✓</span> Dedicated Account Manager & SLA Support</li>
+                            <li><span class="check">✓</span> One-Click Audit-Ready ESG PDF Generation</li>
+                        </ul>
+                        <button class="premium-btn plan-btn" onclick="openPaymentModal('White-Label & Enterprise API', 4999)">Select Enterprise Plan</button>
+                    </div>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <!-- PAYMENT GATEWAY MODAL -->
+    <div id="payment-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Subscribe to PRAGATI AI 🌿</h3>
+                <span class="modal-close" onclick="closePaymentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-summary">
+                    <span id="modal-selected-plan">Selected Plan: Pro Growth Tier</span>
+                    <span id="modal-selected-price" class="modal-price-highlight">₹3,999 / month</span>
+                </div>
+                
+                <form id="payment-form" onsubmit="handlePaymentSubmit(event)">
+                    <div class="input-group">
+                        <label for="pay-company-name">Startup / Company Name</label>
+                        <input type="text" id="pay-company-name" required placeholder="e.g. EcoGrid Technologies Pvt Ltd" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="pay-email">Work Email Address</label>
+                        <input type="email" id="pay-email" required placeholder="founder@ecogrid.io" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="pay-method">Preferred Payment Gateway</label>
+                        <select id="pay-method" class="premium-select">
+                            <option value="upi">UPI / QR Code (PhonePe, GPay, Paytm)</option>
+                            <option value="card">Credit / Debit Card (Visa, Mastercard, RuPay)</option>
+                            <option value="netbanking">Net Banking (HDFC, ICICI, SBI, Axis)</option>
+                            <option value="stripe">Stripe / International Billing</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-footer-notes">
+                        🔒 Encrypted 256-bit SSL transaction. Recurring monthly subscription can be cancelled anytime.
+                    </div>
+                    
+                    <button type="submit" class="premium-btn modal-submit-btn" style="margin-top: 16px;">
+                        Proceed to Pay & Activate Subscription
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
     
     <script src="app.js"></script>
