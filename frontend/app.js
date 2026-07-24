@@ -1035,3 +1035,43 @@ async function sendCopilotMessage() {
         container.scrollTop = container.scrollHeight;
     }
 }
+
+// Tab 7: Startup Subscriptions & Payment Modal Logic
+let currentSelectedPlan = null;
+let currentSelectedPrice = 0;
+
+function openPaymentModal(planName, price) {
+    currentSelectedPlan = planName;
+    currentSelectedPrice = price;
+    
+    document.getElementById("modal-selected-plan").innerText = `Selected Plan: ${planName}`;
+    document.getElementById("modal-selected-price").innerText = `₹${price.toLocaleString()} / month`;
+    
+    const modal = document.getElementById("payment-modal");
+    if (modal) {
+        modal.style.display = "flex";
+    }
+}
+
+function closePaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+function handlePaymentSubmit(event) {
+    event.preventDefault();
+    const company = document.getElementById("pay-company-name").value.trim();
+    const email = document.getElementById("pay-email").value.trim();
+    const method = document.getElementById("pay-method").value;
+    
+    if (!company || !email) {
+        alert("Please fill in your company name and work email.");
+        return;
+    }
+    
+    closePaymentModal();
+    
+    alert(`🎉 Subscription Activated!\n\nThank you, ${company}!\n\nPlan: ${currentSelectedPlan} (₹${currentSelectedPrice.toLocaleString()}/mo)\nBilling Email: ${email}\nPayment Gateway: ${method.toUpperCase()}\n\nYour API Keys and Multi-Tenant Portal access details have been dispatched to ${email}.`);
+}
