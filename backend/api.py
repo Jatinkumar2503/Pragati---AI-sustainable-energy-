@@ -27,9 +27,14 @@ from engine.forecaster import generate_forecast
 from engine.scheduler import optimize_shift_schedule
 from engine.telemetry_db import TelemetryDB
 from engine.privacy_shield import privacy_shield
+from engine.workspace_manager import list_workspaces, get_current_workspace, switch_workspace
+from engine.document_parser import parse_electricity_bill
+from engine.rag_engine import rag_engine
+from agents.orchestrator import AgentOrchestrator
 
-# Initialize database instance container
+# Initialize database and agent orchestrator instances
 DB_INSTANCE = TelemetryDB()
+ORCHESTRATOR_INSTANCE = AgentOrchestrator()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -150,6 +155,84 @@ def get_status():
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# =====================================================================
+# MULTI-WORKSPACE & WORKSPACE MANAGEMENT ENDPOINTS
+# =====================================================================
+@app.get("/api/v1/workspaces")
+def get_workspaces_list():
+    """
+    Returns available Indian industrial demo workspaces + Customer Sandbox.
+    """
+    return {
+        "status": "success",
+        "current_workspace": get_current_workspace(),
+        "workspaces": list_workspaces()
+    }
+
+class WorkspaceSwitchRequest(BaseModel):
+    workspace_id: str = Field(..., description="ID of workspace to switch to")
+
+@app.post("/api/v1/workspaces/switch")
+def handle_workspace_switch(req: WorkspaceSwitchRequest):
+    """
+    Switches active workspace context and returns updated workspace configuration.
+    """
+    try:
+        active_ws = switch_workspace(req.workspace_id)
+        return {
+            "status": "success",
+            "message": f"Successfully switched to workspace: {active_ws['name']}",
+            "workspace": active_ws
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# =====================================================================
+# DOCUMENT INTELLIGENCE & OCR BILL PARSER ENDPOINTS
+# =====================================================================
+@app.post("/api/v1/documents/parse_bill")
+async def parse_bill_document(file: UploadFile = File(...)):
+    """
+    Multimodal OCR parsing endpoint extracting utility bill parameters and computing XAI recommendations.
+    """
+    try:
+        contents = await file.read()
+        res = parse_electricity_bill(contents, file.filename)
+        return res
+    except Exception as e:
+        logger.error(f"Bill parsing failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse bill: {str(e)}")
+
+# =====================================================================
+# MULTI-AGENT ORCHESTRATOR & AI BOARD ROOM ENDPOINTS
+# =====================================================================
+@app.get("/api/v1/agents/morning_brief")
+def get_agent_morning_brief(sector: str = Query("Steel", description="Industrial sector context")):
+    """
+    Compiles the Daily AI Executive Morning Brief using 4 Core Agents + Gemini Orchestrator.
+    """
+    try:
+        return ORCHESTRATOR_INSTANCE.generate_morning_brief(sector=sector)
+    except Exception as e:
+        logger.error(f"Morning brief compilation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class AgentQueryRequest(BaseModel):
+    message: str = Field(..., min_length=1, description="Natural language prompt or query")
+    sector: str = Field("Steel", description="Active sector context")
+
+@app.post("/api/v1/agents/query")
+def process_agent_query(req: AgentQueryRequest):
+    """
+    Cognitive query routing endpoint executing agent tool calls and generating XAI cards.
+    """
+    try:
+        return ORCHESTRATOR_INSTANCE.process_query(req.message, sector=req.sector)
+    except Exception as e:
+        logger.error(f"Agent query processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/telemetry")
 def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days of data to return")):
