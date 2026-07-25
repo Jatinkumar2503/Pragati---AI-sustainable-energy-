@@ -6,6 +6,7 @@ from .anomaly_agent import AnomalyAgent
 from .optimization_agent import OptimizationAgent
 from .compliance_agent import ComplianceAgent
 from .digital_twin_agent import DigitalTwinAgent
+from .alert_agent import AlertAgent
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class AgentOrchestrator:
         self.optimization_agent = OptimizationAgent()
         self.compliance_agent = ComplianceAgent()
         self.digital_twin_agent = DigitalTwinAgent()
+        self.alert_agent = AlertAgent()
         self.api_key = os.environ.get("GEMINI_API_KEY", "")
 
     def generate_morning_brief(self, sector: str = "Steel") -> Dict[str, Any]:
