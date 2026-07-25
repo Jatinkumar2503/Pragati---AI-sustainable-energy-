@@ -153,6 +153,20 @@
             
             <!-- TAB 2: ANOMALIES -->
             <div class="tab-panel" id="tab-anomalies">
+                <!-- Real-time Meter & Alert Center -->
+                <div class="card" style="margin-bottom: 24px; background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="pulse-dot green"></span>
+                            <h2>Live Meter Stream & Alert Center</h2>
+                        </div>
+                        <button class="premium-btn" style="padding: 6px 12px; font-size: 0.8rem;" onclick="fetchActiveAlerts()">Refresh Alerts 🔄</button>
+                    </div>
+                    <div id="live-alerts-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+                        <p style="color: #94A3B8; font-size: 0.9rem;">Polling active facility alerts...</p>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <h2>Detected Energy Anomalies</h2>
