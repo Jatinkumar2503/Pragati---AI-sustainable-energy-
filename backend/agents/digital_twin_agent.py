@@ -4,8 +4,8 @@ Evaluates scenario options (Solar PV, BESS, Load Shifting) and generates XAI Car
 """
 
 from typing import Dict, Any
-from backend.agents.base_agent import BaseAgent, XAICard
-from backend.engine.digital_twin import DigitalTwinEngine
+from .base_agent import BaseAgent, XAICard
+from engine.digital_twin import DigitalTwinEngine
 
 class DigitalTwinAgent(BaseAgent):
     """

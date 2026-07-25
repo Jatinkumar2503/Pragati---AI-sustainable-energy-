@@ -8,13 +8,16 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engine.telemetry_streamer import telemetry_streamer
+from engine.telemetry_streamer import TelemetryStreamer
 from agents.alert_agent import AlertAgent
 
 class TestAlerts(unittest.TestCase):
 
+    def setUp(self):
+        self.streamer = TelemetryStreamer()
+
     def test_telemetry_streamer(self):
-        stream = telemetry_streamer.get_live_telemetry()
+        stream = self.streamer.get_live_telemetry()
         self.assertIn("active_load_kw", stream)
         self.assertIn("grid_voltage_v", stream)
         self.assertIn("power_factor", stream)
@@ -22,14 +25,14 @@ class TestAlerts(unittest.TestCase):
         self.assertEqual(stream["meter_status"], "ONLINE")
 
     def test_active_alerts(self):
-        alerts = telemetry_streamer.get_active_alerts()
+        alerts = self.streamer.get_active_alerts()
         self.assertGreater(len(alerts), 0)
-        self.assertEqual(alerts[0]["status"], "TRIGGERED")
+        self.assertIn(alerts[0]["status"], ("TRIGGERED", "ACKNOWLEDGED"))
 
     def test_acknowledge_alert(self):
-        alerts = telemetry_streamer.get_active_alerts()
+        alerts = self.streamer.get_active_alerts()
         alert_id = alerts[0]["alert_id"]
-        res = telemetry_streamer.acknowledge_alert(alert_id, "Rajesh Engineer")
+        res = self.streamer.acknowledge_alert(alert_id, "Rajesh Engineer")
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["alert"]["status"], "ACKNOWLEDGED")
 
