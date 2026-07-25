@@ -5,6 +5,7 @@ from .forecast_agent import ForecastAgent
 from .anomaly_agent import AnomalyAgent
 from .optimization_agent import OptimizationAgent
 from .compliance_agent import ComplianceAgent
+from .digital_twin_agent import DigitalTwinAgent
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class AgentOrchestrator:
         self.anomaly_agent = AnomalyAgent()
         self.optimization_agent = OptimizationAgent()
         self.compliance_agent = ComplianceAgent()
+        self.digital_twin_agent = DigitalTwinAgent()
         self.api_key = os.environ.get("GEMINI_API_KEY", "")
 
     def generate_morning_brief(self, sector: str = "Steel") -> Dict[str, Any]:
@@ -93,6 +95,11 @@ class AgentOrchestrator:
             res = self.optimization_agent.run({"task_load_kw": 250.0, "duration_hours": 4})
             start_hr = res["schedule"]["recommended_start_hour"]
             reply = f"**Optimization Agent MILP Recommendation:** Optimal start window for 250 kW shift batch is **{start_hr:02d}:00 hours**. Financial Impact: **{res['xai_card']['financial_impact_inr']}**."
+            xai_card = res["xai_card"]
+
+        elif "solar" in query_lower or "twin" in query_lower or "battery" in query_lower or "scenario" in query_lower:
+            res = self.digital_twin_agent.run({"region": "Western", "solar_capacity_kw": 300.0, "battery_storage_kwh": 150.0})
+            reply = f"**Digital Twin Agent Simulation:** Projected scenario yields **{res['xai_card']['financial_impact_inr']}** with CO2 reduction of **{res['xai_card']['carbon_impact_kg']}**."
             xai_card = res["xai_card"]
             
         else:
