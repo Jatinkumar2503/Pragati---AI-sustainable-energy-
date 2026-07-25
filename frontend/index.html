@@ -412,6 +412,15 @@
                             <input type="range" id="twin-battery" min="0" max="250" value="50" step="10" class="premium-slider">
                             <div class="slider-val"><span id="twin-battery-val">50</span> kWh</div>
                         </div>
+                        <div class="input-group">
+                            <label for="twin-shift">Peak Load Shift Ratio (%)</label>
+                            <input type="range" id="twin-shift" min="0" max="50" value="20" step="5" class="premium-slider">
+                            <div class="slider-val"><span id="twin-shift-val">20</span> %</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+                            <button id="run-digital-twin-btn" class="premium-btn" onclick="runDigitalTwinSimulation()">Run Scenario Simulation ☀️</button>
+                            <button id="view-audit-logs-btn" class="premium-btn" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);" onclick="openAuditLogDrawer()">View Audit Logs 📜</button>
+                        </div>
                     </div>
                     
                     <div class="twin-results card">
@@ -629,6 +638,21 @@
         </div>
     </div>
     
+    <!-- AUDIT LOG MODAL DRAWER -->
+    <div id="audit-log-drawer" class="modal-backdrop" style="display: none;">
+        <div class="modal-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3>📜 Audit Logs & Agent Recommendation History</h3>
+                <span class="modal-close" onclick="closeAuditLogDrawer()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="audit-log-list" style="display: flex; flex-direction: column; gap: 12px;">
+                    <p style="color: #94A3B8;">Loading audit logs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
