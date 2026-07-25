@@ -54,6 +54,7 @@ PRAGATI AI moves beyond passive energy monitoring dashboards. It operates as an 
 4. **Optimization Agent** (`backend/agents/optimization_agent.py`): Mixed-Integer Linear Programming (MILP) solver aligning heavy machine shifts with green tariff windows.
 5. **Compliance & Reporting Agent** (`backend/agents/compliance_agent.py`): Audits BEE PAT target compliance, calculates the composite **PRAGATI Score (0–1000)**, and outputs executive scorecards.
 6. **Digital Twin Agent** (`backend/agents/digital_twin_agent.py`): Evaluates Solar PV, BESS Battery Storage, and Load Shifting scenarios with financial and carbon ROI projections.
+7. **Alert Management Agent** (`backend/agents/alert_agent.py`): Triages high-frequency meter threshold alerts and generates emergency mitigation XAI Cards.
 
 ---
 
@@ -81,6 +82,7 @@ $$\text{PRAGATI Score (0–1000 Range)} = \text{PRAGATI Score (0–100)} \times 
 │   │   ├── optimization_agent.py # Optimization Agent (MILP Shift Scheduler)
 │   │   ├── compliance_agent.py   # Compliance Agent (BEE PAT Audit & PRAGATI Scorecard)
 │   │   ├── digital_twin_agent.py # Digital Twin Agent (Scenario Modeling & ROI)
+│   │   ├── alert_agent.py        # Alert Agent (Emergency Threshold Triage & XAI Cards)
 │   │   └── orchestrator.py       # Gemini 1.5 Pro AgentOrchestrator
 │   ├── engine/                   # Specialized ML Core & Solvers
 │   │   ├── dataset_loader.py     # Public Indian Industrial Dataset loader (BEE/ASI/CEA)
