@@ -1075,3 +1075,98 @@ function handlePaymentSubmit(event) {
     
     alert(`🎉 Subscription Activated!\n\nThank you, ${company}!\n\nPlan: ${currentSelectedPlan} (₹${currentSelectedPrice.toLocaleString()}/mo)\nBilling Email: ${email}\nPayment Gateway: ${method.toUpperCase()}\n\nYour API Keys and Multi-Tenant Portal access details have been dispatched to ${email}.`);
 }
+
+// Day 3: Digital Twin Simulation & Audit Log Drawer
+async function runDigitalTwinSimulation() {
+    const solar = parseFloat(document.getElementById("twin-solar")?.value || 250);
+    const battery = parseFloat(document.getElementById("twin-battery")?.value || 100);
+    const shift = parseFloat(document.getElementById("twin-shift")?.value || 20);
+    
+    const btn = document.getElementById("run-digital-twin-btn");
+    if (btn) btn.innerText = "Simulating Scenarios... ⏳";
+
+    try {
+        const res = await fetch(`${API_BASE}/v1/simulation/digital_twin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                region: "Western",
+                base_monthly_kwh: 150000.0,
+                solar_capacity_kw: solar,
+                battery_storage_kwh: battery,
+                load_shift_pct: shift
+            })
+        });
+
+        if (!res.ok) throw new Error("Digital Twin simulation failed");
+
+        const data = await res.json();
+        const sim = data.result.simulation;
+
+        // Update DOM metrics
+        if (document.getElementById("twin-val-gen")) {
+            document.getElementById("twin-val-gen").innerText = `${sim.energy_metrics.monthly_solar_generation_kwh.toLocaleString()} kWh/mo`;
+        }
+        if (document.getElementById("twin-val-savings")) {
+            document.getElementById("twin-val-savings").innerText = `₹${sim.financial_metrics.annual_savings_inr.toLocaleString()}`;
+        }
+        if (document.getElementById("twin-val-co2")) {
+            document.getElementById("twin-val-co2").innerText = `${sim.carbon_metrics.annual_co2_reduction_tons} Tons CO₂`;
+        }
+
+        if (data.result.xai_card) {
+            renderXAICardDrawer(data.result.xai_card);
+        }
+    } catch (e) {
+        console.error("Digital Twin error:", e);
+    } finally {
+        if (btn) btn.innerText = "Run Scenario Simulation ☀️";
+    }
+}
+
+async function openAuditLogDrawer() {
+    const drawer = document.getElementById("audit-log-drawer");
+    const container = document.getElementById("audit-log-list");
+    if (drawer) drawer.style.display = "flex";
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/v1/audit/logs`);
+        const data = await res.json();
+
+        let html = "";
+        data.logs.forEach(log => {
+            let statusColor = log.status === "APPROVED" ? "#10B981" : "#F59E0B";
+            html += `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 700; color: #E2E8F0; font-size: 0.9rem;">${log.id} — ${log.agent}</span>
+                        <span style="font-size: 0.75rem; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}55; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${log.status}</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 4px;">${log.action}</div>
+                    <div style="font-size: 0.8rem; color: #10B981; font-weight: 600;">Impact: ${log.impact}</div>
+                    <div style="font-size: 0.75rem; color: #64748B; margin-top: 6px;">🕒 ${log.timestamp} • Authorized by ${log.approved_by}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = `<p style="color: #EF4444;">Failed to load audit logs.</p>`;
+    }
+}
+
+function closeAuditLogDrawer() {
+    const drawer = document.getElementById("audit-log-drawer");
+    if (drawer) drawer.style.display = "none";
+}
+
+// Bind slider value displays
+document.addEventListener("DOMContentLoaded", () => {
+    const shiftSlider = document.getElementById("twin-shift");
+    const shiftVal = document.getElementById("twin-shift-val");
+    if (shiftSlider && shiftVal) {
+        shiftSlider.addEventListener("input", (e) => {
+            shiftVal.innerText = e.target.value;
+        });
+    }
+});
