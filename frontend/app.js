@@ -1160,7 +1160,66 @@ function closeAuditLogDrawer() {
     if (drawer) drawer.style.display = "none";
 }
 
-// Bind slider value displays
+// Day 4: Real-time Telemetry Stream & Alert Center
+async function fetchActiveAlerts() {
+    const container = document.getElementById("live-alerts-list");
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/v1/alerts/active`);
+        const data = await res.json();
+        const alerts = data.result.alerts || [];
+
+        if (alerts.length === 0) {
+            container.innerHTML = `<p style="color: #10B981; font-weight: 500;">✓ All facility meters nominal. 0 active operational alerts.</p>`;
+            return;
+        }
+
+        let html = "";
+        alerts.forEach(a => {
+            let badgeBg = a.severity === "CRITICAL" ? "#EF4444" : (a.severity === "HIGH" ? "#F97316" : "#F59E0B");
+            let isAck = a.status === "ACKNOWLEDGED";
+            html += `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="background: ${badgeBg}; color: #FFF; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">${a.severity}</span>
+                            <strong style="color: #F8FAFC; font-size: 0.95rem;">${a.type} — ${a.equipment}</strong>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #CBD5E1;">Value: <span style="color: #EF4444; font-weight: 700;">${a.value}</span> (Safety Limit: ${a.threshold})</div>
+                        <div style="font-size: 0.8rem; color: #10B981; margin-top: 4px;">Mitigation: ${a.mitigation}</div>
+                    </div>
+                    <div>
+                        ${isAck 
+                            ? `<span style="color: #10B981; font-size: 0.8rem; font-weight: 600;">✓ Acknowledged by ${a.acknowledged_by}</span>`
+                            : `<button class="premium-btn" style="padding: 6px 12px; font-size: 0.8rem; background: #EF4444;" onclick="acknowledgeAlert('${a.alert_id}')">Acknowledge Alert 🚨</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = `<p style="color: #EF4444;">Failed to fetch live alerts.</p>`;
+    }
+}
+
+async function acknowledgeAlert(alertId) {
+    try {
+        const res = await fetch(`${API_BASE}/v1/alerts/acknowledge`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ alert_id: alertId, operator_name: "Shift Operator" })
+        });
+        if (res.ok) {
+            fetchActiveAlerts();
+        }
+    } catch (e) {
+        console.error("Alert acknowledgment failed:", e);
+    }
+}
+
+// Bind slider value displays and init alert polling
 document.addEventListener("DOMContentLoaded", () => {
     const shiftSlider = document.getElementById("twin-shift");
     const shiftVal = document.getElementById("twin-shift-val");
@@ -1169,4 +1228,5 @@ document.addEventListener("DOMContentLoaded", () => {
             shiftVal.innerText = e.target.value;
         });
     }
+    fetchActiveAlerts();
 });
