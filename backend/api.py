@@ -31,7 +31,9 @@ from engine.workspace_manager import list_workspaces, get_current_workspace, swi
 from engine.document_parser import parse_electricity_bill
 from engine.rag_engine import rag_engine
 from engine.digital_twin import DigitalTwinEngine
+from engine.telemetry_streamer import telemetry_streamer
 from agents.digital_twin_agent import DigitalTwinAgent
+from agents.alert_agent import AlertAgent
 from agents.orchestrator import AgentOrchestrator
 
 # Initialize database and agent orchestrator instances
@@ -1190,6 +1192,40 @@ async def get_audit_logs():
         }
     ]
     return {"status": "success", "total_logs": len(logs), "logs": logs}
+
+class AlertAcknowledgeRequest(BaseModel):
+    alert_id: str = Field(..., description="ID of the alert to acknowledge")
+    operator_name: str = Field("Operator", description="Name of the operator acknowledging the alert")
+
+@app.get("/api/v1/telemetry/stream")
+async def get_telemetry_stream():
+    """
+    Returns live meter stream reading.
+    """
+    return {"status": "success", "stream": telemetry_streamer.get_live_telemetry()}
+
+@app.get("/api/v1/alerts/active")
+async def get_active_alerts():
+    """
+    Returns active triggered alerts and AlertAgent triage summary.
+    """
+    try:
+        agent = AlertAgent()
+        result = agent.run({})
+        return {"status": "success", "result": result}
+    except Exception as e:
+        logger.error(f"Active alerts retrieval failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/alerts/acknowledge")
+async def post_acknowledge_alert(req: AlertAcknowledgeRequest):
+    """
+    Acknowledges a triggered alert by ID.
+    """
+    res = telemetry_streamer.acknowledge_alert(req.alert_id, req.operator_name)
+    if res["status"] == "error":
+        raise HTTPException(status_code=404, detail=res["message"])
+    return res
 
 # Mount the static frontend directory
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
