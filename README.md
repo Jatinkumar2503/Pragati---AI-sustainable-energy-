@@ -53,6 +53,7 @@ PRAGATI AI moves beyond passive energy monitoring dashboards. It operates as an 
 3. **Anomaly Agent** (`backend/agents/anomaly_agent.py`): Isolation Forest model detecting power factor drops, idle machine power leaks, and off-shift spikes.
 4. **Optimization Agent** (`backend/agents/optimization_agent.py`): Mixed-Integer Linear Programming (MILP) solver aligning heavy machine shifts with green tariff windows.
 5. **Compliance & Reporting Agent** (`backend/agents/compliance_agent.py`): Audits BEE PAT target compliance, calculates the composite **PRAGATI Score (0–1000)**, and outputs executive scorecards.
+6. **Digital Twin Agent** (`backend/agents/digital_twin_agent.py`): Evaluates Solar PV, BESS Battery Storage, and Load Shifting scenarios with financial and carbon ROI projections.
 
 ---
 
@@ -79,12 +80,14 @@ $$\text{PRAGATI Score (0–1000 Range)} = \text{PRAGATI Score (0–100)} \times 
 │   │   ├── anomaly_agent.py      # Anomaly Agent (Isolation Forest)
 │   │   ├── optimization_agent.py # Optimization Agent (MILP Shift Scheduler)
 │   │   ├── compliance_agent.py   # Compliance Agent (BEE PAT Audit & PRAGATI Scorecard)
+│   │   ├── digital_twin_agent.py # Digital Twin Agent (Scenario Modeling & ROI)
 │   │   └── orchestrator.py       # Gemini 1.5 Pro AgentOrchestrator
 │   ├── engine/                   # Specialized ML Core & Solvers
 │   │   ├── dataset_loader.py     # Public Indian Industrial Dataset loader (BEE/ASI/CEA)
 │   │   ├── anomaly_detector.py   # Isolation Forest engine with MAD statistics
 │   │   ├── forecaster.py         # Prophet, Random Forest & GRU neural network models
 │   │   ├── scheduler.py          # MILP Solver (OR-Tools / SciPy) & ToD Tariff Calculator
+│   │   ├── digital_twin.py       # Digital Twin Engine (Solar PV, BESS & Carbon Factors)
 │   │   ├── privacy_shield.py     # Differential Privacy Shield (Laplace Mechanism)
 │   │   └── telemetry_db.py       # SQLite / PostgreSQL Telemetry Storage Engine
 │   └── tests/
