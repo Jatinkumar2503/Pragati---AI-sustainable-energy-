@@ -618,7 +618,18 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     """
     # 1. Resample to hourly data to keep calculations fast and reduce noise
     logger.info("Resampling telemetry data to hourly aggregates...")
-    df_hourly = df.set_index('date').resample('h').agg({
+    df_copy = df.copy()
+    defaults = {
+        'usage_kwh': 100.0,
+        'reactive_lagging_kvarh': 20.0,
+        'power_factor_lagging': 90.0,
+        'ambient_temperature_c': 28.0
+    }
+    for col, val in defaults.items():
+        if col not in df_copy.columns:
+            df_copy[col] = val
+            
+    df_hourly = df_copy.set_index('date').resample('h').agg({
         'usage_kwh': 'mean',
         'reactive_lagging_kvarh': 'mean',
         'power_factor_lagging': 'mean',

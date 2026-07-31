@@ -15,6 +15,21 @@ def run_anomaly_detection(df, contamination="auto"):
     """
     df_copy = df.copy().sort_values('date').reset_index(drop=True)
     
+    defaults = {
+        'usage_kwh': 100.0,
+        'reactive_lagging_kvarh': 20.0,
+        'reactive_leading_kvarh': 10.0,
+        'power_factor_lagging': 90.0,
+        'power_factor_leading': 95.0,
+        'ambient_temperature_c': 28.0,
+        'load_type': 'Medium_Load',
+        'week_status': 'Weekday',
+        'day_of_week': 'Monday'
+    }
+    for col, val in defaults.items():
+        if col not in df_copy.columns:
+            df_copy[col] = val
+    
     # Simulate THD (Total Harmonic Distortion %) and Voltage (V) if not present in the dataframe
     if 'thd_pct' not in df_copy.columns:
         np.random.seed(42)

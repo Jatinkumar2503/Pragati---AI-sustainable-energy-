@@ -22,9 +22,8 @@ class TestScheduler(unittest.TestCase):
         self.assertIsInstance(res, dict)
         self.assertIn("best_start_hour", res)
         self.assertIn("savings", res)
-        self.assertIn("hourly_breakdown", res)
-        self.assertIn("baseline_metrics", res)
-        self.assertIn("optimal_metrics", res)
+        self.assertIn("best_hourly_details", res)
+        self.assertIn("baseline", res)
 
 if __name__ == "__main__":
     unittest.main()
