@@ -19,8 +19,10 @@ class TestForecast(unittest.TestCase):
     def test_generate_forecast(self):
         res = generate_forecast(self.df, forecast_hours=24, backtest_folds=2)
         self.assertIsInstance(res, dict)
-        self.assertIn("forecast", res)
-        self.assertIn("validation_rmse", res)
+        self.assertIn("prophet_forecast", res)
+        self.assertIn("rf_forecast", res)
+        self.assertIn("rnn_forecast", res)
+        self.assertIn("metrics", res)
 
 if __name__ == "__main__":
     unittest.main()
