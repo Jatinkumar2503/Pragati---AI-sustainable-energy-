@@ -549,6 +549,59 @@ input[type=range]::-webkit-slider-thumb:hover {
     border: 1px solid rgba(200, 190, 170, 0.6) !important;
 }
 
+/* B2B Managed Deployment Banner */
+.b2b-managed-banner {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 24px !important;
+    padding: 32px !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 16px 36px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    margin-bottom: 32px !important;
+}
+
+.b2b-managed-banner h3 {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 8px !important;
+}
+
+.b2b-managed-banner p {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+    margin-bottom: 24px !important;
+}
+
+.b2b-step-card {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    color: #FFFFFF !important;
+    backdrop-filter: blur(12px) !important;
+    transition: all 0.3s ease !important;
+}
+
+.b2b-step-card:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-3px) !important;
+}
+
+.b2b-step-card strong {
+    color: #FFFFFF !important;
+    font-size: 15px !important;
+    display: block !important;
+    margin-bottom: 6px !important;
+}
+
+.b2b-step-card p {
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-size: 13px !important;
+    margin: 0 !important;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 640px) {
     .sidebar {

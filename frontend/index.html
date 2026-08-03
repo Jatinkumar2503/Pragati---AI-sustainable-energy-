@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=8.0">
+    <link rel="stylesheet" href="style.css?v=10.0">
 </head>
 <body>
     <div class="app-container">
@@ -549,30 +549,30 @@
                 </div>
 
                 <!-- 4-Step Managed B2B Onboarding & Data Isolation Architecture -->
-                <div class="card" style="margin-bottom: 24px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(16, 185, 129, 0.2); padding: 24px;">
-                    <h3 style="font-size: 1.2rem; color: #F8FAFC; margin-bottom: 8px;">🏭 Managed Industrial Deployment & Isolated Multi-Tenant Architecture</h3>
-                    <p style="color: #94A3B8; font-size: 0.88rem; margin-bottom: 20px;">Unlike consumer subscription software, PRAGATI AI is deployed via a managed enterprise onboarding model with dedicated physical audits and strict workspace privacy isolation.</p>
+                <div class="b2b-managed-banner">
+                    <h3>🏭 Managed Industrial Deployment & Isolated Multi-Tenant Architecture</h3>
+                    <p>Unlike consumer subscription software, PRAGATI AI is deployed via a managed enterprise onboarding model with dedicated physical audits and strict workspace privacy isolation.</p>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 16px;">
+                        <div class="b2b-step-card">
                             <div style="font-size: 1.5rem; margin-bottom: 8px;">1️⃣ On-Site Audit</div>
-                            <strong style="color: #E2E8F0; font-size: 0.9rem; display: block; margin-bottom: 4px;">In-Person Plant Assessment</strong>
-                            <p style="color: #94A3B8; font-size: 0.8rem; margin: 0;">Engineers audit physical SCADA meters, power factor, and DISCOM tariffs on-site.</p>
+                            <strong>In-Person Plant Assessment</strong>
+                            <p>Engineers audit physical SCADA meters, power factor, and DISCOM tariffs on-site.</p>
                         </div>
-                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 16px;">
+                        <div class="b2b-step-card">
                             <div style="font-size: 1.5rem; margin-bottom: 8px;">2️⃣ Private User ID</div>
-                            <strong style="color: #E2E8F0; font-size: 0.9rem; display: block; margin-bottom: 4px;">Dedicated Tenant Provisioning</strong>
-                            <p style="color: #94A3B8; font-size: 0.8rem; margin: 0;">We create a private, cryptographically isolated User ID & workspace for your plant.</p>
+                            <strong>Dedicated Tenant Provisioning</strong>
+                            <p>We create a private, cryptographically isolated User ID & workspace for your plant.</p>
                         </div>
-                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 16px;">
+                        <div class="b2b-step-card">
                             <div style="font-size: 1.5rem; margin-bottom: 8px;">3️⃣ Auto-Retraining</div>
-                            <strong style="color: #E2E8F0; font-size: 0.9rem; display: block; margin-bottom: 4px;">Plant-Specific Model Training</strong>
-                            <p style="color: #94A3B8; font-size: 0.8rem; margin: 0;">AI models (Prophet, Isolation Forest, MILP) train exclusively on your factory's logs.</p>
+                            <strong>Plant-Specific Model Training</strong>
+                            <p>AI models (Prophet, Isolation Forest, MILP) train exclusively on your factory's logs.</p>
                         </div>
-                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 16px; background: rgba(16, 185, 129, 0.03);">
+                        <div class="b2b-step-card">
                             <div style="font-size: 1.5rem; margin-bottom: 8px;">4️⃣ Zero Data Leak</div>
-                            <strong style="color: #10B981; font-size: 0.9rem; display: block; margin-bottom: 4px;">Differential Privacy Shield</strong>
-                            <p style="color: #94A3B8; font-size: 0.8rem; margin: 0;">Your telemetry stays 100% private. Data never leaves your tenant workspace.</p>
+                            <strong>Differential Privacy Shield</strong>
+                            <p>Your telemetry stays 100% private. Data never leaves your tenant workspace.</p>
                         </div>
                     </div>
                 </div>
@@ -635,13 +635,13 @@
                 </div>
 
                 <!-- Industrial Enterprise Contact Banner -->
-                <div class="card" style="margin-top: 32px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="card b2b-contact-banner" style="margin-top: 32px; background: linear-gradient(135deg, #FAF6EE 0%, #FFFFFF 100%); border: 1px solid rgba(16, 185, 129, 0.4); padding: 24px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
                         <div>
-                            <h3 style="font-size: 1.2rem; color: #F8FAFC; margin-bottom: 4px;">🏭 Industrial Plant & Heavy Factory Deployment</h3>
-                            <p style="color: #94A3B8; font-size: 0.85rem; margin: 0;">Need custom SCADA / Modbus hardware integration, multi-plant hierarchy, or dedicated BEE PAT compliance consulting?</p>
+                            <h3 style="font-size: 1.2rem; color: #1F2B24; margin-bottom: 4px;">🏭 Industrial Plant & Heavy Factory Deployment</h3>
+                            <p style="color: #526357; font-size: 0.85rem; margin: 0;">Need custom SCADA / Modbus hardware integration, multi-plant hierarchy, or dedicated BEE PAT compliance consulting?</p>
                         </div>
-                        <button class="premium-btn" onclick="openContactSalesModal('Custom Factory Deployment')" style="background: var(--primary); padding: 8px 18px;">Contact Industrial Engineering Team ✉️</button>
+                        <button class="premium-btn" onclick="openContactSalesModal('Custom Factory Deployment')" style="background: #059669; padding: 12px 24px; width: auto; margin-top: 0;">Contact Industrial Engineering Team ✉️</button>
                     </div>
                 </div>
             </div>
