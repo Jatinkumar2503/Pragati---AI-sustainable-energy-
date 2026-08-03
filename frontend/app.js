@@ -1201,22 +1201,22 @@ async function fetchActiveAlerts() {
 
         let html = "";
         alerts.forEach(a => {
-            let badgeBg = a.severity === "CRITICAL" ? "#EF4444" : (a.severity === "HIGH" ? "#F97316" : "#F59E0B");
+            let badgeBg = a.severity === "CRITICAL" ? "#DC2626" : (a.severity === "HIGH" ? "#D97706" : "#D97706");
             let isAck = a.status === "ACKNOWLEDGED";
             html += `
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: #FAF6EE; border: 1px solid rgba(200, 190, 170, 0.6); border-radius: 14px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(60, 52, 38, 0.04);">
                     <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <span style="background: ${badgeBg}; color: #FFF; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">${a.severity}</span>
-                            <strong style="color: #F8FAFC; font-size: 0.95rem;">${a.type} — ${a.equipment}</strong>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                            <span style="background: ${badgeBg}; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">${a.severity}</span>
+                            <strong style="color: #1F2B24; font-size: 1rem; font-weight: 800;">${a.type} — ${a.equipment}</strong>
                         </div>
-                        <div style="font-size: 0.85rem; color: #CBD5E1;">Value: <span style="color: #EF4444; font-weight: 700;">${a.value}</span> (Safety Limit: ${a.threshold})</div>
-                        <div style="font-size: 0.8rem; color: #10B981; margin-top: 4px;">Mitigation: ${a.mitigation}</div>
+                        <div style="font-size: 0.88rem; color: #526357; font-weight: 600;">Value: <span style="color: #DC2626; font-weight: 800;">${a.value}</span> (Safety Limit: <span style="color: #1F2B24; font-weight: 700;">${a.threshold}</span>)</div>
+                        <div style="font-size: 0.85rem; color: #047857; margin-top: 6px; font-weight: 700;">Mitigation: ${a.mitigation}</div>
                     </div>
                     <div>
                         ${isAck 
-                            ? `<span style="color: #10B981; font-size: 0.8rem; font-weight: 600;">✓ Acknowledged by ${a.acknowledged_by}</span>`
-                            : `<button class="premium-btn" style="padding: 6px 12px; font-size: 0.8rem; background: #EF4444;" onclick="acknowledgeAlert('${a.alert_id}')">Acknowledge Alert 🚨</button>`
+                            ? `<span style="color: #047857; font-size: 0.85rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 10px; display: inline-block;">✓ Acknowledged by ${a.acknowledged_by}</span>`
+                            : `<button class="premium-btn" style="padding: 8px 16px; font-size: 0.85rem; width: auto !important; margin-top: 0 !important; background: #DC2626;" onclick="acknowledgeAlert('${a.alert_id}')">Acknowledge Alert 🚨</button>`
                         }
                     </div>
                 </div>
