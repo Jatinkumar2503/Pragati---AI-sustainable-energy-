@@ -212,6 +212,29 @@ body {
 }
 
 /* =====================================================================
+   📌 STRICT SINGLE-TAB PANEL VISIBILITY (ONLY ACTIVE TAB IS VISIBLE)
+   ===================================================================== */
+.tab-panel {
+    display: none !important;
+}
+
+.tab-panel.active {
+    display: block !important;
+    animation: fadeInTab 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes fadeInTab {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =====================================================================
    🌿 MASTER 3D WARM CREAM CARD CONTAINERS & FEATURE BOUNDARIES
    ===================================================================== */
 

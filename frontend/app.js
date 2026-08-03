@@ -260,6 +260,10 @@ function initTabNavigation() {
         "tab-copilot": {
             title: "AI Sustainability Copilot",
             sub: "Chat with PRAGATI AI to audit energy leaks and receive operational recommendations."
+        },
+        "tab-subscriptions": {
+            title: "PRAGATI AI Startup Plans & Managed B2B Deployment",
+            sub: "Deploy active sustainability intelligence across your client sites or request dedicated factory SCADA integration."
         }
     };
     
@@ -267,31 +271,41 @@ function initTabNavigation() {
         item.addEventListener("click", (e) => {
             e.preventDefault();
             const targetTab = item.getAttribute("data-tab");
+            const targetPanel = document.getElementById(targetTab);
             
-            // Toggle active classes
+            if (!targetPanel) return;
+            
+            // Toggle active classes across all navigation items and tab panels
             navItems.forEach(n => n.classList.remove("active"));
             tabPanels.forEach(p => p.classList.remove("active"));
             
             item.classList.add("active");
-            document.getElementById(targetTab).classList.add("active");
+            targetPanel.classList.add("active");
+            
+            // Scroll to top of main workspace cleanly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             
             // Set dynamic header titles
             if (tabMetadata[targetTab]) {
-                tabTitle.innerText = tabMetadata[targetTab].title;
-                tabSubtitle.innerText = tabMetadata[targetTab].sub;
+                if (tabTitle) tabTitle.innerText = tabMetadata[targetTab].title;
+                if (tabSubtitle) tabSubtitle.innerText = tabMetadata[targetTab].sub;
             }
             
-            // Specific chart resizing on tab reveal
-            if (targetTab === "tab-forecasting" && forecastChart) {
-                forecastChart.resize();
-                if (backtestChart) backtestChart.resize();
-            } else if (targetTab === "tab-scheduler" && scheduleChart) {
-                scheduleChart.resize();
-            } else if (targetTab === "tab-anomalies" && thdChart) {
-                thdChart.resize();
-            } else if (targetTab === "tab-digital-twin" && twinCashFlowChart) {
-                twinCashFlowChart.resize();
-            }
+            // Trigger Chart.js auto-resize on reveal
+            setTimeout(() => {
+                if (targetTab === "tab-dashboard" && telemetryChart) {
+                    telemetryChart.resize();
+                } else if (targetTab === "tab-forecasting" && forecastChart) {
+                    forecastChart.resize();
+                    if (backtestChart) backtestChart.resize();
+                } else if (targetTab === "tab-scheduler" && scheduleChart) {
+                    scheduleChart.resize();
+                } else if (targetTab === "tab-anomalies" && thdChart) {
+                    thdChart.resize();
+                } else if (targetTab === "tab-digital-twin" && twinCashFlowChart) {
+                    twinCashFlowChart.resize();
+                }
+            }, 50);
         });
     });
 }
