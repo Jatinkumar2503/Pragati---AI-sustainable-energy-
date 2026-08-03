@@ -1331,8 +1331,89 @@ function handleContactSalesSubmit(event) {
     closeContactSalesModal();
 }
 
-// 🏃‍♂️ Interactive 3D Perspective Tilt Physics Handler for Dynamic Motion
+// 🌐 VisionOS 3D Environmental Canvas Engine & Kinetic Cursor Glow
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. Interactive Magnetic Cursor Glow (Spring Lerp Motion)
+    const cursorGlow = document.getElementById("cursor-glow");
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let currentX = mouseX;
+    let currentY = mouseY;
+
+    window.addEventListener("mousemove", (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    const animateCursor = () => {
+        currentX += (mouseX - currentX) * 0.12;
+        currentY += (mouseY - currentY) * 0.12;
+        if (cursorGlow) {
+            cursorGlow.style.left = `${currentX}px`;
+            cursorGlow.style.top = `${currentY}px`;
+        }
+        requestAnimationFrame(animateCursor);
+    };
+    animateCursor();
+
+    // 2. High-Performance 60 FPS 3D Environmental Canvas Engine
+    const canvas = document.getElementById("ambient-3d-canvas");
+    if (canvas) {
+        const ctx = canvas.getContext("2d");
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener("resize", () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Generate 60 3D Environmental Particles
+        const particles = [];
+        for (let i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                z: Math.random() * 3 + 0.5,
+                radius: Math.random() * 2.5 + 1,
+                color: Math.random() > 0.4 ? "rgba(16, 185, 129, " : "rgba(245, 158, 11, ",
+                alpha: Math.random() * 0.5 + 0.2,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: -Math.random() * 0.8 - 0.2
+            });
+        }
+
+        const renderCanvas = () => {
+            ctx.clearRect(0, 0, width, height);
+
+            const parallaxX = (mouseX - width / 2) * 0.02;
+            const parallaxY = (mouseY - height / 2) * 0.02;
+
+            particles.forEach(p => {
+                p.x += p.vx + parallaxX * (1 / p.z) * 0.1;
+                p.y += p.vy + parallaxY * (1 / p.z) * 0.1;
+
+                if (p.y < -10) {
+                    p.y = height + 10;
+                    p.x = Math.random() * width;
+                }
+                if (p.x < -10) p.x = width + 10;
+                if (p.x > width + 10) p.x = -10;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * p.z, 0, Math.PI * 2);
+                ctx.fillStyle = `${p.color}${p.alpha})`;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = p.color.includes("16, 185") ? "#10B981" : "#F59E0B";
+                ctx.fill();
+            });
+
+            requestAnimationFrame(renderCanvas);
+        };
+        renderCanvas();
+    }
+
+    // 3. 3D Card Mouse Tilt Physics
     const init3DTilt = () => {
         const cards = document.querySelectorAll(".kpi-card, .chart-card, .data-card, .pricing-card");
         cards.forEach(card => {
@@ -1344,7 +1425,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const rotateY = (x / rect.width) * 14;
                 card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-8px) scale3d(1.02, 1.02, 1.02)`;
             });
-            
             card.addEventListener("mouseleave", () => {
                 card.style.transform = "";
             });
