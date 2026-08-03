@@ -1,5 +1,5 @@
 /* =====================================================================
-   🌿 PRAGATI AI — VISION-OS CINEMATIC AI OPERATING SYSTEM THEME
+   🌿 PRAGATI AI — VISION-OS WARM CREAM 3D KINETIC AI OPERATING SYSTEM
    ===================================================================== */
 
 /* Reset & Base System Setup */
@@ -11,8 +11,8 @@
 
 body {
     font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #F7F4EC;
-    color: #1F2B24;
+    background-color: #F7F4EC !important;
+    color: #1F2B24 !important;
     overflow-x: hidden;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -23,15 +23,15 @@ body {
 /* 🎨 Warm Eco-Luxury Palette Tokens */
 :root {
     --bg-main: #F7F4EC;
-    --bg-sidebar: rgba(236, 230, 216, 0.88);
+    --bg-sidebar: #ECE6D8;
     --card-bg-3d: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 242, 232, 0.92) 100%);
     --card-hover-3d: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(240, 233, 218, 0.98) 100%);
     
     /* 3D Shadows & Double-Bevel Highlights */
-    --shadow-3d-card: 0 24px 48px -12px rgba(60, 52, 38, 0.14), 0 8px 16px -4px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -2px 4px rgba(190, 180, 160, 0.3);
-    --shadow-3d-hover: 0 35px 70px -15px rgba(60, 52, 38, 0.24), 0 16px 32px -4px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -2px 4px rgba(180, 170, 150, 0.4);
-    --shadow-3d-btn: 0 6px 0 #047857, 0 12px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    --shadow-3d-btn-hover: 0 8px 0 #047857, 0 16px 30px rgba(16, 185, 129, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --shadow-3d-card: 0 20px 40px -10px rgba(60, 52, 38, 0.12), 0 8px 16px -4px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -2px 4px rgba(190, 180, 160, 0.3);
+    --shadow-3d-hover: 0 30px 60px -12px rgba(60, 52, 38, 0.22), 0 14px 28px -4px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -2px 4px rgba(180, 170, 150, 0.4);
+    --shadow-3d-btn: 0 6px 0 #047857, 0 10px 22px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    --shadow-3d-btn-hover: 0 8px 0 #047857, 0 14px 28px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
     --shadow-3d-btn-active: 0 2px 0 #047857, 0 4px 10px rgba(16, 185, 129, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 
     /* Eco-Luxe Palette Tokens */
@@ -50,11 +50,11 @@ body {
     --text-secondary: #526357;
     --text-muted: #829285;
     
-    --border-3d: 1px solid rgba(200, 190, 170, 0.55);
-    --border-hover-3d: 1px solid rgba(16, 185, 129, 0.55);
+    --border-3d: 1px solid rgba(200, 190, 170, 0.5);
+    --border-hover-3d: 1px solid rgba(16, 185, 129, 0.5);
 }
 
-/* 🌐 Full-Screen WebGL 3D Environmental Canvas */
+/* 🌐 Full-Screen WebGL 3D Environmental Canvas (Strictly Behind UI) */
 #ambient-3d-canvas {
     position: fixed;
     top: 0;
@@ -62,7 +62,8 @@ body {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 0;
+    z-index: -1 !important;
+    opacity: 0.65;
 }
 
 /* 🎯 Interactive Magnetic Cursor Glow */
@@ -75,7 +76,7 @@ body {
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
-    z-index: 1;
+    z-index: 0;
     opacity: 0.85;
 }
 
@@ -83,9 +84,9 @@ body {
 .aurora-ribbon {
     position: fixed;
     pointer-events: none;
-    z-index: 0;
-    filter: blur(70px);
-    opacity: 0.45;
+    z-index: -1;
+    filter: blur(80px);
+    opacity: 0.35;
 }
 
 .ribbon-1 {
@@ -126,7 +127,7 @@ body {
     border-radius: 50%;
     filter: blur(80px);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
     opacity: 0.7;
 }
 
@@ -180,22 +181,24 @@ body {
     display: flex;
     min-height: 100vh;
     position: relative;
-    z-index: 1;
+    z-index: 10;
+    width: 100%;
 }
 
-/* 🌿 3D VisionOS Glass Sidebar Navigation */
+/* 🌿 3D VisionOS Glass Sidebar Navigation (STRICTLY ALWAYS VISIBLE) */
 .sidebar {
-    width: 280px;
-    background: var(--bg-sidebar);
-    border-right: 1px solid rgba(200, 190, 170, 0.6);
-    box-shadow: 12px 0 35px rgba(60, 52, 38, 0.08);
-    backdrop-filter: blur(28px) saturate(180%);
-    display: flex;
-    flex-direction: column;
-    padding: 28px 20px;
-    position: fixed;
-    height: 100vh;
-    z-index: 100;
+    width: 280px !important;
+    background: #ECE6D8 !important;
+    border-right: 1px solid rgba(200, 190, 170, 0.8) !important;
+    box-shadow: 10px 0 30px rgba(60, 52, 38, 0.12) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 28px 20px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
 }
 
 .brand {
@@ -269,7 +272,7 @@ body {
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.8);
     color: var(--text-primary);
     transform: translateX(6px) translateY(-2px);
     box-shadow: 0 6px 16px rgba(60, 52, 38, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1);
@@ -331,10 +334,13 @@ body {
 
 /* Main Workspace Content Area */
 .main-content {
-    margin-left: 280px;
+    margin-left: 280px !important;
     flex-grow: 1;
     padding: 36px 40px;
-    max-width: calc(100vw - 280px);
+    width: calc(100% - 280px) !important;
+    max-width: calc(100% - 280px) !important;
+    position: relative;
+    z-index: 10;
 }
 
 /* 3D Floating Top Workspace Bar */
@@ -886,31 +892,18 @@ input[type=range]::-webkit-slider-thumb:hover {
     margin: 16px 0;
 }
 
-/* Responsive Breakpoints */
-@media (max-width: 1024px) {
+/* Mobile & Tablet Responsive Layout */
+@media (max-width: 640px) {
     .sidebar {
-        width: 240px;
+        width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 16px !important;
     }
     .main-content {
-        margin-left: 240px;
-        max-width: calc(100vw - 240px);
-        padding: 24px;
-    }
-}
-
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 16px;
-    }
-    .main-content {
-        margin-left: 0;
-        max-width: 100vw;
-        padding: 16px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px !important;
     }
 }
