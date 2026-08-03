@@ -1330,3 +1330,26 @@ function handleContactSalesSubmit(event) {
     alert(`📩 Industrial Audit Request Received!\n\nThank you, ${personName} (${plantName})!\nOur Industrial Energy Team will review your ${loadKw} plant specifications and contact you at ${email} within 24 business hours.\n\nReference ID: IND-AUDIT-${Math.floor(100000 + Math.random() * 900000)}`);
     closeContactSalesModal();
 }
+
+// 🏃‍♂️ Interactive 3D Perspective Tilt Physics Handler for Dynamic Motion
+document.addEventListener("DOMContentLoaded", () => {
+    const init3DTilt = () => {
+        const cards = document.querySelectorAll(".kpi-card, .chart-card, .data-card, .pricing-card");
+        cards.forEach(card => {
+            card.addEventListener("mousemove", (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                const rotateX = (-y / rect.height) * 14;
+                const rotateY = (x / rect.width) * 14;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-8px) scale3d(1.02, 1.02, 1.02)`;
+            });
+            
+            card.addEventListener("mouseleave", () => {
+                card.style.transform = "";
+            });
+        });
+    };
+    init3DTilt();
+    setTimeout(init3DTilt, 1000);
+});
