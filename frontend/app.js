@@ -229,13 +229,13 @@ async function handleCSVUpload(file) {
     }
 }
 
-// Sidebar Navigation Control
-function initTabNavigation() {
+// Universal Global Tab Switcher Function
+function switchTab(targetTab) {
     const navItems = document.querySelectorAll(".nav-item");
     const tabPanels = document.querySelectorAll(".tab-panel");
     const tabTitle = document.getElementById("tab-title");
     const tabSubtitle = document.getElementById("tab-subtitle");
-    
+
     const tabMetadata = {
         "tab-dashboard": {
             title: "Operational Dashboard",
@@ -266,48 +266,57 @@ function initTabNavigation() {
             sub: "Deploy active sustainability intelligence across your client sites or request dedicated factory SCADA integration."
         }
     };
-    
-    navItems.forEach(item => {
-        item.addEventListener("click", (e) => {
-            e.preventDefault();
-            const targetTab = item.getAttribute("data-tab");
-            const targetPanel = document.getElementById(targetTab);
-            
-            if (!targetPanel) return;
-            
-            // Toggle active classes across all navigation items and tab panels
-            navItems.forEach(n => n.classList.remove("active"));
-            tabPanels.forEach(p => p.classList.remove("active"));
-            
-            item.classList.add("active");
-            targetPanel.classList.add("active");
-            
-            // Scroll to top of main workspace cleanly
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Set dynamic header titles
-            if (tabMetadata[targetTab]) {
-                if (tabTitle) tabTitle.innerText = tabMetadata[targetTab].title;
-                if (tabSubtitle) tabSubtitle.innerText = tabMetadata[targetTab].sub;
-            }
-            
-            // Trigger Chart.js auto-resize on reveal
-            setTimeout(() => {
-                if (targetTab === "tab-dashboard" && telemetryChart) {
-                    telemetryChart.resize();
-                } else if (targetTab === "tab-forecasting" && forecastChart) {
-                    forecastChart.resize();
-                    if (backtestChart) backtestChart.resize();
-                } else if (targetTab === "tab-scheduler" && scheduleChart) {
-                    scheduleChart.resize();
-                } else if (targetTab === "tab-anomalies" && thdChart) {
-                    thdChart.resize();
-                } else if (targetTab === "tab-digital-twin" && twinCashFlowChart) {
-                    twinCashFlowChart.resize();
-                }
-            }, 50);
-        });
+
+    // Hide all tab panels completely using inline style + remove active class
+    tabPanels.forEach(p => {
+        p.classList.remove("active");
+        p.style.display = "none";
     });
+
+    // Deactivate all sidebar nav links
+    navItems.forEach(n => n.classList.remove("active"));
+
+    // Activate target panel & nav link
+    const targetPanel = document.getElementById(targetTab);
+    const targetNav = document.querySelector(`.nav-item[data-tab="${targetTab}"]`);
+
+    if (targetPanel) {
+        targetPanel.classList.add("active");
+        targetPanel.style.display = "block";
+    }
+
+    if (targetNav) {
+        targetNav.classList.add("active");
+    }
+
+    // Scroll main workspace to top
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Set dynamic header titles
+    if (tabMetadata[targetTab]) {
+        if (tabTitle) tabTitle.innerText = tabMetadata[targetTab].title;
+        if (tabSubtitle) tabSubtitle.innerText = tabMetadata[targetTab].sub;
+    }
+
+    // Trigger Chart.js auto-resize
+    setTimeout(() => {
+        if (targetTab === "tab-dashboard" && telemetryChart) {
+            telemetryChart.resize();
+        } else if (targetTab === "tab-forecasting" && forecastChart) {
+            forecastChart.resize();
+            if (backtestChart) backtestChart.resize();
+        } else if (targetTab === "tab-scheduler" && scheduleChart) {
+            scheduleChart.resize();
+        } else if (targetTab === "tab-anomalies" && thdChart) {
+            thdChart.resize();
+        } else if (targetTab === "tab-digital-twin" && twinCashFlowChart) {
+            twinCashFlowChart.resize();
+        }
+    }, 50);
+}
+
+function initTabNavigation() {
+    switchTab("tab-dashboard");
 }
 
 // Check Backend API Connection Health

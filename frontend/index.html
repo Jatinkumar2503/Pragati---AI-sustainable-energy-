@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=12.0">
+    <link rel="stylesheet" href="style.css?v=15.0">
 </head>
 <body>
     <div class="app-container">
@@ -22,25 +22,25 @@
             </div>
             
             <nav class="nav-menu">
-                <a href="#" class="nav-item active" data-tab="tab-dashboard" id="nav-dashboard">
+                <a href="javascript:void(0)" class="nav-item active" data-tab="tab-dashboard" id="nav-dashboard" onclick="switchTab('tab-dashboard')">
                     <span class="icon">📊</span> Dashboard
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-anomalies" id="nav-anomalies">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-anomalies" id="nav-anomalies" onclick="switchTab('tab-anomalies')">
                     <span class="icon">⚠️</span> Anomaly Alerts
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-forecasting" id="nav-forecasting">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-forecasting" id="nav-forecasting" onclick="switchTab('tab-forecasting')">
                     <span class="icon">📈</span> Load Forecasting
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-scheduler" id="nav-scheduler">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-scheduler" id="nav-scheduler" onclick="switchTab('tab-scheduler')">
                     <span class="icon">⚙️</span> Shift Scheduler
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-digital-twin" id="nav-digital-twin">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-digital-twin" id="nav-digital-twin" onclick="switchTab('tab-digital-twin')">
                     <span class="icon">☀️</span> Digital Twin
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-copilot" id="nav-copilot">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-copilot" id="nav-copilot" onclick="switchTab('tab-copilot')">
                     <span class="icon">💬</span> AI Copilot
                 </a>
-                <a href="#" class="nav-item" data-tab="tab-subscriptions" id="nav-subscriptions">
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-subscriptions" id="nav-subscriptions" onclick="switchTab('tab-subscriptions')">
                     <span class="icon">💳</span> Startup Plans
                 </a>
             </nav>
@@ -750,6 +750,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=12.0"></script>
+    <script src="app.js?v=15.0"></script>
 </body>
 </html>
