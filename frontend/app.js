@@ -1230,3 +1230,80 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     fetchActiveAlerts();
 });
+
+// Payment Gateway Modal & Subscription Processing
+let selectedPlanName = "Pro Growth Tier";
+let selectedPlanPrice = 3999;
+
+function openPaymentModal(planName, price) {
+    selectedPlanName = planName;
+    selectedPlanPrice = price;
+    
+    const modal = document.getElementById("payment-modal");
+    const planEl = document.getElementById("modal-selected-plan");
+    const priceEl = document.getElementById("modal-selected-price");
+    
+    if (planEl) planEl.innerText = `Selected Plan: ${planName}`;
+    if (priceEl) priceEl.innerText = `₹${price.toLocaleString()} / month (+ 18% GST)`;
+    if (modal) modal.style.display = "flex";
+}
+
+function closePaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function handlePaymentSubmit(event) {
+    event.preventDefault();
+    const btn = document.querySelector("#payment-form button[type='submit']");
+    if (btn) btn.innerText = "Processing Payment Transaction... ⏳";
+    
+    const company = document.getElementById("pay-company-name") ? document.getElementById("pay-company-name").value : "EcoGrid Technologies";
+    const email = document.getElementById("pay-email") ? document.getElementById("pay-email").value : "founder@ecogrid.io";
+    const method = document.getElementById("pay-method") ? document.getElementById("pay-method").value : "upi";
+    
+    try {
+        // Step 1: Create Order
+        const orderRes = await fetch(`${API_BASE}/v1/payment/create-order`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                plan_name: selectedPlanName,
+                amount_inr: selectedPlanPrice,
+                company_name: company,
+                email: email,
+                payment_method: method
+            })
+        });
+        const orderData = await orderRes.json();
+        
+        if (!orderRes.ok) throw new Error("Order creation failed");
+        
+        const orderId = orderData.order.order_id;
+        const totalAmount = orderData.order.total_amount_inr;
+        
+        // Step 2: Verify Payment
+        const verifyRes = await fetch(`${API_BASE}/v1/payment/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                order_id: orderId,
+                payment_id: `pay_RZP_${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+                signature: "sig_valid_pragati_2026"
+            })
+        });
+        const verifyData = await verifyRes.json();
+        
+        if (verifyRes.ok) {
+            alert(`🎉 Subscription Active!\n\nThank you, ${company}!\nPlan: ${selectedPlanName}\nTotal Charged: ₹${totalAmount.toLocaleString()} (incl. 18% GST)\nLicense Key: ${verifyData.receipt.license_key}\nStatus: Active until ${verifyData.receipt.valid_until}`);
+            closePaymentModal();
+        } else {
+            alert("Payment verification failed. Please try again.");
+        }
+    } catch (e) {
+        console.error("Payment submission error:", e);
+        alert("Transaction failed: " + e.message);
+    } finally {
+        if (btn) btn.innerText = "Proceed to Pay & Activate Subscription";
+    }
+}

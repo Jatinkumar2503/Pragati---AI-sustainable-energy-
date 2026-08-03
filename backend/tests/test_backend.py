@@ -330,5 +330,37 @@ class TestPragatiBackend(unittest.TestCase):
         # Reset environment settings for other tests
         os.environ["PRAGATI_ENV"] = "test"
 
+    def test_payment_gateway_endpoints(self):
+        """9. Test SaaS subscription payment order creation and transaction verification."""
+        client = TestClient(app)
+        
+        # Test Order Creation
+        res_order = client.post("/api/v1/payment/create-order", json={
+            "plan_name": "Pro Growth Tier",
+            "amount_inr": 3999.0,
+            "company_name": "EcoGrid Technologies Pvt Ltd",
+            "email": "founder@ecogrid.io",
+            "payment_method": "upi"
+        })
+        self.assertEqual(res_order.status_code, 200)
+        data_order = res_order.json()
+        self.assertEqual(data_order["status"], "success")
+        self.assertIn("order_PRAGATI_", data_order["order"]["order_id"])
+        self.assertEqual(data_order["order"]["total_amount_inr"], 4718.82)
+        
+        # Test Payment Verification
+        order_id = data_order["order"]["order_id"]
+        res_verify = client.post("/api/v1/payment/verify", json={
+            "order_id": order_id,
+            "payment_id": "pay_RZP_TEST12345",
+            "signature": "sig_valid_pragati_2026"
+        })
+        self.assertEqual(res_verify.status_code, 200)
+        data_verify = res_verify.json()
+        self.assertEqual(data_verify["status"], "success")
+        self.assertTrue(data_verify["receipt"]["subscription_active"])
+        self.assertIn("PRAGATI-LIC-", data_verify["receipt"]["license_key"])
+
 if __name__ == "__main__":
     unittest.main()
+
