@@ -601,18 +601,29 @@
                             <li><span class="check">✓</span> Dedicated Account Manager & SLA Support</li>
                             <li><span class="check">✓</span> One-Click Audit-Ready ESG PDF Generation</li>
                         </ul>
-                        <button class="premium-btn plan-btn" onclick="openPaymentModal('White-Label & Enterprise API', 4999)">Select Enterprise Plan</button>
+                        <button class="premium-btn plan-btn" onclick="openContactSalesModal('Enterprise Industrial Cluster')">Request Enterprise Audit & Contact Sales 📞</button>
+                    </div>
+                </div>
+
+                <!-- Industrial Enterprise Contact Banner -->
+                <div class="card" style="margin-top: 32px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h3 style="font-size: 1.2rem; color: #F8FAFC; margin-bottom: 4px;">🏭 Industrial Plant & Heavy Factory Deployment</h3>
+                            <p style="color: #94A3B8; font-size: 0.85rem; margin: 0;">Need custom SCADA / Modbus hardware integration, multi-plant hierarchy, or dedicated BEE PAT compliance consulting?</p>
+                        </div>
+                        <button class="premium-btn" onclick="openContactSalesModal('Custom Factory Deployment')" style="background: var(--primary); padding: 8px 18px;">Contact Industrial Engineering Team ✉️</button>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- PAYMENT GATEWAY MODAL -->
+    <!-- PAYMENT GATEWAY MODAL (SANDBOX / TEST MODE) -->
     <div id="payment-modal" class="modal-backdrop" style="display: none;">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>Subscribe to PRAGATI AI 🌿</h3>
+                <h3>Subscribe to PRAGATI AI 🌿 (Test / Sandbox Mode)</h3>
                 <span class="modal-close" onclick="closePaymentModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -631,21 +642,64 @@
                         <input type="email" id="pay-email" required placeholder="founder@ecogrid.io" class="premium-input">
                     </div>
                     <div class="input-group">
-                        <label for="pay-method">Preferred Payment Gateway</label>
+                        <label for="pay-method">Preferred Payment Gateway (Test Mode)</label>
                         <select id="pay-method" class="premium-select">
-                            <option value="upi">UPI / QR Code (PhonePe, GPay, Paytm)</option>
-                            <option value="card">Credit / Debit Card (Visa, Mastercard, RuPay)</option>
+                            <option value="upi">Razorpay UPI / Test QR Code (PhonePe, GPay, Paytm)</option>
+                            <option value="card">Test Credit / Debit Card (Visa, Mastercard, RuPay)</option>
                             <option value="netbanking">Net Banking (HDFC, ICICI, SBI, Axis)</option>
-                            <option value="stripe">Stripe / International Billing</option>
+                            <option value="stripe">Stripe / International Test Billing</option>
                         </select>
                     </div>
                     
                     <div class="modal-footer-notes">
-                        🔒 Encrypted 256-bit SSL transaction. Recurring monthly subscription can be cancelled anytime.
+                        🔒 Test / Hackathon Sandbox Mode. No real money will be charged.
                     </div>
                     
                     <button type="submit" class="premium-btn modal-submit-btn" style="margin-top: 16px;">
-                        Proceed to Pay & Activate Subscription
+                        Proceed with Test Mode Checkout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- INDUSTRIAL ENTERPRISE CONTACT SALES MODAL -->
+    <div id="contact-sales-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3>📞 Request Enterprise Industrial Audit & Quote</h3>
+                <span class="modal-close" onclick="closeContactSalesModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="color: #94A3B8; font-size: 0.85rem; margin-bottom: 16px;">PRAGATI AI is customized for industrial plants based on daily power load (kW), meter count, and DISCOM tariff rules. Complete this form for a dedicated engineering assessment.</p>
+                <form id="contact-sales-form" onsubmit="handleContactSalesSubmit(event)">
+                    <div class="input-group">
+                        <label for="contact-plant-name">Factory / Industry Name</label>
+                        <input type="text" id="contact-plant-name" required placeholder="e.g. DAEWOO Steel Manufacturing Plant #3" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="contact-person-name">Contact Person & Designation</label>
+                        <input type="text" id="contact-person-name" required placeholder="e.g. Rajesh Sharma (Energy Manager)" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="contact-email">Corporate Work Email</label>
+                        <input type="email" id="contact-email" required placeholder="rajesh@daewoosteel.in" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="contact-phone">Phone / WhatsApp Number</label>
+                        <input type="tel" id="contact-phone" required placeholder="+91 98765 43210" class="premium-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="contact-load-kw">Estimated Peak Power Load (kW)</label>
+                        <select id="contact-load-kw" class="premium-select">
+                            <option value="<500 kW">Small Industrial Plant (&lt; 500 kW)</option>
+                            <option value="500kW - 2MW" selected>Medium Manufacturing Facility (500 kW – 2 MW)</option>
+                            <option value="2MW - 10MW">Heavy Industrial Complex (2 MW – 10 MW)</option>
+                            <option value=">10MW">Enterprise Multi-Plant Cluster (&gt; 10 MW)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="premium-btn modal-submit-btn" style="margin-top: 16px;">
+                        Submit Request for Industrial Consultation 🚀
                     </button>
                 </form>
             </div>

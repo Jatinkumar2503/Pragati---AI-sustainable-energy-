@@ -1304,6 +1304,28 @@ async function handlePaymentSubmit(event) {
         console.error("Payment submission error:", e);
         alert("Transaction failed: " + e.message);
     } finally {
-        if (btn) btn.innerText = "Proceed to Pay & Activate Subscription";
+        if (btn) btn.innerText = "Proceed with Test Mode Checkout";
     }
+}
+
+// Industrial Enterprise Contact Sales Modal Handler
+function openContactSalesModal(deploymentType) {
+    const modal = document.getElementById("contact-sales-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeContactSalesModal() {
+    const modal = document.getElementById("contact-sales-modal");
+    if (modal) modal.style.display = "none";
+}
+
+function handleContactSalesSubmit(event) {
+    event.preventDefault();
+    const plantName = document.getElementById("contact-plant-name") ? document.getElementById("contact-plant-name").value : "DAEWOO Steel";
+    const personName = document.getElementById("contact-person-name") ? document.getElementById("contact-person-name").value : "Plant Manager";
+    const email = document.getElementById("contact-email") ? document.getElementById("contact-email").value : "energy@daewoosteel.in";
+    const loadKw = document.getElementById("contact-load-kw") ? document.getElementById("contact-load-kw").value : "500kW - 2MW";
+    
+    alert(`📩 Industrial Audit Request Received!\n\nThank you, ${personName} (${plantName})!\nOur Industrial Energy Team will review your ${loadKw} plant specifications and contact you at ${email} within 24 business hours.\n\nReference ID: IND-AUDIT-${Math.floor(100000 + Math.random() * 900000)}`);
+    closeContactSalesModal();
 }
