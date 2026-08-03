@@ -373,10 +373,19 @@ async def post_forecast(req: ForecastRequest):
     Runs asynchronously via asyncio.to_thread.
     """
     try:
-        with DB_INSTANCE.get_connection() as conn:
-            # Load first 20,000 rows directly from SQL DB
-            df_train = pd.read_sql_query("SELECT * FROM telemetry ORDER BY date ASC LIMIT 20000", conn)
-            df_train['date'] = pd.to_datetime(df_train['date'])
+        df_train = pd.DataFrame()
+        try:
+            with DB_INSTANCE.get_connection() as conn:
+                df_train = pd.read_sql_query("SELECT * FROM telemetry ORDER BY date ASC LIMIT 20000", conn)
+                if not df_train.empty:
+                    df_train['date'] = pd.to_datetime(df_train['date'])
+        except Exception as db_err:
+            logger.warning(f"Failed to query DB in post_forecast: {db_err}")
+            df_train = pd.DataFrame()
+            
+        if df_train.empty or len(df_train) < 50:
+            logger.info("Telemetry DB empty or insufficient in post_forecast. Falling back to load_dataset()...")
+            df_train = load_dataset()
         
         # Execute forecasting CPU-bound routine in background thread pool
         results = await asyncio.to_thread(generate_forecast, df_train, forecast_hours=req.hours, backtest_folds=req.backtest_folds)
@@ -384,6 +393,7 @@ async def post_forecast(req: ForecastRequest):
     except Exception as e:
         logger.error(f"Forecasting calculation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Forecasting calculation failed: {str(e)}")
+
 
 @app.post("/api/schedule")
 async def post_schedule(req: ScheduleRequest):

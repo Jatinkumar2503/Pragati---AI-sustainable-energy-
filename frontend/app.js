@@ -583,7 +583,8 @@ async function runForecasting() {
         renderForecastChart(data, seasonalName);
         renderBacktestChart(data, seasonalName);
     } catch (e) {
-        alert("Failed to compile forecast predictions.");
+        console.error("Forecasting execution error:", e);
+        alert(`Failed to compile forecast predictions: ${e.message || e}`);
     } finally {
         btn.disabled = false;
         btn.innerText = "Run Forecasting Models";
