@@ -1487,6 +1487,53 @@ def verify_payment(req: PaymentVerifyRequest):
         logger.error(f"Failed to verify payment: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/v1/audit/logs")
+def get_audit_logs():
+    """
+    Returns audit logs and agent recommendation history.
+    """
+    return {
+        "status": "success",
+        "logs": [
+            {
+                "id": "AUDIT-104",
+                "agent": "Optimization Agent",
+                "status": "APPROVED",
+                "action": "Shifted heavy smelting furnace load window from peak (14:00) to off-peak night (22:00)",
+                "impact": "Saved ₹18,450 / day & reduced 240 kg CO₂",
+                "timestamp": "2026-08-05 14:22:10",
+                "approved_by": "Plant Manager (Rajesh Sharma)"
+            },
+            {
+                "id": "AUDIT-103",
+                "agent": "Anomaly Agent",
+                "status": "APPROVED",
+                "action": "Mitigated power factor drop on Mill #3 idle standby leak",
+                "impact": "Eliminated ₹8,600 monthly DISCOM PF penalty surcharge",
+                "timestamp": "2026-08-05 11:05:45",
+                "approved_by": "Shift Supervisor (Amit Patel)"
+            },
+            {
+                "id": "AUDIT-102",
+                "agent": "Digital Twin Agent",
+                "status": "UNDER_REVIEW",
+                "action": "Proposed 200 kW Solar PV + 100 kWh BESS installation",
+                "impact": "Estimated ₹6,40,000 annual bill reduction (142 tCO2e offset)",
+                "timestamp": "2026-08-05 09:15:30",
+                "approved_by": "Pending CFO Signoff"
+            },
+            {
+                "id": "AUDIT-101",
+                "agent": "Compliance Agent",
+                "status": "APPROVED",
+                "action": "Generated BEE PAT Cycle-VI ESG Audit Report",
+                "impact": "Verified PRAGATI Score: 845 / 1000 (Tier-1 Compliant)",
+                "timestamp": "2026-08-04 18:40:00",
+                "approved_by": "Sustainability Officer (Priya Nair)"
+            }
+        ]
+    }
+
 # Mount the static frontend directory
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "frontend")
@@ -1495,3 +1542,7 @@ if os.path.exists(FRONTEND_DIR):
     logger.info(f"Mounted frontend static files from: {FRONTEND_DIR}")
 else:
     logger.warning(f"Frontend directory not found at: {FRONTEND_DIR}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)
