@@ -438,30 +438,186 @@ input[type=range]::-webkit-slider-thumb:hover {
     margin-bottom: 16px !important;
 }
 
-/* 3D KPI Cards */
+/* 3D KPI Cards Upgrade */
 .kpi-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
     gap: 24px !important;
-    margin-bottom: 36px !important;
+    margin-bottom: 32px !important;
 }
 
-.kpi-title {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    color: var(--text-secondary) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
+.kpi-card-v2 {
+    background: linear-gradient(145deg, #FFFFFF 0%, #FAF6EE 100%) !important;
+    border: 1px solid rgba(200, 190, 170, 0.7) !important;
+    border-radius: 20px !important;
+    padding: 22px 24px !important;
+    box-shadow: 0 10px 24px rgba(60, 52, 38, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.kpi-card-v2::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #059669 0%, #D97706 100%);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.kpi-card-v2:hover {
+    transform: translateY(-5px) scale(1.02) !important;
+    border-color: #059669 !important;
+    box-shadow: 0 16px 36px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+.kpi-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     margin-bottom: 12px !important;
 }
 
-.kpi-value {
+.kpi-title-v2 {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #526357 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin: 0 !important;
+}
+
+.kpi-icon-badge {
+    font-size: 18px !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.kpi-icon-badge.gold {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%) !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.kpi-icon-badge.emerald {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+.kpi-icon-badge.terracotta {
+    background: linear-gradient(135deg, rgba(224, 122, 95, 0.2) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
+    border: 1px solid rgba(224, 122, 95, 0.4) !important;
+}
+
+.kpi-icon-badge.red {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.2) 100%) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+.kpi-value-v2 {
     font-family: 'Outfit', sans-serif !important;
     font-size: 34px !important;
     font-weight: 800 !important;
-    color: var(--text-primary) !important;
-    margin-bottom: 8px !important;
-    line-height: 1.2 !important;
+    color: #1F2B24 !important;
+    margin: 8px 0 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.5px !important;
+}
+
+.kpi-value-v2.green-val {
+    color: #059669 !important;
+}
+
+.kpi-value-v2.red-val {
+    color: #E07A5F !important;
+}
+
+.kpi-carbon-chips {
+    display: flex !important;
+    gap: 6px !important;
+    margin: 10px 0 !important;
+    flex-wrap: wrap !important;
+}
+
+.scope-chip {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.scope-chip.s1 {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #047857 !important;
+}
+
+.scope-chip.s2 {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    color: #B45309 !important;
+}
+
+.scope-chip.s3 {
+    background: rgba(6, 182, 212, 0.12) !important;
+    border: 1px solid rgba(6, 182, 212, 0.3) !important;
+    color: #0891B2 !important;
+}
+
+.scope-chip strong {
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800 !important;
+}
+
+.kpi-footer-badge {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 6px 12px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: fit-content !important;
+    margin-top: 4px !important;
+}
+
+.kpi-footer-badge.green {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #047857 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.kpi-footer-badge.warning {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #B45309 !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.kpi-footer-badge.alert {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #B91C1C !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.kpi-footer-badge.rate {
+    background: rgba(200, 190, 170, 0.25) !important;
+    color: #526357 !important;
+    border: 1px solid rgba(200, 190, 170, 0.5) !important;
 }
 
 /* 3D Tactile Tables */
@@ -639,4 +795,503 @@ input[type=range]::-webkit-slider-thumb:hover {
         max-width: 100% !important;
         padding: 16px !important;
     }
+}
+
+/* =====================================================================
+   📌 MODAL BACKDROP, DRAWERS & DIALOG SYSTEM
+   ===================================================================== */
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(31, 43, 36, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 10000 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+}
+
+.modal-card {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(200, 190, 170, 0.8) !important;
+    border-radius: 24px !important;
+    width: 100% !important;
+    max-width: 550px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 28px !important;
+    box-shadow: 0 24px 60px rgba(31, 43, 36, 0.25), 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+    position: relative !important;
+    animation: modalPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes modalPopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 14px !important;
+    border-bottom: 1px solid rgba(200, 190, 170, 0.5) !important;
+}
+
+.modal-header h3 {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #1F2B24 !important;
+    margin: 0 !important;
+}
+
+.modal-close {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #829285 !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.modal-close:hover {
+    color: #1F2B24 !important;
+    background: rgba(200, 190, 170, 0.3) !important;
+}
+
+.modal-summary {
+    background: #FAF6EE !important;
+    border: 1px solid rgba(200, 190, 170, 0.6) !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-weight: 600 !important;
+    color: #1F2B24 !important;
+}
+
+.modal-price-highlight {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #059669 !important;
+}
+
+.modal-footer-notes {
+    font-size: 12px !important;
+    color: #526357 !important;
+    margin-top: 14px !important;
+    text-align: center !important;
+}
+
+/* =====================================================================
+   💬 COPILOT CHAT MESSAGES & BUBBLE SYSTEM
+   ===================================================================== */
+.chat-header {
+    padding: 18px 24px !important;
+    border-bottom: 1px solid rgba(200, 190, 170, 0.5) !important;
+    background: #FAF6EE !important;
+}
+
+.chat-bot-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.bot-avatar {
+    font-size: 24px !important;
+}
+
+.chat-bot-info h3 {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #1F2B24 !important;
+    margin: 0 !important;
+}
+
+.bot-status {
+    font-size: 12px !important;
+    color: #059669 !important;
+    font-weight: 600 !important;
+}
+
+.chat-input-area {
+    padding: 16px 20px !important;
+    border-top: 1px solid rgba(200, 190, 170, 0.5) !important;
+    background: #FAF6EE !important;
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+.chat-input-area .premium-input {
+    flex-grow: 1 !important;
+    margin: 0 !important;
+}
+
+.chat-input-area .premium-btn {
+    width: auto !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    padding: 12px 20px !important;
+}
+
+.message {
+    display: flex !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+.message.user {
+    justify-content: flex-end !important;
+}
+
+.message.bot {
+    justify-content: flex-start !important;
+}
+
+.message-content {
+    max-width: 82% !important;
+    padding: 16px 20px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    word-break: break-word !important;
+}
+
+.message.user .message-content {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: #FFFFFF !important;
+    border-bottom-right-radius: 4px !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25) !important;
+}
+
+.message.bot .message-content {
+    background: #FAF6EE !important;
+    color: #1F2B24 !important;
+    border: 1px solid rgba(200, 190, 170, 0.6) !important;
+    border-bottom-left-radius: 4px !important;
+    box-shadow: 0 2px 10px rgba(60, 52, 38, 0.06) !important;
+}
+
+.message.bot .message-content ul {
+    margin-top: 10px !important;
+    padding-left: 20px !important;
+}
+
+.message.bot .message-content li {
+    margin-bottom: 6px !important;
+}
+
+/* =====================================================================
+   💳 PRICING GRID & SUBSCRIPTIONS CARDS
+   ===================================================================== */
+.pricing-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 28px !important;
+    margin-top: 24px !important;
+}
+
+.pricing-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    position: relative !important;
+}
+
+.pricing-card.popular {
+    border: 2px solid #059669 !important;
+    box-shadow: 0 16px 40px -6px rgba(5, 150, 105, 0.25), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.popular-tag {
+    position: absolute !important;
+    top: -14px !important;
+    right: 20px !important;
+    background: linear-gradient(135deg, #059669 0%, #D97706 100%) !important;
+    color: #FFFFFF !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    padding: 4px 14px !important;
+    border-radius: 12px !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3) !important;
+}
+
+.card-tier-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #1F2B24 !important;
+    margin-bottom: 4px !important;
+}
+
+.card-tier-target {
+    font-size: 12px !important;
+    color: #526357 !important;
+    margin-bottom: 16px !important;
+    min-height: 36px !important;
+}
+
+.card-price {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 38px !important;
+    font-weight: 800 !important;
+    color: #059669 !important;
+    margin-bottom: 20px !important;
+}
+
+.price-period {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #829285 !important;
+}
+
+.pricing-features {
+    list-style: none !important;
+    padding: 0 !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+.pricing-features li {
+    font-size: 13px !important;
+    color: #1F2B24 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.pricing-features li.disabled {
+    color: #829285 !important;
+    opacity: 0.65 !important;
+}
+
+.check {
+    color: #059669 !important;
+    font-weight: 800 !important;
+}
+
+.cross {
+    color: #E07A5F !important;
+    font-weight: 800 !important;
+}
+
+/* =====================================================================
+   ☀️ DIGITAL TWIN 3D KPI GRID & ROI BANNER STYLING
+   ===================================================================== */
+.twin-layout {
+    display: grid !important;
+    grid-template-columns: 340px 1fr !important;
+    gap: 28px !important;
+    align-items: start !important;
+}
+
+.twin-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+    gap: 18px !important;
+    margin-bottom: 24px !important;
+}
+
+.twin-kpi-card {
+    background: linear-gradient(145deg, #FFFFFF 0%, #FAF6EE 100%) !important;
+    border: 1px solid rgba(200, 190, 170, 0.7) !important;
+    border-radius: 18px !important;
+    padding: 18px 20px !important;
+    box-shadow: 0 6px 16px rgba(60, 52, 38, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.twin-kpi-card:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    border-color: #059669 !important;
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    background: #FFFFFF !important;
+}
+
+.twin-kpi-label {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #526357 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.twin-kpi-label span {
+    font-size: 16px !important;
+}
+
+.twin-kpi-val {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: #1F2B24 !important;
+    line-height: 1.2 !important;
+}
+
+.twin-kpi-val.green-text {
+    color: #059669 !important;
+    text-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+}
+
+.twin-roi-section {
+    display: flex !important;
+    gap: 20px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    padding: 20px 24px !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
+    border-radius: 20px !important;
+    margin-top: 12px !important;
+}
+
+.twin-roi-metric {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-size: 14px !important;
+    color: #1F2B24 !important;
+}
+
+.twin-roi-metric .roi-label {
+    font-weight: 700 !important;
+    color: #526357 !important;
+}
+
+.twin-roi-metric strong {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #059669 !important;
+}
+
+.twin-roi-metric.highlight-box {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    padding: 10px 20px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3) !important;
+}
+
+.twin-roi-metric.highlight-box .roi-label {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.twin-roi-metric.highlight-box strong {
+    color: #FFFFFF !important;
+}
+
+/* =====================================================================
+   📌 HIGH-CONTRAST PAGE HEADERS & SUB-HEADER BANNERS
+   ===================================================================== */
+.content-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 28px !important;
+    padding-bottom: 18px !important;
+    border-bottom: 1px solid rgba(200, 190, 170, 0.5) !important;
+}
+
+.header-title h1,
+#tab-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    color: #1F2B24 !important;
+    letter-spacing: -0.5px !important;
+    margin-bottom: 4px !important;
+}
+
+.header-title p,
+#tab-subtitle {
+    font-size: 14px !important;
+    color: #526357 !important;
+    font-weight: 500 !important;
+}
+
+.date-badge {
+    background: #FAF6EE !important;
+    border: 1px solid rgba(200, 190, 170, 0.7) !important;
+    color: #059669 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 10px rgba(60, 52, 38, 0.05) !important;
+}
+
+.sub-header-banner-v2 {
+    background: linear-gradient(135deg, #1F2B24 0%, #0D1410 100%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+    border-radius: 20px !important;
+    padding: 26px 30px !important;
+    margin-bottom: 28px !important;
+    box-shadow: 0 14px 32px rgba(31, 43, 36, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+}
+
+.sub-header-title-v2 {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 6px !important;
+    letter-spacing: -0.3px !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sub-header-desc-v2 {
+    color: #CBD5E1 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}
+
+.currency-badge-v2 {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 10px 20px !important;
+    border-radius: 24px !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4) !important;
+    white-space: nowrap !important;
 }
