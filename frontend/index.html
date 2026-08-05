@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=18.0">
+    <link rel="stylesheet" href="style.css?v=300.0">
 </head>
 <body>
     <div class="app-container">
@@ -79,42 +79,42 @@
             <div class="tab-panel active" id="tab-dashboard">
                 <!-- KPI Grid -->
                 <div class="kpi-grid">
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-card-v2">
                         <div class="kpi-header">
-                            <span class="kpi-title">Active Grid Load</span>
-                            <span class="kpi-icon">⚡</span>
+                            <span class="kpi-title-v2">Active Grid Load</span>
+                            <div class="kpi-icon-badge gold">⚡</div>
                         </div>
-                        <div class="kpi-value" id="kpi-load">— kW</div>
-                        <div class="kpi-footer green">● Normal Operations</div>
+                        <div class="kpi-value-v2" id="kpi-load">— kW</div>
+                        <div class="kpi-footer-badge green">● Normal Operations</div>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-card-v2">
                         <div class="kpi-header">
-                            <span class="kpi-title">Carbon Audit (Scope 1/2/3)</span>
-                            <span class="kpi-icon">🌿</span>
+                            <span class="kpi-title-v2">Carbon Audit (Scope 1/2/3)</span>
+                            <div class="kpi-icon-badge emerald">🌿</div>
                         </div>
-                        <div class="kpi-value" id="kpi-carbon">— kg CO₂</div>
-                        <div class="kpi-carbon-breakdown">
-                            <div class="breakdown-item">S1: <span id="kpi-scope1">— kg</span></div>
-                            <div class="breakdown-item">S2: <span id="kpi-scope2">— kg</span></div>
-                            <div class="breakdown-item">S3: <span id="kpi-scope3">— kg</span></div>
+                        <div class="kpi-value-v2 green-val" id="kpi-carbon">— kg CO₂</div>
+                        <div class="kpi-carbon-chips">
+                            <span class="scope-chip s1">S1: <strong id="kpi-scope1">— kg</strong></span>
+                            <span class="scope-chip s2">S2: <strong id="kpi-scope2">— kg</strong></span>
+                            <span class="scope-chip s3">S3: <strong id="kpi-scope3">— kg</strong></span>
                         </div>
-                        <div class="kpi-footer" id="kpi-carbon-rate">Current: — g/kWh</div>
+                        <div class="kpi-footer-badge rate" id="kpi-carbon-rate">Current: — g/kWh</div>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-card-v2">
                         <div class="kpi-header">
-                            <span class="kpi-title">Power Factor (Lag)</span>
-                            <span class="kpi-icon">📉</span>
+                            <span class="kpi-title-v2">Power Factor (Lag)</span>
+                            <div class="kpi-icon-badge terracotta">📉</div>
                         </div>
-                        <div class="kpi-value" id="kpi-pf">— %</div>
-                        <div class="kpi-footer" id="kpi-pf-status">Target: > 90%</div>
+                        <div class="kpi-value-v2" id="kpi-pf">— %</div>
+                        <div class="kpi-footer-badge warning" id="kpi-pf-status">Target: > 90%</div>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-card-v2">
                         <div class="kpi-header">
-                            <span class="kpi-title">Active Anomalies</span>
-                            <span class="kpi-icon">⚠️</span>
+                            <span class="kpi-title-v2">Active Anomalies</span>
+                            <div class="kpi-icon-badge red">⚠️</div>
                         </div>
-                        <div class="kpi-value" id="kpi-anomalies-count">—</div>
-                        <div class="kpi-footer red" id="kpi-anomalies-status">Requires attention</div>
+                        <div class="kpi-value-v2 red-val" id="kpi-anomalies-count">—</div>
+                        <div class="kpi-footer-badge alert" id="kpi-anomalies-status">Requires attention</div>
                     </div>
                 </div>
                 
@@ -440,35 +440,35 @@
                     <div class="twin-results card">
                         <div class="twin-kpis">
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Annual Solar Gen.</div>
+                                <div class="twin-kpi-label"><span>☀️</span> Annual Solar Gen.</div>
                                 <div class="twin-kpi-val" id="twin-val-gen">— kWh</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Solar Self-Consumption</div>
+                                <div class="twin-kpi-label"><span>⚡</span> Solar Self-Consumption</div>
                                 <div class="twin-kpi-val" id="twin-val-self">— %</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Annual Bill Reduction</div>
+                                <div class="twin-kpi-label"><span>💰</span> Annual Bill Reduction</div>
                                 <div class="twin-kpi-val green-text" id="twin-val-savings">$—</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Carbon Offset (Annual)</div>
+                                <div class="twin-kpi-label"><span>🌿</span> Carbon Offset (Annual)</div>
                                 <div class="twin-kpi-val green-text" id="twin-val-co2">— kg</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Net Present Value (NPV)</div>
+                                <div class="twin-kpi-label"><span>📈</span> Net Present Value (NPV)</div>
                                 <div class="twin-kpi-val green-text" id="twin-val-npv">$—</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Levelized Cost (LCOE)</div>
+                                <div class="twin-kpi-label"><span>🏷️</span> Levelized Cost (LCOE)</div>
                                 <div class="twin-kpi-val" id="twin-val-lcoe">— /kWh</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">MACRS Tax Shield (5-yr)</div>
+                                <div class="twin-kpi-label"><span>🏛️</span> MACRS Tax Shield (5-yr)</div>
                                 <div class="twin-kpi-val" id="twin-val-macrs">$—</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label">Monthly Peak Shaving</div>
+                                <div class="twin-kpi-label"><span>🔋</span> Monthly Peak Shaving</div>
                                 <div class="twin-kpi-val" id="twin-val-peak">— kW</div>
                             </div>
                         </div>
@@ -538,12 +538,12 @@
             
             <!-- TAB 7: STARTUP SUBSCRIPTION PLANS -->
             <div class="tab-panel" id="tab-subscriptions">
-                <div class="sub-header-banner" style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1)); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="sub-header-banner-v2">
                     <div>
-                        <h2 style="font-size: 1.4rem; color: #F8FAFC; margin-bottom: 6px;">PRAGATI AI for Sustainable & Renewable Startups 🌿</h2>
-                        <p style="color: #94A3B8; font-size: 0.9rem;">Deploy active sustainability intelligence across your client sites. Choose a monthly plan to unlock full ML prediction engines & REST APIs.</p>
+                        <h2 class="sub-header-title-v2">PRAGATI AI for Sustainable & Renewable Startups 🌿</h2>
+                        <p class="sub-header-desc-v2">Deploy active sustainability intelligence across your client sites. Choose a monthly plan to unlock full ML prediction engines & REST APIs.</p>
                     </div>
-                    <div class="currency-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--primary); color: #10B981; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">
+                    <div class="currency-badge-v2">
                         🇮🇳 Billing in INR (₹)
                     </div>
                 </div>
@@ -750,6 +750,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=18.0"></script>
+    <script src="app.js?v=300.0"></script>
 </body>
 </html>
