@@ -392,9 +392,9 @@ function renderTelemetryChart(data) {
                 {
                     label: 'Grid Load (kW)',
                     data: data.usage_kwh,
-                    borderColor: '#10B981', // Emerald
-                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                    borderWidth: 2,
+                    borderColor: '#059669', // Bio-Emerald
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    borderWidth: 2.5,
                     tension: 0.3,
                     fill: true,
                     yAxisID: 'y'
@@ -402,10 +402,10 @@ function renderTelemetryChart(data) {
                 {
                     label: 'Power Factor (%)',
                     data: data.power_factor_lagging,
-                    borderColor: '#06B6D4', // Cyan
-                    borderWidth: 1.5,
+                    borderColor: '#D97706', // Solar Gold
+                    borderWidth: 2,
                     borderDash: [5, 5],
-                    tension: 0.1,
+                    tension: 0.2,
                     fill: false,
                     yAxisID: 'y1'
                 }
@@ -416,24 +416,24 @@ function renderTelemetryChart(data) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                    labels: { color: '#1F2B24', font: { family: 'Plus Jakarta Sans', weight: '700', size: 12 } }
                 }
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { color: '#64748B', maxTicksLimit: 12 }
+                    grid: { color: 'rgba(200, 190, 170, 0.4)' },
+                    ticks: { color: '#526357', maxTicksLimit: 12, font: { weight: '600' } }
                 },
                 y: {
-                    title: { display: true, text: 'Active Power (kW)', color: '#94A3B8' },
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { color: '#64748B' }
+                    title: { display: true, text: 'Active Power (kW)', color: '#1F2B24', font: { weight: '700' } },
+                    grid: { color: 'rgba(200, 190, 170, 0.4)' },
+                    ticks: { color: '#526357', font: { weight: '600' } }
                 },
                 y1: {
                     position: 'right',
-                    title: { display: true, text: 'Power Factor (%)', color: '#94A3B8' },
+                    title: { display: true, text: 'Power Factor (%)', color: '#1F2B24', font: { weight: '700' } },
                     grid: { drawOnChartArea: false },
-                    ticks: { color: '#64748B', min: 40, max: 100 }
+                    ticks: { color: '#526357', min: 40, max: 100, font: { weight: '600' } }
                 }
             }
         }
@@ -456,9 +456,9 @@ function renderTHDChart(data) {
                 {
                     label: 'Total Harmonic Distortion (THD %)',
                     data: data.thd_pct,
-                    borderColor: '#F59E0B', // Amber
-                    backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                    borderWidth: 2,
+                    borderColor: '#D97706', // Solar Gold
+                    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+                    borderWidth: 2.5,
                     tension: 0.3,
                     fill: true,
                     yAxisID: 'y'
@@ -466,8 +466,8 @@ function renderTHDChart(data) {
                 {
                     label: 'Grid Voltage (V)',
                     data: data.voltage_v,
-                    borderColor: '#EF4444', // Red
-                    borderWidth: 1.5,
+                    borderColor: '#E07A5F', // Terracotta
+                    borderWidth: 2,
                     tension: 0.2,
                     fill: false,
                     yAxisID: 'y1'
@@ -479,24 +479,24 @@ function renderTHDChart(data) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: { color: '#94A3B8', font: { family: 'Inter' } }
+                    labels: { color: '#1F2B24', font: { family: 'Plus Jakarta Sans', weight: '700', size: 12 } }
                 }
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { color: '#64748B', maxTicksLimit: 12 }
+                    grid: { color: 'rgba(200, 190, 170, 0.4)' },
+                    ticks: { color: '#526357', maxTicksLimit: 12, font: { weight: '600' } }
                 },
                 y: {
-                    title: { display: true, text: 'THD (%)', color: '#94A3B8' },
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { color: '#64748B' }
+                    title: { display: true, text: 'THD (%)', color: '#1F2B24', font: { weight: '700' } },
+                    grid: { color: 'rgba(200, 190, 170, 0.4)' },
+                    ticks: { color: '#526357', font: { weight: '600' } }
                 },
                 y1: {
                     position: 'right',
-                    title: { display: true, text: 'Voltage (V)', color: '#94A3B8' },
+                    title: { display: true, text: 'Voltage (V)', color: '#1F2B24', font: { weight: '700' } },
                     grid: { drawOnChartArea: false },
-                    ticks: { color: '#64748B', min: 380, max: 440 }
+                    ticks: { color: '#526357', font: { weight: '600' } }
                 }
             }
         }
@@ -1154,28 +1154,38 @@ async function openAuditLogDrawer() {
     if (drawer) drawer.style.display = "flex";
     if (!container) return;
 
+    container.innerHTML = `<p style="color: #526357; font-weight: 500; text-align: center; padding: 12px;">Loading audit logs...</p>`;
+
     try {
         const res = await fetch(`${API_BASE}/v1/audit/logs`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+
+        if (!data.logs || data.logs.length === 0) {
+            container.innerHTML = `<p style="color: #526357; text-align: center;">No audit logs recorded yet.</p>`;
+            return;
+        }
 
         let html = "";
         data.logs.forEach(log => {
-            let statusColor = log.status === "APPROVED" ? "#10B981" : "#F59E0B";
+            let statusColor = log.status === "APPROVED" ? "#059669" : "#D97706";
+            let statusBg = log.status === "APPROVED" ? "rgba(16, 185, 129, 0.12)" : "rgba(217, 119, 6, 0.12)";
             html += `
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: 700; color: #E2E8F0; font-size: 0.9rem;">${log.id} — ${log.agent}</span>
-                        <span style="font-size: 0.75rem; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}55; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${log.status}</span>
+                <div style="background: #FAF6EE; border: 1px solid rgba(200, 190, 170, 0.6); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(60, 52, 38, 0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 800; color: #1F2B24; font-size: 0.95rem; font-family: 'Outfit', sans-serif;">${log.id} — ${log.agent}</span>
+                        <span style="font-size: 0.75rem; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}44; padding: 3px 10px; border-radius: 8px; font-weight: 700;">${log.status}</span>
                     </div>
-                    <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 4px;">${log.action}</div>
-                    <div style="font-size: 0.8rem; color: #10B981; font-weight: 600;">Impact: ${log.impact}</div>
-                    <div style="font-size: 0.75rem; color: #64748B; margin-top: 6px;">🕒 ${log.timestamp} • Authorized by ${log.approved_by}</div>
+                    <div style="font-size: 0.88rem; color: #334155; margin-bottom: 6px; line-height: 1.5;">${log.action}</div>
+                    <div style="font-size: 0.82rem; color: #059669; font-weight: 700;">Impact: ${log.impact}</div>
+                    <div style="font-size: 0.75rem; color: #64748B; margin-top: 8px;">🕒 ${log.timestamp} • Authorized by <strong>${log.approved_by}</strong></div>
                 </div>
             `;
         });
         container.innerHTML = html;
     } catch (e) {
-        container.innerHTML = `<p style="color: #EF4444;">Failed to load audit logs.</p>`;
+        console.error("Audit log error:", e);
+        container.innerHTML = `<p style="color: #E07A5F; font-weight: 600; text-align: center; padding: 12px;">Failed to load audit logs: ${e.message}</p>`;
     }
 }
 
@@ -1183,6 +1193,21 @@ function closeAuditLogDrawer() {
     const drawer = document.getElementById("audit-log-drawer");
     if (drawer) drawer.style.display = "none";
 }
+
+// Universal Backdrop Click & Escape Key Modal Dismissal
+window.addEventListener("click", (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains("modal-backdrop")) {
+        e.target.style.display = "none";
+    }
+});
+
+window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        document.querySelectorAll(".modal-backdrop").forEach(modal => {
+            modal.style.display = "none";
+        });
+    }
+});
 
 // Day 4: Real-time Telemetry Stream & Alert Center
 async function fetchActiveAlerts() {
