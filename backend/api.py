@@ -27,10 +27,21 @@ from engine.forecaster import generate_forecast
 from engine.scheduler import optimize_shift_schedule
 from engine.telemetry_db import TelemetryDB
 from engine.privacy_shield import privacy_shield
-from engine.workspace_manager import list_workspaces, get_current_workspace, switch_workspace
-from engine.document_parser import parse_electricity_bill
+from engine.workspace_manager import (
+    list_workspaces,
+    get_current_workspace,
+    switch_workspace,
+    calculate_sec_compliance,
+    calculate_iso_50001_enpi,
+    BEE_PAT_SECTOR_NORMS
+)
+from engine.document_parser import (
+    parse_electricity_bill,
+    calculate_apfc_sizing,
+    DISCOM_TARIFF_SCHEDULES
+)
 from engine.rag_engine import rag_engine
-from engine.digital_twin import DigitalTwinEngine
+from engine.digital_twin import DigitalTwinEngine, CEA_GRID_EMISSION_FACTORS, STATE_GRID_FACTORS
 from engine.telemetry_streamer import telemetry_streamer
 from agents.digital_twin_agent import DigitalTwinAgent
 from agents.alert_agent import AlertAgent
@@ -1701,6 +1712,173 @@ def trigger_automated_retraining(tenant_id: str = "demo_steel"):
     except Exception as e:
         logger.error(f"Automated pipeline error: {e}")
         return {"status": "error", "message": str(e)}
+
+# ---------------------------------------------------------
+# Enterprise SEC Benchmarking, ESCerts & APFC Sizing APIs
+# ---------------------------------------------------------
+
+@app.get("/api/v1/workspace/benchmarks")
+def get_workspace_benchmarks(workspace_id: Optional[str] = None):
+    """
+    Returns Bureau of Energy Efficiency (BEE) PAT Cycle-VII Specific Energy Consumption (SEC)
+    benchmarks, baseline metrics, and current compliance performance.
+    """
+    try:
+        ws = get_current_workspace() if not workspace_id else switch_workspace(workspace_id)
+        sec_eval = calculate_sec_compliance(
+            workspace_id=ws["id"],
+            annual_production_tons=ws.get("production_capacity_tons_year", 50000.0),
+            annual_electrical_kwh=ws["metrics"]["annual_kwh"]
+        )
+        return {
+            "status": "success",
+            "workspace": ws,
+            "sectoral_norms": BEE_PAT_SECTOR_NORMS,
+            "compliance_evaluation": sec_eval
+        }
+    except Exception as e:
+        logger.error(f"Error fetching workspace benchmarks: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ESCertsRequest(BaseModel):
+    workspace_id: str = "indian_steel"
+    annual_production_tons: float = Field(65000.0, ge=1.0)
+    annual_electrical_kwh: float = Field(38500000.0, ge=1.0)
+    annual_thermal_toe: float = Field(0.0, ge=0.0)
+
+@app.post("/api/v1/compliance/escerts")
+def calculate_escerts_endpoint(req: ESCertsRequest):
+    """
+    Computes BEE Energy Saving Certificates (ESCerts) eligibility, market valuation,
+    or non-compliance shortfall penalty.
+    """
+    try:
+        result = calculate_sec_compliance(
+            workspace_id=req.workspace_id,
+            annual_production_tons=req.annual_production_tons,
+            annual_electrical_kwh=req.annual_electrical_kwh,
+            annual_thermal_toe=req.annual_thermal_toe
+        )
+        return {"status": "success", "escerts_data": result}
+    except Exception as e:
+        logger.error(f"Error computing ESCerts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class APFCSizingRequest(BaseModel):
+    active_power_kw: float = Field(..., gt=0.0)
+    current_pf: float = Field(..., ge=0.40, le=0.999)
+    target_pf: float = Field(0.99, ge=0.80, le=0.999)
+    tariff_inr_kwh: float = Field(8.50, gt=0.0)
+    discom: str = "MSEDCL"
+
+@app.post("/api/v1/analytics/apfc-sizing")
+def calculate_apfc_sizing_endpoint(req: APFCSizingRequest):
+    """
+    Computes exact reactive power compensation required, recommended APFC capacitor bank rating,
+    stage stepping, DISCOM penalty elimination, and simple payback ROI.
+    """
+    try:
+        sizing = calculate_apfc_sizing(
+            active_power_kw=req.active_power_kw,
+            current_pf=req.current_pf,
+            target_pf=req.target_pf,
+            tariff_inr_kwh=req.tariff_inr_kwh
+        )
+        return {"status": "success", "apfc_sizing": sizing, "discom": req.discom}
+    except Exception as e:
+        logger.error(f"Error sizing APFC capacitor: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class BatteryDegradationRequest(BaseModel):
+    capacity_kwh: float = Field(500.0, gt=0.0)
+    chemistry: str = Field("LFP", description="LFP or NMC")
+    daily_cycles: float = Field(1.0, ge=0.1, le=5.0)
+    depth_of_discharge: float = Field(0.80, ge=0.10, le=1.0)
+    operating_temp_c: float = Field(35.0, ge=-10.0, le=60.0)
+    simulation_years: int = Field(10, ge=1, le=20)
+
+@app.post("/api/v1/digital-twin/battery-degradation")
+def battery_degradation_endpoint(req: BatteryDegradationRequest):
+    """
+    Runs Arrhenius electro-chemical capacity fade and cycling mechanical degradation
+    simulation for utility BESS installations.
+    """
+    try:
+        twin = DigitalTwinEngine()
+        result = twin.simulate_battery_degradation(
+            battery_capacity_kwh=req.capacity_kwh,
+            chemistry=req.chemistry,
+            daily_cycles=req.daily_cycles,
+            depth_of_discharge=req.depth_of_discharge,
+            operating_temp_c=req.operating_temp_c,
+            simulation_years=req.simulation_years
+        )
+        return {"status": "success", "battery_degradation": result}
+    except Exception as e:
+        logger.error(f"Error simulating battery degradation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/rag/regulatory-search")
+def rag_regulatory_search(query: str = Query(..., min_length=2), category: Optional[str] = None):
+    """
+    Semantic search across Bureau of Energy Efficiency (BEE), Central Electricity Authority (CEA),
+    CERC Grid Frequency Code, and State DISCOM tariff knowledge bases.
+    """
+    try:
+        matches = rag_engine.search_rules(query=query, category=category, top_k=5)
+        return {"status": "success", "query": query, "category": category, "results": matches}
+    except Exception as e:
+        logger.error(f"RAG search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class BRSRReportRequest(BaseModel):
+    annual_kwh: float = Field(38500000.0, ge=1.0)
+    turnover_inr_crores: float = Field(120.0, ge=0.1)
+    fuel_consumption_liters_diesel: float = Field(25000.0, ge=0.0)
+    renewable_kwh: float = Field(0.0, ge=0.0)
+
+@app.post("/api/v1/compliance/brsr-report")
+def generate_brsr_report_endpoint(req: BRSRReportRequest):
+    """
+    Generates SEBI BRSR (Business Responsibility and Sustainability Reporting) Core Principle 6
+    mandatory energy, GHG intensity, and renewable share disclosure audit.
+    """
+    try:
+        from agents.compliance_agent import ComplianceAgent
+        agent = ComplianceAgent()
+        report = agent.generate_brsr_principle_6_report(
+            annual_kwh=req.annual_kwh,
+            turnover_inr_crores=req.turnover_inr_crores,
+            fuel_consumption_liters_diesel=req.fuel_consumption_liters_diesel,
+            renewable_kwh=req.renewable_kwh
+        )
+        return {"status": "success", "brsr_report": report}
+    except Exception as e:
+        logger.error(f"BRSR report generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class DriftTelemetryRequest(BaseModel):
+    values: List[float] = Field(..., min_length=5)
+    allowance: float = Field(0.5, ge=0.01, le=5.0)
+    threshold: float = Field(5.0, ge=1.0, le=20.0)
+
+@app.post("/api/v1/pipeline/drift-telemetry")
+def detect_drift_endpoint(req: DriftTelemetryRequest):
+    """
+    Runs Page's Cumulative Sum (CUSUM) sensor drift and calibration change-point detection
+    over active telemetry readings.
+    """
+    try:
+        from engine.data_pipeline import detect_cusum_drift
+        drift_res = detect_cusum_drift(
+            values=np.array(req.values, dtype=float),
+            allowance=req.allowance,
+            threshold=req.threshold
+        )
+        return {"status": "success", "drift_analysis": drift_res}
+    except Exception as e:
+        logger.error(f"CUSUM drift detection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Mount the static frontend directory
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
