@@ -8,7 +8,7 @@ frontendPath = "c:\Users\Asus\Documents\sustainable platform\frontend\index.html
 WshShell.CurrentDirectory = backendPath
 
 ' Start the FastAPI server silently (0 hides the window, False runs it asynchronously)
-WshShell.Run "py -m uvicorn api:app --host 127.0.0.1 --port 8000", 0, False
+WshShell.Run "py -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload", 0, False
 
 ' Sleep for 3 seconds to let the server start up
 WScript.Sleep 3000

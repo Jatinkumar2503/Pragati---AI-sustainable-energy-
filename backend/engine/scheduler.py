@@ -45,16 +45,21 @@ def get_carbon_intensity(hour):
     else:
         return 400.0  # Night: fossil fuel baseload
 
-def get_weather_solar_profile():
+def get_weather_solar_profile(tenant_id="demo_steel"):
     """
     Retrieves the actual historical daily solar profile, ambient temperature,
     and cloud cover from the telemetry dataset database, linking the optimizer
-    directly to the weather-generator's output.
+    directly to the weather-generator's output for the specific tenant.
     """
     try:
         import pandas as pd
         from .dataset_loader import load_dataset
         df = load_dataset()
+        try:
+            from api import apply_tenant_profile
+            df = apply_tenant_profile(df, tenant_id)
+        except Exception:
+            pass
         df['hour'] = df['date'].dt.hour
         # Group by hour to get the representative weather-driven profiles
         profile = df.groupby('hour').agg({
@@ -477,7 +482,8 @@ def optimize_shift_schedule(
     solar_yield_coeff=0.12,
     task_power_factor=0.80,
     pf_penalty_mult=2.0,
-    capacitor_bank_kvar=50.0
+    capacitor_bank_kvar=50.0,
+    tenant_id="demo_steel"
 ):
     """
     Calculates the mathematically optimal starting hours for energy-intensive tasks.

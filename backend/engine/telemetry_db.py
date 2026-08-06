@@ -248,9 +248,11 @@ class TelemetryDB(BaseDatabase):
             cursor.execute("SELECT COUNT(*) FROM telemetry;")
             count = cursor.fetchone()[0]
             
-            if count == 0:
-                logger.info("Telemetry database is empty. Bootstrapping historical CSV data...")
+            if count < 500:
+                logger.info(f"Telemetry database contains only {count} records. Bootstrapping full historical dataset...")
                 try:
+                    conn.execute("DELETE FROM telemetry;")
+                    conn.commit()
                     df = load_dataset()
                     # Convert pandas datetime dates to ISO TEXT strings for SQLite
                     df_to_save = df.copy()
@@ -258,7 +260,7 @@ class TelemetryDB(BaseDatabase):
                     
                     records = df_to_save.to_dict(orient="records")
                     self.insert_telemetry_records(records, sync=True)
-                    logger.info("Telemetry database successfully bootstrapped with historical logs!")
+                    logger.info(f"Telemetry database successfully bootstrapped with {len(records)} historical logs!")
                 except Exception as e:
                     logger.error(f"Failed to bootstrap telemetry database: {e}")
                     raise

@@ -57,6 +57,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+try:
+    from api_billing import router as billing_router
+    app.include_router(billing_router)
+except ImportError:
+    pass
+
 # Security: API Key validation settings
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -83,29 +89,34 @@ app.add_middleware(
 
 # Thread-safe cache variables with locking to prevent race conditions under concurrent requests
 _cache_lock = threading.RLock()
-ANOMALIES_CACHE = None
+ANOMALIES_CACHE = {}
 
-def get_cached_anomalies():
+def get_cached_anomalies(tenant_id: str = "demo_steel"):
     global ANOMALIES_CACHE
     with _cache_lock:
-        if ANOMALIES_CACHE is None:
+        if not isinstance(ANOMALIES_CACHE, dict):
+            ANOMALIES_CACHE = {}
+        if tenant_id not in ANOMALIES_CACHE:
             try:
                 # Query first 15,000 samples from SQLite database for fast analytical calculations
                 with DB_INSTANCE.get_connection() as conn:
                     df_sample = pd.read_sql_query("SELECT * FROM telemetry ORDER BY date ASC LIMIT 15000", conn)
                     df_sample['date'] = pd.to_datetime(df_sample['date'])
-                ANOMALIES_CACHE = run_anomaly_detection(df_sample)
-                logger.info(f"Anomaly detection complete. {len(ANOMALIES_CACHE)} anomalies cached from database.")
+                df_tenant = apply_tenant_profile(df_sample, tenant_id)
+                ANOMALIES_CACHE[tenant_id] = run_anomaly_detection(df_tenant)
+                logger.info(f"Anomaly detection complete for tenant '{tenant_id}'. {len(ANOMALIES_CACHE[tenant_id])} anomalies cached from database.")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to run anomaly detection: {str(e)}")
-    return ANOMALIES_CACHE
+    return ANOMALIES_CACHE[tenant_id]
 
 # Pydantic request schemas with input validation
 class ForecastRequest(BaseModel):
     hours: int = Field(default=48, ge=1, le=336, description="Forecast horizon in hours (1-336)")
     backtest_folds: int = Field(default=3, ge=2, le=10, description="Number of folds for rolling backtesting")
+    tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
 
 class ScheduleRequest(BaseModel):
+    tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
     task_load_kw: float = Field(default=100.0, gt=0, le=5000, description="Process power load in kW")
     task_duration_h: int = Field(default=4, ge=1, le=24, description="Process duration in hours")
     solar_capacity_kw: float = Field(default=150.0, ge=0, le=5000, description="Solar panel capacity in kW")
@@ -119,6 +130,7 @@ class ScheduleRequest(BaseModel):
     capacitor_bank_kvar: float = Field(default=50.0, ge=0.0, le=1000.0, description="Capacitor bank rating in kVAR for power quality compensation")
 
 class SimulateRequest(BaseModel):
+    tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
     solar_capacity_kw: float = Field(default=150.0, ge=0, le=5000, description="Solar panel capacity in kW")
     battery_capacity_kwh: float = Field(default=50.0, ge=0, le=2000, description="Battery capacity in kWh")
 
@@ -238,17 +250,99 @@ def process_agent_query(req: AgentQueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+TENANT_PROFILES = {
+    "demo_steel": {
+        "mult": 1.0,
+        "pf_base": 0.865,
+        "name": "DAEWOO Steel (Faridabad)",
+        "industry": "Steel Heavy Manufacturing",
+        "shift_peak_hour": 14,
+        "base_load_offset": 0.0
+    },
+    "demo_textile": {
+        "mult": 0.68,
+        "pf_base": 0.920,
+        "name": "Vardhman Textile (Panipat)",
+        "industry": "Textile Weaving & Spinning",
+        "shift_peak_hour": 11,
+        "base_load_offset": 5.0
+    },
+    "demo_rice": {
+        "mult": 0.50,
+        "pf_base": 0.895,
+        "name": "KRBL Basmati Rice (Karnal)",
+        "industry": "Agro Processing & Milling",
+        "shift_peak_hour": 16,
+        "base_load_offset": -2.0
+    },
+    "demo_auto": {
+        "mult": 1.68,
+        "pf_base": 0.840,
+        "name": "Maruti Auto Forging (Gurugram)",
+        "industry": "Automotive Stamping & Forging",
+        "shift_peak_hour": 10,
+        "base_load_offset": 12.0
+    },
+    "demo_chemical": {
+        "mult": 1.12,
+        "pf_base": 0.910,
+        "name": "Haryana Chemicals (Ambala)",
+        "industry": "Chemical & Specialty Polymers",
+        "shift_peak_hour": 13,
+        "base_load_offset": 3.0
+    }
+}
+TENANT_MULTIPLIERS = {k: {"mult": v["mult"], "pf_base": v["pf_base"]} for k, v in TENANT_PROFILES.items()}
+
+def apply_tenant_profile(df: pd.DataFrame, tenant_id: str) -> pd.DataFrame:
+    t_cfg = TENANT_PROFILES.get(tenant_id, TENANT_PROFILES["demo_steel"])
+    mult = t_cfg["mult"]
+    pf_base = t_cfg["pf_base"]
+    peak_shift = t_cfg["shift_peak_hour"] - 14
+    base_offset = t_cfg["base_load_offset"]
+
+    df_out = df.copy()
+    if 'usage_kwh' in df_out.columns:
+        if 'date' in df_out.columns and pd.api.types.is_datetime64_any_dtype(df_out['date']):
+            hours = df_out['date'].dt.hour
+            phase_mod = 1.0 + 0.12 * np.sin(2 * np.pi * (hours + peak_shift) / 24.0)
+            df_out['usage_kwh'] = np.round(np.clip(df_out['usage_kwh'] * mult * phase_mod + base_offset, 1.0, None), 2)
+        else:
+            df_out['usage_kwh'] = np.round(np.clip(df_out['usage_kwh'] * mult + base_offset, 1.0, None), 2)
+
+    if 'reactive_lagging_kvarh' in df_out.columns:
+        df_out['reactive_lagging_kvarh'] = np.round(df_out['reactive_lagging_kvarh'] * mult, 2)
+
+    if 'power_factor_lagging' in df_out.columns:
+        df_out['power_factor_lagging'] = np.round(np.clip(df_out['power_factor_lagging'] * (pf_base / 0.865), 40.0, 99.9), 2)
+
+    if 'co2_tco2' in df_out.columns:
+        df_out['co2_tco2'] = np.round(df_out['co2_tco2'] * mult, 4)
+
+    if 'scope1_co2_kg' in df_out.columns:
+        df_out['scope1_co2_kg'] = np.round(df_out['scope1_co2_kg'] * mult, 3)
+
+    if 'scope2_co2_kg' in df_out.columns:
+        df_out['scope2_co2_kg'] = np.round(df_out['scope2_co2_kg'] * mult, 3)
+
+    if 'scope3_co2_kg' in df_out.columns:
+        df_out['scope3_co2_kg'] = np.round(df_out['scope3_co2_kg'] * mult, 3)
+
+    return df_out
+
 @app.get("/api/telemetry")
-def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days of data to return")):
+def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days of data to return"),
+                  tenant_id: str = Query("demo_steel", description="Tenant or Demo Industry ID")):
     """
-    Returns telemetry logs for index charting directly from the database.
+    Returns telemetry logs for index charting scaled specifically for the selected tenant / industry.
     """
     try:
         df_filtered = DB_INSTANCE.query_recent_telemetry(days)
+        df_tenant = apply_tenant_profile(df_filtered, tenant_id)
         
         # Resample to hourly averages to keep network payload light and charts readable
         numeric_cols = ['date', 'usage_kwh', 'reactive_lagging_kvarh', 'power_factor_lagging', 'co2_tco2', 'scope1_co2_kg', 'scope2_co2_kg', 'scope3_co2_kg']
-        df_hourly = df_filtered[numeric_cols].set_index('date').resample('h').mean().ffill().bfill().fillna(0.0).reset_index()
+        df_hourly = df_tenant[numeric_cols].set_index('date').resample('h').mean().ffill().bfill().fillna(0.0).reset_index()
         
         timestamps = df_hourly['date'].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
         usage = [round(float(x), 2) for x in df_hourly['usage_kwh'].tolist()]
@@ -358,18 +452,18 @@ async def post_telemetry_upload(
         raise HTTPException(status_code=500, detail=f"Failed to parse CSV: {str(e)}")
 
 @app.get("/api/anomalies")
-async def get_anomalies():
+async def get_anomalies(tenant_id: str = Query("demo_steel", description="Tenant or Demo Industry ID")):
     """
-    Returns anomalies identified by machine learning model and expert rule engine.
+    Returns anomalies identified by machine learning model and expert rule engine for selected tenant.
     Runs asynchronously to remain non-blocking.
     """
-    anomalies = await asyncio.to_thread(get_cached_anomalies)
+    anomalies = await asyncio.to_thread(get_cached_anomalies, tenant_id)
     return anomalies
 
 @app.post("/api/forecast")
 async def post_forecast(req: ForecastRequest):
     """
-    Executes Prophet, Random Forest, and custom GRU forecasts, comparing validation RMSE.
+    Executes Prophet, Random Forest, and custom GRU forecasts, comparing validation RMSE for the selected tenant / industry.
     Runs asynchronously via asyncio.to_thread.
     """
     try:
@@ -386,6 +480,9 @@ async def post_forecast(req: ForecastRequest):
         if df_train.empty or len(df_train) < 50:
             logger.info("Telemetry DB empty or insufficient in post_forecast. Falling back to load_dataset()...")
             df_train = load_dataset()
+        
+        # Apply tenant/industry profile scaling and operational pattern
+        df_train = apply_tenant_profile(df_train, req.tenant_id)
         
         # Execute forecasting CPU-bound routine in background thread pool
         results = await asyncio.to_thread(generate_forecast, df_train, forecast_hours=req.hours, backtest_folds=req.backtest_folds)
@@ -414,7 +511,8 @@ async def post_schedule(req: ScheduleRequest):
             solar_yield_coeff=req.solar_yield_coeff,
             task_power_factor=req.task_power_factor,
             pf_penalty_mult=req.pf_penalty_mult,
-            capacitor_bank_kvar=req.capacitor_bank_kvar
+            capacitor_bank_kvar=req.capacitor_bank_kvar,
+            tenant_id=req.tenant_id
         )
         return recommendations
     except Exception as e:
@@ -428,7 +526,7 @@ async def post_simulate(req: SimulateRequest):
     Runs asynchronously via asyncio.to_thread.
     """
     try:
-        results = await asyncio.to_thread(run_roi_simulator_logic, req.solar_capacity_kw, req.battery_capacity_kwh)
+        results = await asyncio.to_thread(run_roi_simulator_logic, req.solar_capacity_kw, req.battery_capacity_kwh, req.tenant_id)
         return results
     except Exception as e:
         logger.error(f"Investment simulation failed: {e}")
@@ -470,13 +568,14 @@ def build_copilot_context_anomalies():
     except Exception as e:
         return {"error": str(e)}
 
-def run_roi_simulator_logic(solar, battery):
+def run_roi_simulator_logic(solar, battery, tenant_id="demo_steel"):
     # Load the 15-minute dataset
     try:
         df = load_dataset()
+        df = apply_tenant_profile(df, tenant_id)
     except Exception as e:
         logger.error(f"Failed to load dataset in ROI simulation: {e}")
-        return run_roi_simulator_logic_fallback(solar, battery)
+        return run_roi_simulator_logic_fallback(solar, battery, tenant_id)
         
     load_kwh = df["usage_kwh"].values
     solar_gen_kwh_base = df["solar_pv_yield_kwh"].values
@@ -1534,9 +1633,98 @@ def get_audit_logs():
         ]
     }
 
+@app.get("/api/v1/demo/tenants")
+def get_demo_tenants():
+    """
+    Returns list of 5 Haryana Industrial Sector Demonstration Workspaces.
+    """
+    return {
+        "status": "success",
+        "tenants": [
+            {
+                "id": "demo_steel",
+                "name": "DAEWOO Steel Processing Plant",
+                "sector": "Steel & Metallurgy",
+                "location": "Faridabad, Haryana",
+                "connected_load_kw": 1250,
+                "badge": "Sample Data – Demonstration Only",
+                "roles_available": ["Plant Manager", "Energy Manager", "Operator", "Auditor"]
+            },
+            {
+                "id": "demo_textile",
+                "name": "Vardhman Textile Weaving Mills",
+                "sector": "Textiles & Garments",
+                "location": "Panipat, Haryana",
+                "connected_load_kw": 850,
+                "badge": "Sample Data – Demonstration Only",
+                "roles_available": ["Plant Manager", "Energy Manager", "Operator"]
+            },
+            {
+                "id": "demo_rice",
+                "name": "KRBL Basmati Rice Processing Plant",
+                "sector": "Agro Processing & Milling",
+                "location": "Karnal, Haryana",
+                "connected_load_kw": 620,
+                "badge": "Sample Data – Demonstration Only",
+                "roles_available": ["Plant Manager", "Operator"]
+            },
+            {
+                "id": "demo_auto",
+                "name": "Maruti Component Forging Plant",
+                "sector": "Automotive Components",
+                "location": "Gurugram, Haryana",
+                "connected_load_kw": 2100,
+                "badge": "Sample Data – Demonstration Only",
+                "roles_available": ["Plant Manager", "Energy Manager", "Auditor"]
+            },
+            {
+                "id": "demo_chemical",
+                "name": "Haryana Specialty Chemicals Facility",
+                "sector": "Chemical & Polymers",
+                "location": "Ambala, Haryana",
+                "connected_load_kw": 1400,
+                "badge": "Sample Data – Demonstration Only",
+                "roles_available": ["Plant Manager", "Operator"]
+            }
+        ]
+    }
+
+@app.post("/api/v1/pipeline/retrain")
+def trigger_automated_retraining(tenant_id: str = "demo_steel"):
+    """
+    Triggers automated data cleaning, feature engineering, and model benchmark tournament for tenant.
+    """
+    try:
+        from engine.data_pipeline import run_automated_pipeline
+        result = run_automated_pipeline(tenant_id)
+        return {"status": "success", "pipeline_result": result}
+    except Exception as e:
+        logger.error(f"Automated pipeline error: {e}")
+        return {"status": "error", "message": str(e)}
+
 # Mount the static frontend directory
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "frontend")
+
+from fastapi.responses import FileResponse, RedirectResponse
+
+@app.get("/admin")
+@app.get("/dashboard")
+@app.get("/anomalies")
+@app.get("/forecasting")
+@app.get("/scheduler")
+@app.get("/digital-twin")
+@app.get("/copilot")
+@app.get("/plans")
+def spa_route_fallback():
+    """
+    Reroutes direct URL navigation to single-page application index.html.
+    """
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return RedirectResponse(url="/")
+
 if os.path.exists(FRONTEND_DIR):
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     logger.info(f"Mounted frontend static files from: {FRONTEND_DIR}")

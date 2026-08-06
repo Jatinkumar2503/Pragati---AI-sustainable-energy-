@@ -1295,3 +1295,12 @@ input[type=range]::-webkit-slider-thumb:hover {
     box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4) !important;
     white-space: nowrap !important;
 }
+
+/* Explicit Chart Canvas Container Dimensions */
+.chart-wrapper {
+    position: relative !important;
+    height: 380px !important;
+    min-height: 380px !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+}

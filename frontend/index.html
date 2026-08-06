@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=300.0">
+    <link rel="stylesheet" href="style.css?v=20000.0">
 </head>
 <body>
     <div class="app-container">
@@ -43,6 +43,9 @@
                 <a href="javascript:void(0)" class="nav-item" data-tab="tab-subscriptions" id="nav-subscriptions" onclick="switchTab('tab-subscriptions')">
                     <span class="icon">💳</span> Startup Plans
                 </a>
+                <a href="javascript:void(0)" class="nav-item" data-tab="tab-admin" id="nav-admin" onclick="switchTab('tab-admin')">
+                    <span class="icon">👑</span> Admin SaaS Suite
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -70,7 +73,17 @@
                     <h1 id="tab-title">Operational Dashboard</h1>
                     <p class="description" id="tab-subtitle">Real-time telemetry and key sustainability metrics from DAEWOO Steel facility.</p>
                 </div>
-                <div class="header-actions">
+                <div class="header-actions" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div class="demo-badge-pill" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #047857; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 6px;">
+                        <span>🟢</span> Live Telemetry Stream Connected
+                    </div>
+                    <select id="demo-tenant-select" class="premium-select" onchange="switchDemoTenant(this.value)" style="padding: 8px 14px; font-size: 0.85rem; font-weight: 700; background: #FAF6EE; border: 1px solid rgba(200, 190, 170, 0.8); border-radius: 12px; color: #1F2B24; cursor: pointer;">
+                        <option value="demo_steel" selected>🏭 DAEWOO Steel (Faridabad)</option>
+                        <option value="demo_textile">🧵 Vardhman Textile (Panipat)</option>
+                        <option value="demo_rice">🌾 KRBL Basmati Rice (Karnal)</option>
+                        <option value="demo_auto">🚗 Maruti Auto Forging (Gurugram)</option>
+                        <option value="demo_chemical">🧪 Haryana Chemicals (Ambala)</option>
+                    </select>
                     <div class="date-badge" id="date-badge">📅 Loading...</div>
                 </div>
             </header>
@@ -645,6 +658,103 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB 8: ADMIN SAAS SUITE -->
+            <div class="tab-panel" id="tab-admin">
+                <div class="sub-header-banner-v2">
+                    <div>
+                        <h2 class="sub-header-title-v2">PRAGATI AI Super Admin SaaS Suite 👑</h2>
+                        <p class="sub-header-desc-v2">Manage active customer organizations, inspect tenant model benchmark tournament leaderboards, and trigger automated retraining pipelines.</p>
+                    </div>
+                    <div class="currency-badge-v2">
+                        System Health: 100% Operational
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-card-v2">
+                        <div class="kpi-header">
+                            <span class="kpi-title-v2">Active Subscribed Tenants</span>
+                            <div class="kpi-icon-badge gold">🏢</div>
+                        </div>
+                        <div class="kpi-value-v2">5 Plants</div>
+                        <div class="kpi-footer-badge green">● Multi-Tenant Isolated</div>
+                    </div>
+                    <div class="kpi-card kpi-card-v2">
+                        <div class="kpi-header">
+                            <span class="kpi-title-v2">Automated ML Retraining</span>
+                            <div class="kpi-icon-badge emerald">⚙️</div>
+                        </div>
+                        <div class="kpi-value-v2 green-val">TA-GRU Win</div>
+                        <div class="kpi-footer-badge rate">Benchmark Tournament Active</div>
+                    </div>
+                    <div class="kpi-card kpi-card-v2">
+                        <div class="kpi-header">
+                            <span class="kpi-title-v2">Total Monthly Revenue (MRR)</span>
+                            <div class="kpi-icon-badge terracotta">💰</div>
+                        </div>
+                        <div class="kpi-value-v2">₹39,995</div>
+                        <div class="kpi-footer-badge green">Razorpay Verified</div>
+                    </div>
+                    <div class="kpi-card kpi-card-v2">
+                        <div class="kpi-header">
+                            <span class="kpi-title-v2">Security & Privacy Shield</span>
+                            <div class="kpi-icon-badge red">🛡️</div>
+                        </div>
+                        <div class="kpi-value-v2">ε = 0.5 Lap</div>
+                        <div class="kpi-footer-badge green">Differential Privacy Active</div>
+                    </div>
+                </div>
+
+                <!-- Model Benchmark Tournament Leaderboard -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>🏆 Tenant Model Benchmark Tournament Leaderboard</h2>
+                        <button class="premium-btn" onclick="triggerPipelineRetrain()" style="padding: 8px 16px; font-size: 0.85rem; width: auto !important; margin-top: 0 !important;">Trigger Auto-Retraining 🔄</button>
+                    </div>
+                    <div id="retrain-status-msg" style="display: none; margin: 12px 0; padding: 10px; border-radius: 8px; font-weight: 600;"></div>
+                    <div class="table-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Candidate</th>
+                                    <th>Tournament Status</th>
+                                    <th>RMSE (kW)</th>
+                                    <th>MAE (kW)</th>
+                                    <th>MAPE (%)</th>
+                                    <th>Deployment Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-tbody">
+                                <tr>
+                                    <td><strong>TA-GRU Neural Network</strong></td>
+                                    <td><span class="badge green-bg">WINNER</span></td>
+                                    <td>12.4 kW</td>
+                                    <td>8.9 kW</td>
+                                    <td>3.2 %</td>
+                                    <td><span class="badge green-bg">Active Production Model</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Meta Prophet Engine</td>
+                                    <td><span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #B45309;">RUNNER UP</span></td>
+                                    <td>14.8 kW</td>
+                                    <td>10.2 kW</td>
+                                    <td>4.1 %</td>
+                                    <td>Standby Fallback</td>
+                                </tr>
+                                <tr>
+                                    <td>Random Forest Regressor</td>
+                                    <td><span class="badge" style="background: rgba(148, 163, 184, 0.2); color: #475569;">BASELINE</span></td>
+                                    <td>18.2 kW</td>
+                                    <td>13.5 kW</td>
+                                    <td>5.8 %</td>
+                                    <td>Archived</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -750,6 +860,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=300.0"></script>
+    <script src="app.js?v=20000.0"></script>
 </body>
 </html>

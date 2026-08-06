@@ -149,13 +149,14 @@ def run_prophet_forecast(train_df, val_subset, actuals):
         tuple: (forecast_list, rmse, model_name) or None if Prophet fails.
     """
     logger.info("Training Meta Prophet model...")
-    prophet_train = train_df[['date', 'usage_kwh']].rename(columns={'date': 'ds', 'usage_kwh': 'y'})
+    prophet_train = train_df[['date', 'usage_kwh']].tail(1000).rename(columns={'date': 'ds', 'usage_kwh': 'y'})
     
     model = Prophet(
         daily_seasonality=True,
         weekly_seasonality=True,
         yearly_seasonality=False,
-        changepoint_prior_scale=0.05
+        changepoint_prior_scale=0.05,
+        uncertainty_samples=0
     )
     model.fit(prophet_train)
     
@@ -541,7 +542,7 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train, seq_len=24)
         
         rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1)
-        rnn.fit(X_train_seq, y_train_seq, epochs=10, batch_size=32)
+        rnn.fit(X_train_seq[-800:], y_train_seq[-800:], epochs=3, batch_size=64)
         
         rnn_forecast = []
         history_rnn = df_hourly.iloc[:split_idx]['usage_kwh'].tolist()
@@ -575,9 +576,9 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         p_forecast = []
         if HAS_PROPHET:
             try:
-                # Limit history to 2000 hours to speed up rolling training
-                prophet_train = train_df.tail(2000)[['date', 'usage_kwh']].rename(columns={'date': 'ds', 'usage_kwh': 'y'})
-                m = Prophet(daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=False, changepoint_prior_scale=0.05)
+                # Limit history to 800 hours to speed up rolling training
+                prophet_train = train_df.tail(800)[['date', 'usage_kwh']].rename(columns={'date': 'ds', 'usage_kwh': 'y'})
+                m = Prophet(daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=False, changepoint_prior_scale=0.05, uncertainty_samples=0)
                 m.fit(prophet_train)
                 future = m.make_future_dataframe(periods=len(val_subset), freq='h', include_history=False)
                 forecast = m.predict(future)

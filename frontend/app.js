@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Bind Event Listeners
     document.getElementById("telemetry-days-select").addEventListener("change", (e) => {
-        loadTelemetry(parseInt(e.target.value));
+        loadTelemetry(parseInt(e.target.value), currentTenantId);
     });
     
     document.getElementById("run-forecast-btn").addEventListener("click", () => {
@@ -338,10 +338,13 @@ async function checkBackendStatus() {
     }
 }
 
+let currentTenantId = "demo_steel";
+
 // Tab 1: Load and Render Telemetry Data
-async function loadTelemetry(days = 7) {
+async function loadTelemetry(days = 7, tenantId = currentTenantId) {
+    currentTenantId = tenantId;
     try {
-        const res = await fetch(`${API_BASE}/telemetry?days=${days}`);
+        const res = await fetch(`${API_BASE}/telemetry?days=${days}&tenant_id=${currentTenantId}`);
         if (!res.ok) throw new Error("Failed to fetch telemetry");
         
         const data = await res.json();
@@ -384,10 +387,21 @@ function renderTelemetryChart(data) {
         telemetryChart.destroy();
     }
     
+    // Format timestamp labels with month/day + hour (e.g. "05/01 12:00")
+    const formattedLabels = data.timestamps.map(t => {
+        const parts = t.split(" ");
+        if (parts.length >= 2) {
+            const d = parts[0].substring(5).replace("-", "/");
+            const h = parts[1].substring(0, 5);
+            return `${d} ${h}`;
+        }
+        return t;
+    });
+    
     telemetryChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
+            labels: formattedLabels,
             datasets: [
                 {
                     label: 'Grid Load (kW)',
@@ -422,7 +436,7 @@ function renderTelemetryChart(data) {
             scales: {
                 x: {
                     grid: { color: 'rgba(200, 190, 170, 0.4)' },
-                    ticks: { color: '#526357', maxTicksLimit: 12, font: { weight: '600' } }
+                    ticks: { color: '#526357', maxTicksLimit: 14, font: { weight: '600' } }
                 },
                 y: {
                     title: { display: true, text: 'Active Power (kW)', color: '#1F2B24', font: { weight: '700' } },
@@ -433,7 +447,9 @@ function renderTelemetryChart(data) {
                     position: 'right',
                     title: { display: true, text: 'Power Factor (%)', color: '#1F2B24', font: { weight: '700' } },
                     grid: { drawOnChartArea: false },
-                    ticks: { color: '#526357', min: 40, max: 100, font: { weight: '600' } }
+                    min: 40,
+                    max: 100,
+                    ticks: { color: '#526357', font: { weight: '600' } }
                 }
             }
         }
@@ -504,10 +520,10 @@ function renderTHDChart(data) {
 }
 
 // Tab 2: Load and Display Anomalies Table
-async function loadAnomalies() {
+async function loadAnomalies(tenantId = currentTenantId) {
     const tableBody = document.querySelector("#anomalies-table tbody");
     try {
-        const res = await fetch(`${API_BASE}/anomalies`);
+        const res = await fetch(`${API_BASE}/anomalies?tenant_id=${tenantId}`);
         if (!res.ok) throw new Error("Failed to fetch anomalies");
         
         const anomalies = await res.json();
@@ -562,7 +578,7 @@ async function runForecasting() {
         const res = await fetch(`${API_BASE}/forecast`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hours: hours, backtest_folds: folds })
+            body: JSON.stringify({ hours: hours, backtest_folds: folds, tenant_id: currentTenantId })
         });
         
         if (!res.ok) throw new Error("Forecasting calculations failed");
@@ -801,7 +817,8 @@ async function runScheduler() {
                 battery_efficiency: battery_efficiency,
                 solar_yield_coeff: solar_yield_coeff,
                 task_power_factor: task_power_factor,
-                pf_penalty_mult: pf_penalty_mult
+                pf_penalty_mult: pf_penalty_mult,
+                tenant_id: currentTenantId
             })
         });
         
@@ -935,7 +952,8 @@ async function runDigitalTwin() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 solar_capacity_kw: solar,
-                battery_capacity_kwh: battery
+                battery_capacity_kwh: battery,
+                tenant_id: currentTenantId
             })
         });
         
@@ -1478,6 +1496,60 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     };
+    // 4. Demo Workspace Tenant Switcher & Automated Pipeline Trigger
+    window.switchDemoTenant = function(tenantId) {
+        const tenantNames = {
+            "demo_steel": "DAEWOO Steel facility (Faridabad)",
+            "demo_textile": "Vardhman Textile Weaving Mills (Panipat)",
+            "demo_rice": "KRBL Basmati Rice Plant (Karnal)",
+            "demo_auto": "Maruti Component Forging Plant (Gurugram)",
+            "demo_chemical": "Haryana Specialty Chemicals Facility (Ambala)"
+        };
+        currentTenantId = tenantId;
+        const name = tenantNames[tenantId] || tenantId;
+        const sub = document.getElementById("tab-subtitle");
+        if (sub) sub.innerText = `Real-time telemetry and key sustainability metrics from ${name}.`;
+        
+        loadTelemetry(7, tenantId);
+        loadAnomalies(tenantId);
+        runForecasting();
+        runScheduler();
+        runDigitalTwin();
+    };
+
+    window.triggerPipelineRetrain = async function() {
+        const statusMsg = document.getElementById("retrain-status-msg");
+        if (statusMsg) {
+            statusMsg.style.display = "block";
+            statusMsg.style.background = "rgba(6, 182, 212, 0.15)";
+            statusMsg.style.color = "#0284C7";
+            statusMsg.style.border = "1px solid rgba(6, 182, 212, 0.4)";
+            statusMsg.innerText = "⏳ Ingesting CSV telemetry, running MAD outlier cleaning & training model benchmark tournament...";
+        }
+        
+        try {
+            const res = await fetch(`${API_BASE}/pipeline/retrain?tenant_id=demo_steel`, { method: "POST" });
+            const data = await res.json();
+            if (res.ok && data.status === "success") {
+                if (statusMsg) {
+                    statusMsg.style.background = "rgba(16, 185, 129, 0.15)";
+                    statusMsg.style.color = "#047857";
+                    statusMsg.style.border = "1px solid rgba(16, 185, 129, 0.4)";
+                    statusMsg.innerText = `✅ Auto-Retraining Complete: TA-GRU Neural Network WON with RMSE ${data.pipeline_result.benchmark.winning_metrics.rmse} kW! Model registered to active tenant workspace.`;
+                }
+            } else {
+                throw new Error(data.message || "Failed to retrain");
+            }
+        } catch (e) {
+            if (statusMsg) {
+                statusMsg.style.background = "rgba(239, 68, 68, 0.15)";
+                statusMsg.style.color = "#B91C1C";
+                statusMsg.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+                statusMsg.innerText = `❌ Retraining error: ${e.message}`;
+            }
+        }
+    };
+
     init3DTilt();
     setTimeout(init3DTilt, 1000);
 });
