@@ -148,5 +148,30 @@ python -m unittest discover backend/tests
 
 ---
 
+## 📊 Enterprise Regulatory Compliance & Physical Formulations
+
+### 1. BEE PAT Cycle-VII Specific Energy Consumption (SEC) & ESCerts
+- **Iron & Steel Norm**: $SEC_{target} = 0.585 \text{ TOE/ton crude steel}$
+- **Cement Norm**: $SEC_{target} = 68.5 \text{ kWh/ton cement}$ and $725 \text{ kcal/kg clinker}$
+- **Textile Norm**: $SEC_{target} = 14.2 \text{ MJ/kg fabric}$
+- **Energy Saving Certificates (ESCerts)**:
+  $$\Delta \text{TOE} = (SEC_{target} - SEC_{actual}) \times \text{Production (tons)}$$
+  $$\text{Market Valuation (INR)} = \Delta \text{TOE} \times ₹1,840/\text{ESCert}$$
+
+### 2. Reactive Power & Automatic Power Factor Controller (APFC) Sizing
+$$Q_c (\text{kVAR}) = P (\text{kW}) \times \left[ \tan(\arccos(PF_{actual})) - \tan(\arccos(PF_{target})) \right]$$
+- Standard 6-stage / 8-stage microprocessor stepped capacitor relay sizing.
+- Eliminates DISCOM low power factor penalties and earns up to 7% PF incentive rebates.
+
+### 3. Utility BESS Arrhenius Electrochemical Aging Physics
+$$SOH(t) = 1.0 - \left[ B_{cal} \cdot \exp\left(-\frac{E_a}{R \cdot T}\right) \cdot t^{0.5} + B_{cyc} \cdot (\Delta DOD)^\beta \cdot N_{cycles}^\gamma \right]$$
+- Accurately models Lithium Iron Phosphate (LFP) vs Nickel Manganese Cobalt (NMC) 10-year battery capacity fade and End-of-Life (EOL at 80% SOH) projections.
+
+### 4. SEBI BRSR Core Principle 6 ESG Reporting
+- Comprehensive disclosure of Scope 1 (Direct fuel / diesel combustion), Scope 2 (Location-based & Market-based grid electricity using CEA regional factors), and Scope 3 (Upstream transmission losses).
+- Computes GHG emission intensity per crore rupees of enterprise revenue.
+
+---
+
 ## 📜 License
 Developed for the **Build with Gemini XPRIZE Edition 2026**. All Rights Reserved.
