@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Query, Security, Depends, UploadFile
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List, Tuple, Union
 from pydantic import BaseModel, Field
 import pandas as pd
 import numpy as np
@@ -129,6 +129,16 @@ class ForecastRequest(BaseModel):
     backtest_folds: int = Field(default=3, ge=2, le=10, description="Number of folds for rolling backtesting")
     tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
 
+class TaskDependencyModel(BaseModel):
+    task_id: str = Field(..., description="Unique task identifier (e.g. EAF-01, LRF-01, CCM-01)")
+    name: Optional[str] = Field(None, description="Task display name")
+    machine: Optional[str] = Field("Primary Facility", description="Equipment/machine assigned")
+    task_load_kw: float = Field(..., gt=0.0, description="Process power draw in kW")
+    task_duration_h: int = Field(..., ge=1, le=24, description="Run duration in hours")
+    dependencies: List[str] = Field(default_factory=list, description="IDs of prerequisite tasks that must complete before this task can start")
+    min_lag_h: int = Field(default=0, ge=0, description="Minimum buffer lag time in hours after prerequisite finishes")
+    max_lag_h: Optional[int] = Field(default=None, description="Maximum allowable buffer lag time in hours")
+
 class ScheduleRequest(BaseModel):
     tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
     task_load_kw: float = Field(default=100.0, gt=0, le=5000, description="Process power load in kW")
@@ -142,6 +152,9 @@ class ScheduleRequest(BaseModel):
     task_power_factor: float = Field(default=0.80, ge=0.40, le=1.00, description="Target Power Factor of the task load")
     pf_penalty_mult: float = Field(default=2.0, ge=0.0, le=10.0, description="Power Factor surcharge billing multiplier rate")
     capacitor_bank_kvar: float = Field(default=50.0, ge=0.0, le=1000.0, description="Capacitor bank rating in kVAR for power quality compensation")
+    maintenance_window: Optional[Tuple[int, int]] = Field(default=(2, 5), description="Plant maintenance overhaul blackout hours")
+    contract_demand_max_kw: Optional[float] = Field(default=450.0, description="Contract demand ceiling in kW")
+    tasks: Optional[List[TaskDependencyModel]] = Field(default=None, description="Optional multi-stage task dependency sequence")
 
 class SimulateRequest(BaseModel):
     tenant_id: str = Field(default="demo_steel", description="Tenant or Demo Industry ID")
@@ -519,6 +532,7 @@ async def post_schedule(req: ScheduleRequest):
     Runs asynchronously via asyncio.to_thread.
     """
     try:
+        tasks_list = [t.model_dump() if hasattr(t, "model_dump") else dict(t) for t in req.tasks] if req.tasks else None
         recommendations = await asyncio.to_thread(
             optimize_shift_schedule,
             task_load_kw=req.task_load_kw,
@@ -532,7 +546,10 @@ async def post_schedule(req: ScheduleRequest):
             task_power_factor=req.task_power_factor,
             pf_penalty_mult=req.pf_penalty_mult,
             capacitor_bank_kvar=req.capacitor_bank_kvar,
-            tenant_id=req.tenant_id
+            maintenance_window=req.maintenance_window,
+            contract_demand_max_kw=req.contract_demand_max_kw,
+            tenant_id=req.tenant_id,
+            tasks=tasks_list
         )
         return recommendations
     except Exception as e:
@@ -1411,6 +1428,7 @@ class DecisionGenerateRequest(BaseModel):
     sector: str = Field("Steel", description="Industrial sector")
     task_load_kw: float = Field(100.0, ge=10.0, le=2000.0, description="Task load in kW")
     duration_hours: int = Field(4, ge=1, le=24, description="Task duration in hours")
+    tasks: Optional[List[TaskDependencyModel]] = Field(default=None, description="Optional multi-stage task dependency sequence")
 
 # Global reference for backward compatibility
 DECISION_CENTER_STATE = DECISION_ENGINE_INSTANCE.current_decision
@@ -1505,11 +1523,13 @@ async def post_generate_decision(req: Optional[DecisionGenerateRequest] = None):
     if req is None:
         req = DecisionGenerateRequest()
     active_alerts = telemetry_streamer.get_active_alerts()
+    tasks_list = [t.model_dump() if hasattr(t, "model_dump") else dict(t) for t in req.tasks] if req.tasks else None
     rec = DECISION_ENGINE_INSTANCE.generate_recommendation(
         tenant_id=req.tenant_id,
         sector=req.sector,
         task_load_kw=req.task_load_kw,
-        task_duration_h=req.duration_hours
+        task_duration_h=req.duration_hours,
+        tasks=tasks_list
     )
     return {
         "status": "success",
@@ -1734,6 +1754,7 @@ async def post_scheduler_optimize_endpoint(req: ScheduleRequest):
     Runs MILP optimization scheduler for batch equipment run windows.
     """
     try:
+        tasks_list = [t.model_dump() if hasattr(t, "model_dump") else dict(t) for t in req.tasks] if req.tasks else None
         res = await asyncio.to_thread(
             optimize_shift_schedule,
             task_load_kw=req.task_load_kw,
@@ -1746,7 +1767,11 @@ async def post_scheduler_optimize_endpoint(req: ScheduleRequest):
             solar_yield_coeff=req.solar_yield_coeff,
             task_power_factor=req.task_power_factor,
             pf_penalty_mult=req.pf_penalty_mult,
-            capacitor_bank_kvar=req.capacitor_bank_kvar
+            capacitor_bank_kvar=req.capacitor_bank_kvar,
+            maintenance_window=req.maintenance_window,
+            contract_demand_max_kw=req.contract_demand_max_kw,
+            tenant_id=req.tenant_id,
+            tasks=tasks_list
         )
         return {"status": "success", "optimization": res}
     except Exception as e:

@@ -331,6 +331,89 @@
                         <div id="dc-provenance-info" style="width: 100%; margin-top: 4px; font-size: 0.75rem; color: #64748B;">Data Source: Sensor SCADA Bus (MODBUS-TCP 15-min Telemetry) | Model: PRAGATI-RF-v2.4-MILP | Hash: SHA256-verified</div>
                     </div>
                 </div>
+
+                <!-- Multi-Stage Task Sequencing & Inter-Stage Buffer Times -->
+                <div class="card" id="dc-sequencing-card" style="margin-top: 24px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: #F8FAFC; display: flex; align-items: center; gap: 8px;">
+                                <span>⛓️</span> Multi-Stage Production Task Sequencing & Precedence Graph
+                            </h2>
+                            <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #94A3B8;">
+                                Electric Arc Furnace (EAF) → Ladle Refining Furnace (LRF) → Continuous Casting Machine (CCM) precedence order and thermal buffer windows.
+                            </p>
+                        </div>
+                        <span class="badge blue-bg" id="dc-graph-status-badge">DAG Verified: Acyclic (0 cycles)</span>
+                    </div>
+                    <div id="dc-task-stages-container" style="display: flex; gap: 16px; margin-top: 16px; overflow-x: auto; padding-bottom: 8px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                    <div id="dc-precedence-buffers-container" style="margin-top: 14px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; font-size: 0.82rem; color: #CBD5E1;">
+                        <!-- Buffer lag details -->
+                    </div>
+                </div>
+
+                <!-- Structured Constraint Audit Log (7 Core Constraints) -->
+                <div class="card" id="dc-audit-card" style="margin-top: 24px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: #F8FAFC; display: flex; align-items: center; gap: 8px;">
+                                <span>📋</span> Structured Operational Constraint Audit Log
+                            </h2>
+                            <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #94A3B8;">
+                                Verification evidence across contract demand, maintenance blackouts, power factor, battery SoC/C-rate, and machine precedence.
+                            </p>
+                        </div>
+                        <span class="badge green-bg" id="dc-audit-summary-badge">Audit: All Evaluated Constraints Met</span>
+                    </div>
+                    <div class="table-container" style="margin-top: 12px;">
+                        <table class="premium-table" style="width: 100%; font-size: 0.82rem;" id="dc-audit-table">
+                            <thead>
+                                <tr>
+                                    <th>Constraint ID</th>
+                                    <th>Name</th>
+                                    <th>Applicable Limit</th>
+                                    <th>Observed Evidence</th>
+                                    <th>Status</th>
+                                    <th>Auditor Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dc-audit-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Fair Baseline vs. Optimized Schedule Comparison (₹, $, kW, kg CO2e) -->
+                <div class="card" id="dc-metrics-card" style="margin-top: 24px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: #F8FAFC; display: flex; align-items: center; gap: 8px;">
+                                <span>⚖️</span> Comparable Baseline vs. Optimized Schedule Metrics
+                            </h2>
+                            <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #94A3B8;">
+                                Identical workload, tariffs, and assumptions. Baseline method explicitly labeled: <strong style="color: #60A5FA;">CONVENTIONAL_ASAP_DISPATCH</strong>.
+                            </p>
+                        </div>
+                        <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3);">MODELED_ESTIMATES</span>
+                    </div>
+                    <div class="table-container" style="margin-top: 12px;">
+                        <table class="premium-table" style="width: 100%; font-size: 0.82rem;" id="dc-comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Conventional ASAP Baseline</th>
+                                    <th>PRAGATI Optimized Dispatch</th>
+                                    <th>Delta / Operational Savings</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dc-comparison-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             
             <!-- TAB 2: ANOMALIES -->

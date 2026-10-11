@@ -64,6 +64,109 @@ class DecisionEngine:
                 {"name": "Contract Demand Ceiling", "status": "Passed", "detail": "Grid active draw remains under 450 kW contractual threshold"},
                 {"name": "APFC Power Factor Target", "status": "Passed", "detail": "PF >= 0.92 maintained via 50 kVAr capacitor step"}
             ],
+            "constraint_audit_log": [
+                {
+                    "constraint_id": "C-DEMAND-01",
+                    "name": "Contract Demand Ceiling",
+                    "applicable_limit": "Peak grid draw <= 450.0 kW",
+                    "observed_value": "440.0 kW peak grid draw",
+                    "status": "SATISFIED",
+                    "explanation": "Peak grid demand (440.0 kW) operated safely below the 450.0 kW contractual ceiling."
+                },
+                {
+                    "constraint_id": "C-MAINT-01",
+                    "name": "Plant Maintenance Window",
+                    "applicable_limit": "Prohibited overhaul hours: 02:00 to 05:00",
+                    "observed_value": "Shifted run window: 11:00 to 15:00",
+                    "status": "SATISFIED",
+                    "explanation": "All tasks scheduled completely outside plant overhaul and maintenance blackout window."
+                },
+                {
+                    "constraint_id": "C-PF-01",
+                    "name": "Power Factor Compliance Threshold",
+                    "applicable_limit": "Grid displacement PF >= 0.90",
+                    "observed_value": "Observed minimum PF: 0.9200",
+                    "status": "SATISFIED",
+                    "explanation": "Grid power factor (0.9200) maintained above DISCOM 0.90 penalty threshold via capacitor bank."
+                },
+                {
+                    "constraint_id": "C-PRECEDENCE-01",
+                    "name": "Multi-Stage Machine Precedence Ordering",
+                    "applicable_limit": "N/A (Single standalone task)",
+                    "observed_value": "N/A",
+                    "status": "NOT_EVALUATED",
+                    "explanation": "Single standalone task executed; multi-stage machine precedence constraints were not applicable."
+                },
+                {
+                    "constraint_id": "C-BUFFER-LAG-01",
+                    "name": "Inter-Stage Buffer & Thermal Lag Windows",
+                    "applicable_limit": "N/A",
+                    "observed_value": "N/A",
+                    "status": "NOT_EVALUATED",
+                    "explanation": "No inter-stage buffer lag windows required for standalone tasks."
+                }
+            ],
+            "metrics_comparison": {
+                "status": "FEASIBLE",
+                "baseline_method": "CONVENTIONAL_ASAP_DISPATCH",
+                "operating_assumptions": {
+                    "time_horizon_hours": 24,
+                    "workload_identical": True,
+                    "tariffs_identical": True,
+                    "emissions_factors_identical": True,
+                    "contract_demand_max_kw": 450.0,
+                    "maintenance_window": [2, 5]
+                },
+                "baseline": {
+                    "energy_cost_inr": 5976.00,
+                    "energy_cost_usd": 72.00,
+                    "peak_demand_kw": 486.0,
+                    "contract_demand_penalty_inr": 8964.00,
+                    "contract_demand_penalty_usd": 108.00,
+                    "total_cost_inr": 14940.00,
+                    "total_cost_usd": 180.00,
+                    "grid_emissions_kg_co2": 194.4,
+                    "feasible": True,
+                    "schedule_summary": []
+                },
+                "optimized": {
+                    "energy_cost_inr": 1950.50,
+                    "energy_cost_usd": 23.50,
+                    "peak_demand_kw": 440.0,
+                    "contract_demand_penalty_inr": 0.0,
+                    "contract_demand_penalty_usd": 0.0,
+                    "total_cost_inr": 1950.50,
+                    "total_cost_usd": 23.50,
+                    "grid_emissions_kg_co2": 97.2,
+                    "feasible": True,
+                    "schedule_summary": []
+                },
+                "deltas": {
+                    "cost_savings_inr": 12989.50,
+                    "cost_savings_usd": 156.50,
+                    "cost_savings_pct": 86.9,
+                    "peak_demand_reduction_kw": 46.0,
+                    "peak_demand_reduction_pct": 9.5,
+                    "emissions_reduction_kg_co2": 97.2,
+                    "emissions_reduction_pct": 50.0
+                },
+                "measurement_nature": "MODELED_ESTIMATES"
+            },
+            "tasks_scheduled": [
+                {
+                    "task_id": "TASK-01",
+                    "task_name": "Annealing Batch",
+                    "machine": "Rolling Mill Annealer",
+                    "start_hour": 11,
+                    "end_hour": 15,
+                    "duration_h": 4,
+                    "task_load_kw": 100.0,
+                    "dependencies": [],
+                    "min_lag_h": 0,
+                    "max_lag_h": None
+                }
+            ],
+            "precedence_summary": [],
             "provenance": {
                 "data_source": "Sensor SCADA Bus (MODBUS-TCP 15-min Telemetry)",
                 "model_version": "PRAGATI-RF-v2.4-MILP",
@@ -80,13 +183,14 @@ class DecisionEngine:
         sector: str = "Steel",
         task_load_kw: float = 100.0,
         task_duration_h: int = 4,
-        force_anomaly_rescan: bool = False
+        force_anomaly_rescan: bool = False,
+        tasks: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """
         Executes end-to-end workflow:
         1. Anomaly trigger identification from active alerts / historical events
         2. 48-hour load & peak demand forecast
-        3. MILP task schedule optimization & constraint verification
+        3. MILP task schedule optimization & constraint verification (multi-stage DAG or standalone)
         4. Decision assembly with evidence & provenance
         """
         from .scheduler import optimize_shift_schedule, get_weather_solar_profile
@@ -101,7 +205,9 @@ class DecisionEngine:
             solar_capacity_kw=150.0,
             environmental_weight=0.15,
             maintenance_window=[2, 3, 4],
-            contract_demand_max_kw=450.0
+            contract_demand_max_kw=450.0,
+            tenant_id=tenant_id,
+            tasks=tasks
         )
 
         plan_comp = sched_res.get("plan_comparison", {})
@@ -109,8 +215,8 @@ class DecisionEngine:
         prop_plan = plan_comp.get("proposed_plan", {})
         delta_plan = plan_comp.get("delta", {})
 
-        current_start_hr = int(curr_plan.get("start_hour", 18))
-        rec_start_hr = int(prop_plan.get("start_hour", sched_res.get("best_start_hour", 11)))
+        current_start_hr = int(curr_plan.get("start_hour", 18)) if curr_plan.get("start_hour") is not None else 18
+        rec_start_hr = int(prop_plan.get("start_hour", sched_res.get("best_start_hour", 11))) if prop_plan.get("start_hour") is not None else 11
         
         curr_cost = float(curr_plan.get("cost_dollars", 72.0))
         opt_cost = float(prop_plan.get("cost_dollars", 23.5))
@@ -150,7 +256,7 @@ class DecisionEngine:
             {
                 "name": "Production Quota Fulfillment",
                 "status": "Passed",
-                "detail": f"100% of {task_duration_h}-hour process batch ({task_load_kw * task_duration_h:.0f} kWh) completed prior to dispatch"
+                "detail": f"100% of process batch throughput completed prior to dispatch"
             },
             {
                 "name": "Contract Demand Ceiling",
@@ -164,7 +270,13 @@ class DecisionEngine:
             }
         ]
 
-        title = f"Shift {task_load_kw:.0f} kW {sector} Processing Cycle to Midday Solar Window ({rec_start_hr:02d}:00)"
+        # Multi-task title or standard title
+        if tasks and len(tasks) > 1:
+            stage_names = " → ".join(t.get("name", t.get("task_name", t.get("task_id", f"Task {i+1}"))) for i, t in enumerate(tasks))
+            title = f"Sequence {len(tasks)}-Stage Production Process ({stage_names}) to Avoid Peak Surcharges"
+        else:
+            title = f"Shift {task_load_kw:.0f} kW {sector} Processing Cycle to Midday Solar Window ({rec_start_hr:02d}:00)"
+
         issue_summary = (
             f"Unusual peak demand spike ({projected_peak:.0f} kW) and high tariff rate ($0.18/kWh) "
             f"anticipated at evening peak hours ({current_start_hr:02d}:00–22:00)."
@@ -174,6 +286,7 @@ class DecisionEngine:
             "action_id": action_id,
             "title": title,
             "status": "PENDING_APPROVAL",
+            "feasibility_status": sched_res.get("status", "FEASIBLE"),
             "created_at": now_str,
             "approved_at": None,
             "approved_by": None,
@@ -196,6 +309,11 @@ class DecisionEngine:
                 "carbon_savings_kg_per_batch": carbon_savings_batch
             },
             "constraints_verified": constraints_list,
+            "constraint_audit_log": sched_res.get("constraint_audit_log", []),
+            "metrics_comparison": sched_res.get("metrics_comparison", {}),
+            "tasks_scheduled": sched_res.get("tasks_scheduled", []),
+            "precedence_summary": sched_res.get("precedence_summary", []),
+            "dependency_graph_status": sched_res.get("dependency_graph_status", {"valid": True, "is_acyclic": True, "errors": []}),
             "provenance": {
                 "data_source": "Sensor SCADA Bus (MODBUS-TCP 15-min Telemetry)",
                 "model_version": "PRAGATI-RF-v2.4-MILP",
