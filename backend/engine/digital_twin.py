@@ -172,6 +172,14 @@ class DigitalTwinEngine:
             simulation_years=10
         )
 
+        # Financial sensitivity and Indian tax shield calculation
+        sensitivity = self.calculate_sensitivity_analysis(
+            base_capex=total_capex,
+            base_annual_savings=annual_financial_savings_inr,
+            base_solar_yield=derated_solar_yield,
+            base_tariff=self.peak_tariff_rate
+        )
+
         return {
             "region": self.region,
             "grid_emission_factor_kg_kwh": self.grid_factor,
@@ -193,7 +201,9 @@ class DigitalTwinEngine:
                 "monthly_savings_inr": round(total_monthly_savings_inr, 2),
                 "annual_savings_inr": round(annual_financial_savings_inr, 2),
                 "estimated_capex_inr": round(total_capex, 2),
-                "payback_period_years": payback_period_years
+                "payback_period_years": payback_period_years,
+                "inr_metrics": sensitivity.get("indian_tax_depreciation_impact", {}),
+                "sensitivity_analysis": sensitivity
             },
             "carbon_metrics": {
                 "monthly_co2_reduction_kg": round(monthly_co2_saved_kg, 2),
@@ -205,6 +215,77 @@ class DigitalTwinEngine:
             "battery_lifecycle": bess_aging
         }
 
+    def calculate_sensitivity_analysis(
+        self,
+        base_capex: float,
+        base_annual_savings: float,
+        base_solar_yield: float = 4.5,
+        base_tariff: float = 11.50
+    ) -> Dict[str, Any]:
+        """
+        Calculates multi-dimensional financial sensitivity for payback period
+        under varying grid tariffs, solar yields, and capital expenditures (±10%, ±20%).
+        Also computes Indian Accelerated Depreciation (Section 32, 40% WDV) vs standard SLM.
+        """
+        variations = [-0.20, -0.10, 0.0, 0.10, 0.20]
+        
+        tariff_sensitivity = []
+        for v in variations:
+            factor = 1.0 + v
+            adj_savings = base_annual_savings * factor
+            payback = round(base_capex / max(1.0, adj_savings), 2)
+            tariff_sensitivity.append({
+                "variation_pct": int(v * 100),
+                "tariff_rate_inr": round(base_tariff * factor, 2),
+                "annual_savings_inr": round(adj_savings, 2),
+                "payback_years": payback
+            })
+            
+        capex_sensitivity = []
+        for v in variations:
+            factor = 1.0 + v
+            adj_capex = base_capex * factor
+            payback = round(adj_capex / max(1.0, base_annual_savings), 2)
+            capex_sensitivity.append({
+                "variation_pct": int(v * 100),
+                "capex_inr": round(adj_capex, 2),
+                "payback_years": payback
+            })
+            
+        solar_yield_sensitivity = []
+        for v in variations:
+            factor = 1.0 + v
+            adj_savings = base_annual_savings * (0.4 + 0.6 * factor)  # 60% of savings linked to solar generation
+            payback = round(base_capex / max(1.0, adj_savings), 2)
+            solar_yield_sensitivity.append({
+                "variation_pct": int(v * 100),
+                "solar_yield_kwh_kw_day": round(base_solar_yield * factor, 2),
+                "payback_years": payback
+            })
+            
+        # Indian IT Act Section 32 Accelerated Depreciation (40% WDV) tax shield
+        # Corporate tax rate: 25.17% (22% base + 10% surcharge + 4% cess under Section 115BAA)
+        corp_tax_rate_in = 0.2517
+        year1_ad_depreciation_inr = base_capex * 0.40
+        year1_tax_shield_inr = round(year1_ad_depreciation_inr * corp_tax_rate_in, 2)
+        after_tax_year1_savings_inr = round(base_annual_savings + year1_tax_shield_inr, 2)
+        effective_indian_year1_payback = round(base_capex / max(1.0, after_tax_year1_savings_inr), 2)
+        
+        return {
+            "base_capex_inr": round(base_capex, 2),
+            "base_annual_savings_inr": round(base_annual_savings, 2),
+            "tariff_sensitivity": tariff_sensitivity,
+            "capex_sensitivity": capex_sensitivity,
+            "solar_yield_sensitivity": solar_yield_sensitivity,
+            "indian_tax_regime": {
+                "section": "Income Tax Act Section 32 (Accelerated Depreciation)",
+                "depreciation_rate_pct": 40.0,
+                "effective_corporate_tax_rate_pct": 25.17,
+                "year1_tax_shield_inr": year1_tax_shield_inr,
+                "effective_after_tax_year1_payback_years": effective_indian_year1_payback
+            }
+        }
+
     def get_grid_audit_data(self) -> Dict[str, Any]:
         """Returns national and regional grid emission breakdown."""
         return {
@@ -213,3 +294,4 @@ class DigitalTwinEngine:
             "regional_breakdown": CEA_GRID_EMISSION_FACTORS,
             "state_breakdown": STATE_GRID_FACTORS
         }
+

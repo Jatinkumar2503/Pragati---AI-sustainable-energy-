@@ -61,7 +61,7 @@ class ComplianceAgent(BaseAgent):
             },
             "greenhouse_gas_emissions": {
                 "scope_1_direct_tons_co2e": round(scope1_co2_tons, 2),
-                "scope_2_location_based_tons_co2e": round(scope2_location_based_tons_co2e, 2),
+                "scope_2_location_based_tons_co2e": round(scope2_location_co2_tons, 2),
                 "scope_2_market_based_tons_co2e": round(scope2_market_co2_tons, 2),
                 "scope_3_supply_chain_tons_co2e": round(scope3_co2_tons, 2),
                 "total_ghg_emissions_tons_co2e": round(total_ghg_emissions_tons, 2),

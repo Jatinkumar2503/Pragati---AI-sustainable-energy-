@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import root_mean_squared_error
+from sklearn.metrics import root_mean_squared_error, mean_absolute_error
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ def prepare_temporal_features(df):
     df_feat['lag_1d'] = df_feat['usage_kwh'].shift(24)
     df_feat['lag_7d'] = df_feat['usage_kwh'].shift(168)
     
-    # Fill NaN lags with historical mean
-    mean_val = df_feat['usage_kwh'].mean()
+    # Fill NaN lags with initial available historical mean to avoid future data leakage
+    mean_val = df_feat['usage_kwh'].iloc[:168].mean() if len(df_feat) >= 168 else df_feat['usage_kwh'].mean()
     df_feat['lag_1d'] = df_feat['lag_1d'].fillna(mean_val)
     df_feat['lag_7d'] = df_feat['lag_7d'].fillna(mean_val)
     
@@ -195,7 +195,7 @@ def run_exp_smoothing_forecast(train_series, forecast_hours, actuals):
 
 
 def adf_test(series, max_lag=168):
-    """
+    r"""
     Performs a self-contained Augmented Dickey-Fuller (ADF) test for stationarity,
     automatically selecting the optimal lag length (up to max_lag=168 for weekly seasonality)
     by minimizing the Akaike Information Criterion (AIC).
@@ -467,9 +467,13 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
     
     metrics_summary = {
         "prophet_rmse": [],
+        "prophet_mae": [],
         "rf_rmse": [],
+        "rf_mae": [],
         "rnn_rmse": [],
-        "persistence_rmse": []
+        "rnn_mae": [],
+        "persistence_rmse": [],
+        "persistence_mae": []
     }
     
     for fold in range(n_splits):
@@ -493,7 +497,9 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
             persistence_forecast.append(val)
         
         p_rmse = float(root_mean_squared_error(actuals, persistence_forecast))
+        p_mae = float(mean_absolute_error(actuals, persistence_forecast))
         metrics_summary["persistence_rmse"].append(p_rmse)
+        metrics_summary["persistence_mae"].append(p_mae)
         
         # 2. Random Forest Forecast
         df_feat = prepare_temporal_features(df_hourly)
@@ -515,7 +521,8 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
             is_weekend = int(day_of_week >= 5)
             lag_1d = history_rf[-24] if len(history_rf) >= 24 else history_rf[-1]
             lag_7d = history_rf[-168] if len(history_rf) >= 168 else history_rf[-1]
-            temp_val = val_subset.iloc[i]['ambient_temperature_c']
+            # Use past training diurnal weather profile instead of unavailable future measurements
+            temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
             
             X_pred = pd.DataFrame([{
                 'hour': hour,
@@ -532,16 +539,24 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
             history_rf.append(pred_val)
             
         rf_rmse = float(root_mean_squared_error(actuals, rf_forecast))
+        rf_mae = float(mean_absolute_error(actuals, rf_forecast))
         metrics_summary["rf_rmse"].append(rf_rmse)
+        metrics_summary["rf_mae"].append(rf_mae)
         
-        # 3. Recurrent Neural Network (RNN) Forecast
+        # 3. Recurrent Neural Network (RNN) Forecast with normalized target y
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         
-        # Build windowed sequences for sequential learning
-        X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train, seq_len=24)
+        target_mean = float(np.mean(y_train))
+        target_std = float(np.std(y_train))
+        if target_std < 1e-4:
+            target_std = 1.0
+        y_train_scaled = (y_train.values - target_mean) / target_std
         
-        rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1)
+        # Build windowed sequences for sequential learning
+        X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train_scaled, seq_len=24)
+        
+        rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1, lr=0.01)
         rnn.fit(X_train_seq[-800:], y_train_seq[-800:], epochs=3, batch_size=64)
         
         rnn_forecast = []
@@ -560,17 +575,20 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
                 
                 lag_1d = history_rnn[k - 24] if k - 24 < len(history_rnn) else history_rnn[-1]
                 lag_7d = history_rnn[k - 168] if k - 168 < len(history_rnn) else history_rnn[-1]
-                temp_val = df_hourly.iloc[k]['ambient_temperature_c']
+                temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
                 
                 seq_steps.append([hour, day_of_week, month, is_weekend, lag_1d, lag_7d, temp_val])
                 
             seq_scaled = scaler.transform(pd.DataFrame(seq_steps, columns=feature_cols))
-            pred_val = max(0.0, float(rnn.forward(seq_scaled)[0, 0]))
+            norm_pred = float(rnn.forward(seq_scaled)[0, 0])
+            pred_val = max(0.0, float(norm_pred * target_std + target_mean))
             rnn_forecast.append(pred_val)
             history_rnn.append(pred_val)
             
         rnn_rmse = float(root_mean_squared_error(actuals, rnn_forecast))
+        rnn_mae = float(mean_absolute_error(actuals, rnn_forecast))
         metrics_summary["rnn_rmse"].append(rnn_rmse)
+        metrics_summary["rnn_mae"].append(rnn_mae)
         
         # 4. Prophet Forecast (Fallback to ExpSmoothing)
         p_forecast = []
@@ -588,8 +606,10 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         else:
             p_forecast = seasonal_exponential_smoothing_forecast(train_df['usage_kwh'], len(val_subset))
             
-        p_rmse = float(root_mean_squared_error(actuals, p_forecast))
-        metrics_summary["prophet_rmse"].append(p_rmse)
+        prophet_rmse = float(root_mean_squared_error(actuals, p_forecast))
+        prophet_mae = float(mean_absolute_error(actuals, p_forecast))
+        metrics_summary["prophet_rmse"].append(prophet_rmse)
+        metrics_summary["prophet_mae"].append(prophet_mae)
         
     avg_results = {k: float(np.mean(v)) for k, v in metrics_summary.items()}
     return avg_results
@@ -693,6 +713,8 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     
     # Recursive autoregressive forecast for validation subset
     rf_forecast_list = []
+    rf_ci_lower = []
+    rf_ci_upper = []
     # Start with the last state of training data to bootstrap lags
     history = df_hourly.iloc[:split_idx]['usage_kwh'].tolist()
     
@@ -709,6 +731,9 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
         lag_1d = history[-24] if len(history) >= 24 else history[-1]
         lag_7d = history[-168] if len(history) >= 168 else history[-1]
         
+        # Use past training diurnal weather profile instead of unavailable future measurements
+        temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
+        
         X_pred = pd.DataFrame([{
             'hour': hour,
             'day_of_week': day_of_week,
@@ -716,31 +741,45 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
             'is_weekend': is_weekend,
             'lag_1d': lag_1d,
             'lag_7d': lag_7d,
-            'ambient_temperature_c': val_subset.iloc[i]['ambient_temperature_c']
+            'ambient_temperature_c': temp_val
         }])
         
         pred_val = max(0.0, float(rf.predict(X_pred)[0]))
         rf_forecast_list.append(pred_val)
         
+        # Empirical 90% prediction interval across ensemble decision trees
+        tree_preds = [float(tree.predict(X_pred.values)[0]) for tree in rf.estimators_]
+        ci_low = max(0.0, float(np.percentile(tree_preds, 5)))
+        ci_high = max(0.0, float(np.percentile(tree_preds, 95)))
+        rf_ci_lower.append(round(ci_low, 2))
+        rf_ci_upper.append(round(ci_high, 2))
+        
         # Append prediction to history to feed subsequent lags recursively
         history.append(pred_val)
         
     rf_rmse = float(root_mean_squared_error(actuals, rf_forecast_list))
-    logger.info(f"Random Forest Training Complete. Validation RMSE: {rf_rmse:.4f}")
+    rf_mae = float(mean_absolute_error(actuals, rf_forecast_list))
+    logger.info(f"Random Forest Training Complete. Validation RMSE: {rf_rmse:.4f}, MAE: {rf_mae:.4f}")
     
     # ==========================================
     # MODEL 3: RECURRENT NEURAL NETWORK (RNN)
     # ==========================================
     logger.info("Training NumPy Recurrent Neural Network (RNN)...")
-    # Scale inputs for model training stability
+    # Scale inputs and target for model training stability
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     
+    target_mean = float(np.mean(y_train))
+    target_std = float(np.std(y_train))
+    if target_std < 1e-4:
+        target_std = 1.0
+    y_train_scaled = (y_train.values - target_mean) / target_std
+    
     # Build windowed sequences for sequential learning
-    X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train, seq_len=24)
+    X_train_seq, y_train_seq = prepare_rnn_sequences(X_train_scaled, y_train_scaled, seq_len=24)
     
     # Train NumpyGRU
-    rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1)
+    rnn = NumpyGRU(input_dim=7, hidden_dim=16, output_dim=1, lr=0.01)
     rnn.fit(X_train_seq, y_train_seq, epochs=10, batch_size=32)
     
     # Recursive autoregressive forecast for validation subset with RNN
@@ -760,25 +799,42 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
             
             lag_1d = history_rnn[k - 24] if k - 24 < len(history_rnn) else history_rnn[-1]
             lag_7d = history_rnn[k - 168] if k - 168 < len(history_rnn) else history_rnn[-1]
-            temp_val = df_hourly.iloc[k]['ambient_temperature_c']
+            temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
             
             seq_steps.append([hour, day_of_week, month, is_weekend, lag_1d, lag_7d, temp_val])
             
         seq_scaled = scaler.transform(pd.DataFrame(seq_steps, columns=feature_cols))
-        pred_val = max(0.0, float(rnn.forward(seq_scaled)[0, 0]))
+        norm_pred = float(rnn.forward(seq_scaled)[0, 0])
+        pred_val = max(0.0, float(norm_pred * target_std + target_mean))
         rnn_forecast_list.append(pred_val)
         
         # Append prediction to history to feed subsequent lags recursively
         history_rnn.append(pred_val)
         
     rnn_rmse = float(root_mean_squared_error(actuals, rnn_forecast_list))
-    logger.info(f"NumPy RNN Training Complete. Validation RMSE: {rnn_rmse:.4f}")
+    rnn_mae = float(mean_absolute_error(actuals, rnn_forecast_list))
+    logger.info(f"NumPy RNN Training Complete. Validation RMSE: {rnn_rmse:.4f}, MAE: {rnn_mae:.4f}")
+    
+    # 3. Naive persistence baseline forecast (y_t = y_{t-24}) for visualization and evaluation
+    persistence_forecast = []
+    for i in range(forecast_hours):
+        lookback_idx = split_idx + i - 24
+        if lookback_idx >= 0:
+            val = df_hourly.iloc[lookback_idx]['usage_kwh']
+        else:
+            val = train_df['usage_kwh'].mean()
+        persistence_forecast.append(val)
+        
+    persistence_rmse = float(root_mean_squared_error(actuals, persistence_forecast))
+    persistence_mae = float(mean_absolute_error(actuals, persistence_forecast))
+    seasonal_mae = float(mean_absolute_error(actuals, seasonal_forecast))
     
     # Determine best model by validation RMSE
     models_rmse = {
         seasonal_model_name: seasonal_rmse,
         "Random Forest": rf_rmse,
-        "RNN": rnn_rmse
+        "RNN": rnn_rmse,
+        "Persistence Baseline": persistence_rmse
     }
     best_model = min(models_rmse, key=models_rmse.get)
     
@@ -790,35 +846,43 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     # 2. Time-series cross-validation (backtesting)
     backtest_results = time_series_backtest(df_hourly, forecast_hours=forecast_hours, n_splits=backtest_folds)
     
-    # 3. Naive persistence baseline forecast for visualization
-    persistence_forecast = []
-    for i in range(forecast_hours):
-        lookback_idx = split_idx + i - 24
-        if lookback_idx >= 0:
-            val = df_hourly.iloc[lookback_idx]['usage_kwh']
-        else:
-            val = train_df['usage_kwh'].mean()
-        persistence_forecast.append(val)
-        
     return {
         "timestamps": timestamps,
         "actuals": [round(x, 2) for x in actuals],
         "prophet_forecast": [round(x, 2) for x in seasonal_forecast],
         "rf_forecast": [round(x, 2) for x in rf_forecast_list],
+        "rf_ci_lower": rf_ci_lower,
+        "rf_ci_upper": rf_ci_upper,
         "rnn_forecast": [round(x, 2) for x in rnn_forecast_list],
         "persistence_forecast": [round(x, 2) for x in persistence_forecast],
         "seasonal_model_name": seasonal_model_name,
+        "primary_model": "Random Forest",
+        "evaluation_period": {
+            "start": str(val_subset.iloc[0]['date']),
+            "end": str(val_subset.iloc[-1]['date']),
+            "horizon_hours": forecast_hours,
+            "protocol": "Chronological out-of-sample split with 3-fold expanding-origin backtesting"
+        },
         "metrics": {
             "prophet_rmse": round(seasonal_rmse, 4),
+            "prophet_mae": round(seasonal_mae, 4),
             "rf_rmse": round(rf_rmse, 4),
+            "rf_mae": round(rf_mae, 4),
             "rnn_rmse": round(rnn_rmse, 4),
+            "rnn_mae": round(rnn_mae, 4),
+            "persistence_rmse": round(persistence_rmse, 4),
+            "persistence_mae": round(persistence_mae, 4),
             "best_model": best_model
         },
         "backtest": {
             "prophet_rmse": round(backtest_results["prophet_rmse"], 4),
+            "prophet_mae": round(backtest_results.get("prophet_mae", 0.0), 4),
             "rf_rmse": round(backtest_results["rf_rmse"], 4),
+            "rf_mae": round(backtest_results.get("rf_mae", 0.0), 4),
             "rnn_rmse": round(backtest_results["rnn_rmse"], 4),
-            "persistence_rmse": round(backtest_results["persistence_rmse"], 4)
+            "rnn_mae": round(backtest_results.get("rnn_mae", 0.0), 4),
+            "persistence_rmse": round(backtest_results["persistence_rmse"], 4),
+            "persistence_mae": round(backtest_results.get("persistence_mae", 0.0), 4)
         },
         "adf": {
             "t_stat": round(t_stat, 4),
