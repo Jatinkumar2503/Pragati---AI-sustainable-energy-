@@ -3,6 +3,7 @@ import logging
 import zipfile
 import requests
 import json
+from typing import Optional, Dict, Any
 import pandas as pd
 import numpy as np
 from engine.scheduler import get_carbon_intensity, SOLAR_YIELD_FACTOR
@@ -369,8 +370,56 @@ def load_dataset():
         
     logger.info(f"Loading dataset from {CSV_PATH}...")
     df = pd.read_csv(CSV_PATH)
-    
     return preprocess_and_align_dataframe(df)
+
+def get_dataset_provenance(df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
+    """
+    Returns provenance metadata describing dataset origin, sampling frequency,
+    physical units, and explicitly distinguishing historical/synthetic benchmarks from live industrial telemetry.
+    """
+    is_synthetic = False
+    if os.path.exists(CSV_PATH):
+        try:
+            with open(CSV_PATH, 'r', encoding='utf-8', errors='ignore') as f:
+                first_line = f.readline()
+                if "2026-05" in first_line:
+                    is_synthetic = True
+        except Exception:
+            pass
+
+    time_range = {"start": None, "end": None}
+    sample_count = 0
+    if df is not None and not df.empty and "date" in df.columns:
+        dates = pd.to_datetime(df["date"])
+        time_range = {
+            "start": str(dates.min()),
+            "end": str(dates.max())
+        }
+        sample_count = len(df)
+
+    source_type = "SYNTHETIC_BENCHMARK" if is_synthetic else "HISTORICAL_UCI_BENCHMARK"
+    source_name = "Synthetic Steel Industry Energy Benchmark" if is_synthetic else "UCI Machine Learning Repository: Steel Industry Energy Consumption"
+
+    return {
+        "source_type": source_type,
+        "source_name": source_name,
+        "is_live_physical_hardware": False,
+        "is_synthetic": is_synthetic,
+        "time_range": time_range,
+        "sample_count": sample_count,
+        "sampling_interval": "15-minute intervals",
+        "units": {
+            "usage_kwh": "kWh",
+            "reactive_lagging_kvarh": "kVARh",
+            "reactive_leading_kvarh": "kVARh",
+            "co2_tco2": "tCO2",
+            "ambient_temperature_c": "°C",
+            "solar_pv_yield_kwh": "kWh",
+            "voltage_v": "V",
+            "thd_pct": "%"
+        },
+        "description": "Historical benchmark telemetry used for baseline modeling and offline validation. Never mislabelled as live industrial physical telemetry."
+    }
 
 if __name__ == "__main__":
     df = load_dataset()

@@ -16,6 +16,46 @@ except ImportError:
     HAS_PROPHET = False
     logger.warning("Meta Prophet is not installed. Falling back to Exponential Smoothing model.")
 
+import datetime
+from typing import Optional, Dict, Any, List
+
+def calculate_safe_mape(actuals, predictions, epsilon: float = 1e-3) -> Optional[float]:
+    """
+    Computes Mean Absolute Percentage Error (MAPE) safely.
+    Handles zero/near-zero actuals by filtering out elements where |y| < epsilon.
+    Returns None if all actuals are zero (preventing division-by-zero or infinite metrics).
+    """
+    if actuals is None or predictions is None or len(actuals) == 0:
+        return None
+    y_true = np.asarray(actuals, dtype=float)
+    y_pred = np.asarray(predictions, dtype=float)
+    if len(y_true) != len(y_pred):
+        return None
+    valid_mask = np.abs(y_true) >= epsilon
+    if not np.any(valid_mask):
+        return None  # All actuals are zero/near-zero: MAPE is mathematically undefined
+    mape = np.mean(np.abs((y_true[valid_mask] - y_pred[valid_mask]) / y_true[valid_mask])) * 100.0
+    return float(round(mape, 4))
+
+def calculate_wape(actuals, predictions) -> Optional[float]:
+    """
+    Computes Weighted Absolute Percentage Error (WAPE = sum(|y - y_hat|) / sum(|y|) * 100).
+    Recommended standard for load forecasting with low or zero-valued baseload intervals.
+    """
+    if actuals is None or predictions is None or len(actuals) == 0:
+        return None
+    y_true = np.asarray(actuals, dtype=float)
+    y_pred = np.asarray(predictions, dtype=float)
+    if len(y_true) != len(y_pred):
+        return None
+    denom = np.sum(np.abs(y_true))
+    if denom == 0.0:
+        err_sum = np.sum(np.abs(y_true - y_pred))
+        return 0.0 if err_sum == 0.0 else None
+    wape = (np.sum(np.abs(y_true - y_pred)) / denom) * 100.0
+    return float(round(wape, 4))
+
+
 
 def prepare_temporal_features(df):
     """
@@ -468,12 +508,20 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
     metrics_summary = {
         "prophet_rmse": [],
         "prophet_mae": [],
+        "prophet_mape": [],
+        "prophet_wape": [],
         "rf_rmse": [],
         "rf_mae": [],
+        "rf_mape": [],
+        "rf_wape": [],
         "rnn_rmse": [],
         "rnn_mae": [],
+        "rnn_mape": [],
+        "rnn_wape": [],
         "persistence_rmse": [],
-        "persistence_mae": []
+        "persistence_mae": [],
+        "persistence_mape": [],
+        "persistence_wape": []
     }
     
     for fold in range(n_splits):
@@ -500,6 +548,10 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         p_mae = float(mean_absolute_error(actuals, persistence_forecast))
         metrics_summary["persistence_rmse"].append(p_rmse)
         metrics_summary["persistence_mae"].append(p_mae)
+        p_mape = calculate_safe_mape(actuals, persistence_forecast)
+        p_wape = calculate_wape(actuals, persistence_forecast)
+        if p_mape is not None: metrics_summary["persistence_mape"].append(p_mape)
+        if p_wape is not None: metrics_summary["persistence_wape"].append(p_wape)
         
         # 2. Random Forest Forecast
         df_feat = prepare_temporal_features(df_hourly)
@@ -542,6 +594,10 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         rf_mae = float(mean_absolute_error(actuals, rf_forecast))
         metrics_summary["rf_rmse"].append(rf_rmse)
         metrics_summary["rf_mae"].append(rf_mae)
+        rf_mape = calculate_safe_mape(actuals, rf_forecast)
+        rf_wape = calculate_wape(actuals, rf_forecast)
+        if rf_mape is not None: metrics_summary["rf_mape"].append(rf_mape)
+        if rf_wape is not None: metrics_summary["rf_wape"].append(rf_wape)
         
         # 3. Recurrent Neural Network (RNN) Forecast with normalized target y
         scaler = StandardScaler()
@@ -573,8 +629,8 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
                 month = pred_date.month
                 is_weekend = int(day_of_week >= 5)
                 
-                lag_1d = history_rnn[k - 24] if k - 24 < len(history_rnn) else history_rnn[-1]
-                lag_7d = history_rnn[k - 168] if k - 168 < len(history_rnn) else history_rnn[-1]
+                lag_1d = history_rnn[k - 24] if 0 <= k - 24 < len(history_rnn) else (history_rnn[-1] if history_rnn else 0.0)
+                lag_7d = history_rnn[k - 168] if 0 <= k - 168 < len(history_rnn) else (history_rnn[-1] if history_rnn else 0.0)
                 temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
                 
                 seq_steps.append([hour, day_of_week, month, is_weekend, lag_1d, lag_7d, temp_val])
@@ -589,6 +645,10 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         rnn_mae = float(mean_absolute_error(actuals, rnn_forecast))
         metrics_summary["rnn_rmse"].append(rnn_rmse)
         metrics_summary["rnn_mae"].append(rnn_mae)
+        rnn_mape = calculate_safe_mape(actuals, rnn_forecast)
+        rnn_wape = calculate_wape(actuals, rnn_forecast)
+        if rnn_mape is not None: metrics_summary["rnn_mape"].append(rnn_mape)
+        if rnn_wape is not None: metrics_summary["rnn_wape"].append(rnn_wape)
         
         # 4. Prophet Forecast (Fallback to ExpSmoothing)
         p_forecast = []
@@ -610,8 +670,12 @@ def time_series_backtest(df_hourly, forecast_hours=48, n_splits=3):
         prophet_mae = float(mean_absolute_error(actuals, p_forecast))
         metrics_summary["prophet_rmse"].append(prophet_rmse)
         metrics_summary["prophet_mae"].append(prophet_mae)
+        pr_mape = calculate_safe_mape(actuals, p_forecast)
+        pr_wape = calculate_wape(actuals, p_forecast)
+        if pr_mape is not None: metrics_summary["prophet_mape"].append(pr_mape)
+        if pr_wape is not None: metrics_summary["prophet_wape"].append(pr_wape)
         
-    avg_results = {k: float(np.mean(v)) for k, v in metrics_summary.items()}
+    avg_results = {k: (float(round(np.mean(v), 4)) if len(v) > 0 else None) for k, v in metrics_summary.items()}
     return avg_results
 
 
@@ -797,8 +861,8 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
             month = pred_date.month
             is_weekend = int(day_of_week >= 5)
             
-            lag_1d = history_rnn[k - 24] if k - 24 < len(history_rnn) else history_rnn[-1]
-            lag_7d = history_rnn[k - 168] if k - 168 < len(history_rnn) else history_rnn[-1]
+            lag_1d = history_rnn[k - 24] if 0 <= k - 24 < len(history_rnn) else (history_rnn[-1] if history_rnn else 0.0)
+            lag_7d = history_rnn[k - 168] if 0 <= k - 168 < len(history_rnn) else (history_rnn[-1] if history_rnn else 0.0)
             temp_val = train_df.iloc[-24 + (hour % 24)]['ambient_temperature_c'] if len(train_df) >= 24 else train_df['ambient_temperature_c'].mean()
             
             seq_steps.append([hour, day_of_week, month, is_weekend, lag_1d, lag_7d, temp_val])
@@ -827,7 +891,17 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
         
     persistence_rmse = float(root_mean_squared_error(actuals, persistence_forecast))
     persistence_mae = float(mean_absolute_error(actuals, persistence_forecast))
-    seasonal_mae = float(mean_absolute_error(actuals, seasonal_forecast))
+    seasonal_mae = float(mean_absolute_error(actuals, seasonal_forecast)) if (seasonal_forecast and len(seasonal_forecast) == len(actuals)) else None
+    
+    # Calculate safe MAPE and WAPE metrics across all models
+    rf_mape = calculate_safe_mape(actuals, rf_forecast_list)
+    rf_wape = calculate_wape(actuals, rf_forecast_list)
+    rnn_mape = calculate_safe_mape(actuals, rnn_forecast_list)
+    rnn_wape = calculate_wape(actuals, rnn_forecast_list)
+    seasonal_mape = calculate_safe_mape(actuals, seasonal_forecast) if (seasonal_forecast and len(seasonal_forecast) == len(actuals)) else None
+    seasonal_wape = calculate_wape(actuals, seasonal_forecast) if (seasonal_forecast and len(seasonal_forecast) == len(actuals)) else None
+    persistence_mape = calculate_safe_mape(actuals, persistence_forecast)
+    persistence_wape = calculate_wape(actuals, persistence_forecast)
     
     # Determine best model by validation RMSE
     models_rmse = {
@@ -845,6 +919,10 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     
     # 2. Time-series cross-validation (backtesting)
     backtest_results = time_series_backtest(df_hourly, forecast_hours=forecast_hours, n_splits=backtest_folds)
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    now_iso = now_utc.isoformat()
+    now_human = now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
     
     return {
         "timestamps": timestamps,
@@ -857,32 +935,97 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
         "persistence_forecast": [round(x, 2) for x in persistence_forecast],
         "seasonal_model_name": seasonal_model_name,
         "primary_model": "Random Forest",
+        "data_source": "UCI Steel Industry Energy Consumption Dataset (15-min resampled to hourly mean)",
+        "evaluation_sample_count": len(actuals),
+        "model_name": "Random Forest Regressor (Ensemble Trees)",
+        "model_version": "PRAGATI-RF-v2.4",
+        "generation_timestamp": now_iso,
+        "units": "kWh (Hourly Active Energy)",
         "evaluation_period": {
             "start": str(val_subset.iloc[0]['date']),
             "end": str(val_subset.iloc[-1]['date']),
             "horizon_hours": forecast_hours,
-            "protocol": "Chronological out-of-sample split with 3-fold expanding-origin backtesting"
+            "sample_count": len(actuals),
+            "protocol": "Chronological out-of-sample holdout split with 3-fold expanding-origin backtesting"
         },
         "metrics": {
-            "prophet_rmse": round(seasonal_rmse, 4),
-            "prophet_mae": round(seasonal_mae, 4),
+            "prophet_rmse": round(seasonal_rmse, 4) if seasonal_rmse is not None else None,
+            "prophet_mae": round(seasonal_mae, 4) if seasonal_mae is not None else None,
+            "prophet_mape": seasonal_mape,
+            "prophet_wape": seasonal_wape,
             "rf_rmse": round(rf_rmse, 4),
             "rf_mae": round(rf_mae, 4),
+            "rf_mape": rf_mape,
+            "rf_wape": rf_wape,
             "rnn_rmse": round(rnn_rmse, 4),
             "rnn_mae": round(rnn_mae, 4),
+            "rnn_mape": rnn_mape,
+            "rnn_wape": rnn_wape,
             "persistence_rmse": round(persistence_rmse, 4),
             "persistence_mae": round(persistence_mae, 4),
-            "best_model": best_model
+            "persistence_mape": persistence_mape,
+            "persistence_wape": persistence_wape,
+            "best_model": best_model,
+            "evaluation_sample_count": len(actuals)
         },
         "backtest": {
-            "prophet_rmse": round(backtest_results["prophet_rmse"], 4),
-            "prophet_mae": round(backtest_results.get("prophet_mae", 0.0), 4),
-            "rf_rmse": round(backtest_results["rf_rmse"], 4),
-            "rf_mae": round(backtest_results.get("rf_mae", 0.0), 4),
-            "rnn_rmse": round(backtest_results["rnn_rmse"], 4),
-            "rnn_mae": round(backtest_results.get("rnn_mae", 0.0), 4),
-            "persistence_rmse": round(backtest_results["persistence_rmse"], 4),
-            "persistence_mae": round(backtest_results.get("persistence_mae", 0.0), 4)
+            "prophet_rmse": round(backtest_results["prophet_rmse"], 4) if backtest_results.get("prophet_rmse") is not None else None,
+            "prophet_mae": round(backtest_results.get("prophet_mae", 0.0), 4) if backtest_results.get("prophet_mae") is not None else None,
+            "prophet_mape": backtest_results.get("prophet_mape"),
+            "prophet_wape": backtest_results.get("prophet_wape"),
+            "rf_rmse": round(backtest_results["rf_rmse"], 4) if backtest_results.get("rf_rmse") is not None else None,
+            "rf_mae": round(backtest_results.get("rf_mae", 0.0), 4) if backtest_results.get("rf_mae") is not None else None,
+            "rf_mape": backtest_results.get("rf_mape"),
+            "rf_wape": backtest_results.get("rf_wape"),
+            "rnn_rmse": round(backtest_results["rnn_rmse"], 4) if backtest_results.get("rnn_rmse") is not None else None,
+            "rnn_mae": round(backtest_results.get("rnn_mae", 0.0), 4) if backtest_results.get("rnn_mae") is not None else None,
+            "rnn_mape": backtest_results.get("rnn_mape"),
+            "rnn_wape": backtest_results.get("rnn_wape"),
+            "persistence_rmse": round(backtest_results["persistence_rmse"], 4) if backtest_results.get("persistence_rmse") is not None else None,
+            "persistence_mae": round(backtest_results.get("persistence_mae", 0.0), 4) if backtest_results.get("persistence_mae") is not None else None,
+            "persistence_mape": backtest_results.get("persistence_mape"),
+            "persistence_wape": backtest_results.get("persistence_wape")
+        },
+        "models": [
+            {
+                "name": seasonal_model_name,
+                "model_version": "v1.1-fourier" if "Prophet" in seasonal_model_name else "v1.0-exp-smooth",
+                "rmse": round(seasonal_rmse, 4) if seasonal_rmse is not None else None,
+                "mae": round(seasonal_mae, 4) if seasonal_mae is not None else None,
+                "mape": seasonal_mape,
+                "wape": seasonal_wape
+            },
+            {
+                "name": "Random Forest Regressor",
+                "model_version": "PRAGATI-RF-v2.4",
+                "rmse": round(rf_rmse, 4),
+                "mae": round(rf_mae, 4),
+                "mape": rf_mape,
+                "wape": rf_wape
+            },
+            {
+                "name": "NumPy GRU Recurrent Neural Net",
+                "model_version": "v1.0-gru-scratch",
+                "rmse": round(rnn_rmse, 4),
+                "mae": round(rnn_mae, 4),
+                "mape": rnn_mape,
+                "wape": rnn_wape
+            }
+        ],
+        "provenance": {
+            "source_type": "HISTORICAL_BENCHMARK",
+            "dataset_name": "UCI Machine Learning Repository - Steel Industry Energy Consumption",
+            "is_synthetic": False,
+            "is_live_data": False,
+            "is_live_physical_hardware": False,
+            "time_range": {
+                "start": str(val_subset.iloc[0]['date']),
+                "end": str(val_subset.iloc[-1]['date'])
+            },
+            "units": "kWh (hourly average active power)",
+            "model_version": "PRAGATI-RF-v2.4",
+            "generation_timestamp": now_iso,
+            "last_refresh_timestamp": now_human
         },
         "adf": {
             "t_stat": round(t_stat, 4),
