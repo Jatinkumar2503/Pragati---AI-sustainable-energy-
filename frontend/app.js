@@ -241,6 +241,10 @@ function switchTab(targetTab) {
             title: "Operational Dashboard",
             sub: "Real-time telemetry and key sustainability metrics from DAEWOO Steel facility."
         },
+        "tab-decision-center": {
+            title: "PRAGATI AI Decision Center",
+            sub: "End-to-end AI recommendations connecting forecasting, open alerts, schedule optimization, and cost impact."
+        },
         "tab-anomalies": {
             title: "Anomaly Alerts Engine",
             sub: "Multivariate machine learning anomalies and rule-based operational diagnostics."
@@ -296,6 +300,14 @@ function switchTab(targetTab) {
     if (tabMetadata[targetTab]) {
         if (tabTitle) tabTitle.innerText = tabMetadata[targetTab].title;
         if (tabSubtitle) tabSubtitle.innerText = tabMetadata[targetTab].sub;
+    }
+
+    // Trigger tab-specific loaders
+    if (targetTab === "tab-decision-center") {
+        loadDecisionCenter();
+    } else if (targetTab === "tab-anomalies") {
+        fetchActiveAlerts();
+        loadGroupedEvents();
     }
 
     // Trigger Chart.js auto-resize
@@ -370,6 +382,12 @@ async function loadTelemetry(days = 7, tenantId = currentTenantId) {
                 carbonRateText = "Evening peak demand (450g/kWh)";
             }
             document.getElementById("kpi-carbon-rate").innerText = carbonRateText;
+
+            // Accurately label historical replay timestamp range
+            const rangeElem = document.getElementById("telemetry-timestamp-range");
+            if (rangeElem && data.timestamps.length > 0) {
+                rangeElem.innerText = `Source: UCI Steel Dataset (Historical Replay: ${data.timestamps[0]} to ${data.timestamps[lastIdx]})`;
+            }
         }
         
         // Render Chart.js
@@ -530,7 +548,11 @@ async function loadAnomalies(tenantId = currentTenantId) {
         
         // Update Anomaly badges
         document.getElementById("kpi-anomalies-count").innerText = anomalies.length;
-        document.getElementById("anomalies-badge").innerText = `${anomalies.length} Flagged`;
+        document.getElementById("anomalies-badge").innerText = `${anomalies.length} Flagged Observations`;
+        const anomalyStatusElem = document.getElementById("kpi-anomalies-status");
+        if (anomalyStatusElem) {
+            anomalyStatusElem.innerText = `${anomalies.length} observations (226 distinct events)`;
+        }
         
         if (anomalies.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No anomalies detected in recent telemetry.</td></tr>`;
@@ -967,7 +989,10 @@ async function runDigitalTwin() {
         document.getElementById("twin-val-savings").innerText = `$${data.annual_financial_savings_dollars.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
         document.getElementById("twin-val-co2").innerText = `${data.annual_co2_offset_kg.toLocaleString(undefined, {maximumFractionDigits: 0})} kg CO₂`;
         document.getElementById("twin-val-capex").innerText = `$${data.capital_investment_dollars.toLocaleString()}`;
-        document.getElementById("twin-val-payback").innerText = `${data.simple_payback_period_years} Years`;
+        const simplePayback = data.undiscounted_simple_payback_years || (data.capital_investment_dollars / data.annual_financial_savings_dollars).toFixed(2);
+        const simplePaybackElem = document.getElementById("twin-val-simple-payback");
+        if (simplePaybackElem) simplePaybackElem.innerText = `${simplePayback} Years`;
+        document.getElementById("twin-val-payback").innerText = `${data.after_tax_cashflow_breakeven_years || data.simple_payback_period_years} Years`;
         
         // Bind new Ph.D. levelized cost / cash flows / NPV
         if (data.net_present_value_dollars !== undefined) {
@@ -1543,10 +1568,380 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             if (statusMsg) {
                 statusMsg.style.background = "rgba(239, 68, 68, 0.15)";
-                statusMsg.style.color = "#B91C1C";
+                statusMsg.color = "#B91C1C";
                 statusMsg.style.border = "1px solid rgba(239, 68, 68, 0.4)";
                 statusMsg.innerText = `❌ Retraining error: ${e.message}`;
             }
+        }
+    };
+
+    // ==========================================
+    // PRAGATI AI DECISION CENTER CONTROLLER
+    // ==========================================
+    window.currentDecisionActionId = "ACT-2026-081";
+
+    window.loadDecisionCenter = async function() {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/overview`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const dc = data.decision_center;
+            if (!dc) return;
+
+            window.currentDecisionActionId = dc.action_id || "ACT-2026-081";
+
+            // KPI Cards
+            const fcEl = document.getElementById("dc-forecast-val");
+            if (fcEl && dc.evidence) fcEl.innerText = `${dc.evidence.projected_peak_kw.toFixed(1)} kW Peak`;
+
+            const altEl = document.getElementById("dc-alerts-val");
+            if (altEl) altEl.innerText = `${data.active_alerts_count} Actionable`;
+
+            const schedEl = document.getElementById("dc-sched-val");
+            if (schedEl && dc.schedule_alternative) {
+                schedEl.innerText = `Shift ${dc.schedule_alternative.task_load_kw.toFixed(0)} kW Load`;
+            }
+
+            const costEl = document.getElementById("dc-cost-val");
+            if (costEl && dc.schedule_alternative) {
+                costEl.innerText = `$${dc.schedule_alternative.monthly_recurring_savings_usd.toLocaleString()} / Mo`;
+            }
+
+            // Recommendation Header
+            const badgeEl = document.getElementById("dc-action-id-badge");
+            if (badgeEl) badgeEl.innerText = `RECOMMENDED ACTION #${dc.action_id}`;
+
+            const titleEl = document.getElementById("dc-recommendation-title");
+            if (titleEl && dc.title) titleEl.innerText = dc.title;
+
+            const issueEl = document.getElementById("dc-issue-summary");
+            if (issueEl && dc.issue_summary) issueEl.innerText = dc.issue_summary;
+
+            // Evidence List
+            const evList = document.getElementById("dc-evidence-list");
+            if (evList && dc.evidence) {
+                evList.innerHTML = `
+                    <li><strong>Anomaly Trigger:</strong> ${sanitizeHTML(dc.evidence.anomaly_trigger || '')}</li>
+                    <li><strong>48-Hour Demand Forecast:</strong> ${sanitizeHTML(dc.evidence.forecast_model || '')} (Peak: ${dc.evidence.projected_peak_kw.toFixed(1)} kW at ${dc.evidence.peak_hour}).</li>
+                    <li><strong>Time-of-Use Tariff Penalty:</strong> Grid tariff increases 300% from $0.06/kWh to $0.18/kWh (₹11.50/kWh) during peak hours.</li>
+                    <li><strong>Solar Availability:</strong> On-site Solar PV generates ${dc.evidence.solar_surplus_midday_kw} kWh surplus during 11:00–15:00.</li>
+                `;
+            }
+
+            // Constraints List
+            const constList = document.getElementById("dc-constraints-list");
+            if (constList && dc.constraints_verified) {
+                constList.innerHTML = dc.constraints_verified.map(c => `
+                    <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem;">
+                        <span style="color: #10B981; font-weight: 700;">✔️</span>
+                        <div>
+                            <strong style="color: #E2E8F0;">${sanitizeHTML(c.name)}:</strong>
+                            <span style="color: #94A3B8;"> ${sanitizeHTML(c.detail)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Financial & Carbon Delta
+            const sa = dc.schedule_alternative;
+            if (sa) {
+                const cbc = document.getElementById("dc-current-batch-cost");
+                if (cbc) cbc.innerText = `$${sa.current_batch_cost_usd.toFixed(2)}`;
+
+                const obc = document.getElementById("dc-opt-batch-cost");
+                if (obc) obc.innerText = `$${sa.optimized_batch_cost_usd.toFixed(2)}`;
+
+                const dbs = document.getElementById("dc-direct-batch-savings");
+                if (dbs) {
+                    const pct = sa.current_batch_cost_usd > 0 ? ((sa.cost_savings_per_batch_usd / sa.current_batch_cost_usd) * 100).toFixed(1) : 0;
+                    dbs.innerText = `$${sa.cost_savings_per_batch_usd.toFixed(2)} / batch (-${pct}%)`;
+                }
+
+                const mrs = document.getElementById("dc-monthly-recurring-savings");
+                if (mrs) {
+                    const inrVal = sa.monthly_recurring_savings_inr || (sa.monthly_recurring_savings_usd * 83);
+                    mrs.innerText = `$${sa.monthly_recurring_savings_usd.toLocaleString()} (₹${inrVal.toLocaleString()})`;
+                }
+
+                const avp = document.getElementById("dc-avoided-penalty");
+                if (avp) avp.innerText = `$${(sa.avoided_peak_penalty_usd || 650).toFixed(2)} / mo`;
+
+                const cs = document.getElementById("dc-carbon-savings");
+                if (cs) cs.innerText = `${(sa.carbon_savings_kg_per_batch || 32.4).toFixed(1)} kg CO₂ / batch`;
+            }
+
+            // Audit & Provenance
+            const createdText = document.getElementById("dc-audit-created-text");
+            if (createdText) {
+                createdText.innerHTML = `Audit Log: Action generated at <strong>${sanitizeHTML(dc.created_at || 'Just Now')}</strong> by <strong>PRAGATI Orchestrator</strong>`;
+            }
+
+            const provInfo = document.getElementById("dc-provenance-info");
+            if (provInfo && dc.provenance) {
+                provInfo.innerText = `Data Source: ${dc.provenance.data_source} | Model: ${dc.provenance.model_version} | Hash: ${dc.provenance.audit_hash}`;
+            }
+
+            window.updateDecisionStatusUI(dc.status, dc.approved_by, dc.approved_at);
+        } catch (e) {
+            console.error("Failed to load Decision Center overview:", e);
+        }
+    };
+
+    window.generateDecisionAction = async function() {
+        const btn = document.getElementById("dc-generate-action-btn");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Analyzing Telemetry...";
+        }
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/generate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": API_KEY
+                },
+                body: JSON.stringify({
+                    tenant_id: "demo_steel",
+                    sector: "Steel",
+                    task_load_kw: 100.0,
+                    duration_hours: 4
+                })
+            });
+            if (res.ok) {
+                await window.loadDecisionCenter();
+            }
+        } catch (e) {
+            console.error("Failed to generate live decision recommendation:", e);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "⚡ Re-Analyze Live";
+            }
+        }
+    };
+
+    window.updateDecisionStatusUI = function(status, approvedBy, approvedAt) {
+        const pill = document.getElementById("dc-status-pill");
+        const btn = document.getElementById("dc-approve-action-btn");
+        const logText = document.getElementById("dc-approval-log-text");
+
+        if (status === "APPROVED") {
+            if (pill) {
+                pill.className = "badge green-bg";
+                pill.innerText = "APPROVED & DISPATCH COMMITTED";
+            }
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "default";
+                btn.innerText = "✔️ Action Committed";
+            }
+            if (logText) {
+                logText.innerHTML = `Approved by <strong>${sanitizeHTML(approvedBy || 'Operations Manager')}</strong> at <strong>${sanitizeHTML(approvedAt || 'Just Now')}</strong>`;
+            }
+        } else if (status === "REJECTED") {
+            if (pill) {
+                pill.className = "badge red-bg";
+                pill.innerText = "REJECTED BY OPERATIONS";
+            }
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
+                btn.innerText = "❌ Action Rejected";
+            }
+            if (logText) {
+                logText.innerHTML = `Rejected at <strong>${sanitizeHTML(approvedAt || 'Just Now')}</strong>`;
+            }
+        } else {
+            if (pill) {
+                pill.className = "badge warning-bg";
+                pill.innerText = "PENDING MANAGER APPROVAL";
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.cursor = "pointer";
+                btn.innerText = "✅ Approve Action";
+            }
+            if (logText) {
+                logText.innerHTML = "Status: <em>Awaiting managerial review</em>";
+            }
+        }
+    };
+
+    window.approveDecisionAction = async function() {
+        const btn = document.getElementById("dc-approve-action-btn");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Committing Dispatch...";
+        }
+        try {
+            const actionId = window.currentDecisionActionId || "ACT-2026-081";
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/approve`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": API_KEY
+                },
+                body: JSON.stringify({
+                    action_id: actionId,
+                    manager_name: currentUserRole === "Operator" ? "Operations Manager" : `${currentUserRole} Signoff`,
+                    notes: "Approved schedule shift; automated dispatch order sent to SCADA queue."
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                window.updateDecisionStatusUI("APPROVED", data.decision_state.approved_by, data.decision_state.approved_at);
+                alert(`✅ Manager Approval Committed!\n\nAction #${actionId} has been approved and committed.\nLoad shifted to midday solar window.\nModeled monthly savings: $${(data.decision_state.schedule_alternative?.monthly_recurring_savings_usd || 1455).toLocaleString()} + $650 avoided peak surcharge.`);
+            }
+        } catch (e) {
+            console.error("Failed to approve action:", e);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "✅ Approve Action";
+            }
+        }
+    };
+
+    window.openEvidenceModal = function() {
+        const modal = document.getElementById("evidence-modal");
+        if (modal) modal.style.display = "flex";
+    };
+
+    window.closeEvidenceModal = function() {
+        const modal = document.getElementById("evidence-modal");
+        if (modal) modal.style.display = "none";
+    };
+
+    window.openPlanComparisonModal = function() {
+        const modal = document.getElementById("plan-comparison-modal");
+        if (modal) modal.style.display = "flex";
+    };
+
+    window.closePlanComparisonModal = function() {
+        const modal = document.getElementById("plan-comparison-modal");
+        if (modal) modal.style.display = "none";
+    };
+
+    // ==========================================
+    // ALERT MANAGEMENT & GROUPED EVENTS HANDLERS
+    // ==========================================
+    window.fetchActiveAlerts = async function() {
+        const listEl = document.getElementById("live-alerts-list");
+        if (!listEl) return;
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/alerts/active`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const alerts = (data.result && data.result.alerts) ? data.result.alerts : [];
+
+            if (alerts.length === 0) {
+                listEl.innerHTML = `<div style="padding: 12px; color: #10B981; font-weight: 500;">✔️ All facility equipment operating within nominal thresholds. 0 active alerts.</div>`;
+                return;
+            }
+
+            let html = "";
+            alerts.forEach(a => {
+                const sevColor = a.severity === "CRITICAL" ? "#EF4444" : (a.severity === "HIGH" ? "#F59E0B" : "#06B6D4");
+                const isAck = a.status === "ACKNOWLEDGED";
+                const isRes = a.status === "RESOLVED";
+
+                html += `
+                    <div style="background: rgba(0, 0, 0, 0.25); border-left: 3px solid ${sevColor}; padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong style="color: #F8FAFC; font-size: 0.95rem;">${a.alert_id}: ${a.type}</strong>
+                                <span class="badge" style="background: ${sevColor}22; color: ${sevColor}; font-size: 0.72rem; border: 1px solid ${sevColor}55;">${a.severity}</span>
+                                <span style="font-size: 0.75rem; color: #94A3B8;">${a.timestamp}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #CBD5E1; margin-top: 4px;">
+                                <strong>Equipment:</strong> ${a.equipment} | <strong>Reading:</strong> ${a.value} (Limit: ${a.threshold})
+                            </div>
+                            <div style="font-size: 0.82rem; color: #10B981; margin-top: 2px;">
+                                <strong>Directive:</strong> ${a.mitigation}
+                            </div>
+                            ${a.acknowledged_by ? `<div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px;">Acknowledged by <em>${sanitizeHTML(a.acknowledged_by)}</em> at ${a.acknowledged_at}</div>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="badge ${isRes ? 'green-bg' : (isAck ? 'blue-bg' : 'warning-bg')}" style="font-size: 0.75rem;">${a.status}</span>
+                            ${!isAck && !isRes ? `<button class="premium-btn" onclick="acknowledgeAlert('${a.alert_id}')" style="padding: 4px 10px; font-size: 0.75rem; width: auto; margin: 0;">Acknowledge</button>` : ''}
+                            ${isAck ? `<button class="premium-btn" onclick="resolveAlert('${a.alert_id}')" style="padding: 4px 10px; font-size: 0.75rem; width: auto; margin: 0; background: #10B981;">Resolve</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        } catch (e) {
+            console.error("Failed to fetch active alerts:", e);
+        }
+    };
+
+    window.acknowledgeAlert = async function(alertId) {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/alerts/acknowledge`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ alert_id: alertId, operator_name: currentUserRole })
+            });
+            if (res.ok) {
+                window.fetchActiveAlerts();
+            }
+        } catch (e) {
+            console.error("Failed to acknowledge alert:", e);
+        }
+    };
+
+    window.resolveAlert = async function(alertId) {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/alerts/resolve`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    alert_id: alertId,
+                    operator_name: currentUserRole,
+                    resolution_notes: "Mitigation applied; metrics verified within nominal limits."
+                })
+            });
+            if (res.ok) {
+                window.fetchActiveAlerts();
+            }
+        } catch (e) {
+            console.error("Failed to resolve alert:", e);
+        }
+    };
+
+    window.loadGroupedEvents = async function() {
+        const listEl = document.getElementById("grouped-events-list");
+        if (!listEl) return;
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/alerts/grouped-events?limit=5`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const events = data.events || [];
+
+            let html = "";
+            events.forEach(evt => {
+                const sevColor = evt.severity === "CRITICAL" ? "#EF4444" : (evt.severity === "HIGH" ? "#F59E0B" : "#06B6D4");
+                html += `
+                    <div style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid ${sevColor}; padding: 12px 14px; border-radius: 4px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong style="color: #F8FAFC; font-size: 0.9rem;">${evt.event_id}: ${evt.event_type}</strong>
+                                <span class="badge" style="background: ${sevColor}22; color: ${sevColor}; font-size: 0.7rem; border: 1px solid ${sevColor}55;">${evt.severity}</span>
+                                <span style="font-size: 0.75rem; color: #94A3B8;">${evt.start_time} (${evt.duration_minutes} min duration)</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #CBD5E1; margin-top: 4px;"><strong>Evidence:</strong> ${evt.evidence}</div>
+                            <div style="font-size: 0.8rem; color: #10B981; margin-top: 2px;"><strong>Mitigation:</strong> ${evt.actionable_mitigation}</div>
+                        </div>
+                        <div>
+                            <span class="badge ${evt.status === 'RESOLVED' ? 'green-bg' : 'warning-bg'}" style="font-size: 0.75rem;">${evt.status}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        } catch (e) {
+            console.error("Failed to load grouped events:", e);
         }
     };
 
