@@ -61,7 +61,7 @@ gcloud run deploy pragati-ai \
 - **0:00 – 0:30 (Hook & Problem)**: Highlight industrial energy waste and rising carbon taxes in emerging manufacturing hubs.
 - **0:30 – 1:30 (Live Demo)**: Showcase the 7 dashboard tabs — Live Anomaly Alerts, Prophet Forecasts, Shift Scheduler, and Digital Twin ROI.
 - **1:30 – 2:30 (Gemini Intelligence)**: Demonstrate the Gemini AI Copilot explaining a power spike and generating an XAI Card.
-- **2:30 – 3:00 (Business ROI & Call to Action)**: Emphasize 22.5% bill reduction, 18.3% carbon abatement, and < 2.4-year CapEx payback.
+- **2:30 – 3:00 (Business ROI & Call to Action)**: Emphasize 22.5% bill reduction, 18.3% carbon abatement, and verified 6.92-year after-tax CapEx breakeven (8.00 yrs simple payback).
 
 ### Step 3: Hackathon Submission Links 🔗
 - **Live Platform URL**: `http://127.0.0.1:8000/` (or Cloud Run URL)
@@ -76,5 +76,5 @@ gcloud run deploy pragati-ai \
 | :--- | :--- | :--- |
 | **Annual Energy Bill Reduction** | **22.5%** lower utility cost | Savings of **~$45,000 / plant / year** |
 | **Carbon Abatement** | **18.3%** Scope 1/2 reduction | Offset **~142 tons CO₂ / year** |
-| **Simple CapEx Payback** | Solar PV + BESS Array | Payback achieved in **2.4 Years** |
+| **CapEx Payback & Breakeven** | Solar PV + BESS Array | After-tax breakeven in **6.92 Years** (8.00 yrs simple payback) |
 | **ESG Audit Acceleration** | 3 months $\rightarrow$ **1 click** | Zero regulatory non-compliance risk |

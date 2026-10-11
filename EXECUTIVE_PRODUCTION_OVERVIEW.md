@@ -108,5 +108,5 @@ Unlike mass-market B2C subscription apps (Netflix, ChatGPT), PRAGATI AI is desig
 | :--- | :--- | :--- | :--- |
 | **Monthly Power Bill** | ₹4,50,000 / month | ₹3,37,500 / month | **₹1,12,500 Saved per month (25% bill reduction)** |
 | **Annual Carbon Output** | 850 Tons CO₂ | 694 Tons CO₂ | **156 Tons CO₂ Abated per year (18.3% reduction)** |
-| **CapEx Solar + BESS ROI** | High uncertainty | Modeled payback in **2.4 Years** | Risk-free solar + battery investment |
+| **CapEx Solar + BESS ROI** | High uncertainty | Modeled after-tax breakeven in **6.92 Years** (8.00 yrs undiscounted simple payback) | High-confidence Solar + BESS simulation |
 | **ESG Audit Preparation** | 3 Months manual work | **1 Click** PDF report | Zero regulatory non-compliance fines |

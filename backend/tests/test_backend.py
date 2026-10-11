@@ -289,13 +289,35 @@ class TestPragatiBackend(unittest.TestCase):
         self.assertIn("best_start_hour", res_sched.json())
         self.assertIn("savings", res_sched.json())
         
-        # API ROI simulation
+        # API ROI simulation with sensitivity and INR metrics
         res_sim = client.post("/api/simulate", json={
             "solar_capacity_kw": 250.0,
             "battery_capacity_kwh": 100.0
         })
         self.assertEqual(res_sim.status_code, 200)
         self.assertIn("simple_payback_period_years", res_sim.json())
+        self.assertIn("sensitivity_analysis", res_sim.json())
+        self.assertIn("indian_rupee_metrics", res_sim.json())
+
+        # API Decision Center Overview
+        res_dc = client.get("/api/v1/decision/overview")
+        self.assertEqual(res_dc.status_code, 200)
+        self.assertIn("decision_center", res_dc.json())
+        self.assertEqual(res_dc.json()["primary_forecast_model"], "Random Forest Regressor")
+
+        # API Decision Center Action Approval
+        res_appr = client.post("/api/v1/decision/approve", json={
+            "action_id": "ACT-2026-081",
+            "manager_name": "Operations Lead",
+            "notes": "Verified feasibility with production supervisor."
+        })
+        self.assertEqual(res_appr.status_code, 200)
+        self.assertEqual(res_appr.json()["decision_state"]["status"], "APPROVED")
+
+        # API Grouped Events
+        res_grp = client.get("/api/v1/alerts/grouped-events?limit=5")
+        self.assertEqual(res_grp.status_code, 200)
+        self.assertEqual(res_grp.json()["total_grouped_events"], 226)
 
     def test_bulk_csv_upload(self):
         """8. Test Bulk CSV Telemetry Upload and alignment routing."""
