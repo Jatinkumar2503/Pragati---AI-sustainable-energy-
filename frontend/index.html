@@ -699,18 +699,38 @@
                         <h3>Sandbox Parameters</h3>
                         <div class="input-group">
                             <label for="twin-solar">Target Solar Array Capacity (kW)</label>
-                            <input type="range" id="twin-solar" min="0" max="500" value="150" step="10" class="premium-slider">
-                            <div class="slider-val"><span id="twin-solar-val">150</span> kW</div>
+                            <input type="range" id="twin-solar" min="0" max="500" value="250" step="10" class="premium-slider" oninput="document.getElementById('twin-solar-val').innerText = this.value">
+                            <div class="slider-val"><span id="twin-solar-val">250</span> kW</div>
                         </div>
                         <div class="input-group">
                             <label for="twin-battery">Target Battery Pack Capacity (kWh)</label>
-                            <input type="range" id="twin-battery" min="0" max="250" value="50" step="10" class="premium-slider">
-                            <div class="slider-val"><span id="twin-battery-val">50</span> kWh</div>
+                            <input type="range" id="twin-battery" min="0" max="250" value="100" step="10" class="premium-slider" oninput="document.getElementById('twin-battery-val').innerText = this.value">
+                            <div class="slider-val"><span id="twin-battery-val">100</span> kWh</div>
                         </div>
                         <div class="input-group">
                             <label for="twin-shift">Peak Load Shift Ratio (%)</label>
-                            <input type="range" id="twin-shift" min="0" max="50" value="20" step="5" class="premium-slider">
+                            <input type="range" id="twin-shift" min="0" max="50" value="20" step="5" class="premium-slider" oninput="document.getElementById('twin-shift-val').innerText = this.value">
                             <div class="slider-val"><span id="twin-shift-val">20</span> %</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="twin-tax-regime">Indian Fiscal & Tax Regime</label>
+                            <select id="twin-tax-regime" class="premium-select" style="width: 100%; padding: 8px 10px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; color: #F8FAFC; font-size: 0.82rem;">
+                                <option value="SECTION_32_RENEWABLE_40_WDV" selected>Sec 32: Renewable Energy (40% WDV)</option>
+                                <option value="STANDARD_CORPORATE_15_WDV">Sec 32: General Plant & Mach. (15% WDV)</option>
+                                <option value="NO_TAX_BENEFIT">No Tax Benefit (Conservative Baseline)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="twin-discount-rate">Discount Rate / WACC (%)</label>
+                            <input type="range" id="twin-discount-rate" min="6" max="16" value="10" step="0.5" class="premium-slider" oninput="document.getElementById('twin-discount-val').innerText = parseFloat(this.value).toFixed(1)">
+                            <div class="slider-val"><span id="twin-discount-val">10.0</span> %</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="twin-horizon">Lifecycle Horizon</label>
+                            <select id="twin-horizon" class="premium-select" style="width: 100%; padding: 8px 10px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; color: #F8FAFC; font-size: 0.82rem;">
+                                <option value="15" selected>15-Year Industrial Lifecycle</option>
+                                <option value="10">10-Year Conservative Horizon</option>
+                            </select>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
                             <button id="run-digital-twin-btn" class="premium-btn" onclick="runDigitalTwinSimulation()">Run Scenario Simulation ☀️</button>
@@ -725,12 +745,8 @@
                                 <div class="twin-kpi-val" id="twin-val-gen">— kWh</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label"><span>⚡</span> Solar Self-Consumption</div>
-                                <div class="twin-kpi-val" id="twin-val-self">— %</div>
-                            </div>
-                            <div class="twin-kpi-card">
                                 <div class="twin-kpi-label"><span>💰</span> Annual Bill Reduction</div>
-                                <div class="twin-kpi-val green-text" id="twin-val-savings">$—</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-savings">—</div>
                             </div>
                             <div class="twin-kpi-card">
                                 <div class="twin-kpi-label"><span>🌿</span> Carbon Offset (Annual)</div>
@@ -738,18 +754,22 @@
                             </div>
                             <div class="twin-kpi-card">
                                 <div class="twin-kpi-label"><span>📈</span> Net Present Value (NPV)</div>
-                                <div class="twin-kpi-val green-text" id="twin-val-npv">$—</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-npv">—</div>
+                            </div>
+                            <div class="twin-kpi-card">
+                                <div class="twin-kpi-label"><span>📊</span> Internal Rate of Return (IRR)</div>
+                                <div class="twin-kpi-val green-text" id="twin-val-irr">— %</div>
                             </div>
                             <div class="twin-kpi-card">
                                 <div class="twin-kpi-label"><span>🏷️</span> Levelized Cost (LCOE)</div>
                                 <div class="twin-kpi-val" id="twin-val-lcoe">— /kWh</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label"><span>🏛️</span> MACRS Tax Shield (5-yr)</div>
-                                <div class="twin-kpi-val" id="twin-val-macrs">$—</div>
+                                <div class="twin-kpi-label"><span>🏛️</span> Tax Shield (Lifecycle)</div>
+                                <div class="twin-kpi-val" id="twin-val-macrs">—</div>
                             </div>
                             <div class="twin-kpi-card">
-                                <div class="twin-kpi-label"><span>🔋</span> Monthly Peak Shaving</div>
+                                <div class="twin-kpi-label"><span>🔋</span> Peak Shaving & Shift</div>
                                 <div class="twin-kpi-val" id="twin-val-peak">— kW</div>
                             </div>
                         </div>
@@ -759,103 +779,117 @@
                         <div class="twin-roi-section">
                             <div class="twin-roi-metric">
                                 <span class="roi-label">Capital Expenditure (Est.):</span>
-                                <strong id="twin-val-capex">$—</strong>
+                                <strong id="twin-val-capex">—</strong>
                             </div>
                             <div class="twin-roi-metric">
                                 <span class="roi-label">Undiscounted Simple Payback:</span>
                                 <strong id="twin-val-simple-payback">— Years</strong>
                             </div>
                             <div class="twin-roi-metric highlight-box">
-                                <span class="roi-label">After-Tax Cash-Flow Breakeven (incl. MACRS):</span>
+                                <span class="roi-label">After-Tax Cash-Flow Breakeven:</span>
                                 <strong id="twin-val-payback">— Years</strong>
                             </div>
                         </div>
 
-                        <!-- 20-Year Cash Flow Chart -->
+                        <!-- 10-15 Year Cash Flow Chart -->
                         <div class="card" style="margin-top: 24px; border: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0, 0, 0, 0.2);">
                             <div class="card-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">
-                                <h2>20-Year Cash Flow Projections (incl. MACRS, O&M & Inverter replacement)</h2>
+                                <h2>Lifecycle Net Cash Flow Trajectory (with Degradation & Replacements)</h2>
                             </div>
                             <div class="chart-wrapper" style="height: 300px; padding-top: 15px;">
                                 <canvas id="twinCashFlowChart"></canvas>
                             </div>
                         </div>
 
-                        <!-- Multi-Variable Sensitivity Analysis & Indian Fiscal Regime -->
+                        <!-- Multi-Variable Sensitivity Tornado & Fiscal Regime Card -->
                         <div class="card" style="margin-top: 24px; border: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0, 0, 0, 0.2);">
                             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">
                                 <div>
-                                    <h2>Multi-Variable Financial Sensitivity & Local Fiscal Analysis</h2>
-                                    <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Stress-testing payback against tariff shifts, solar yield variations, CapEx, and Indian Section 32 tax shields.</p>
+                                    <h2>Sensitivity Tornado Drivers & Fiscal Regime Validation</h2>
+                                    <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Ranked NPV drivers (±15% swings) and Indian Income Tax Act compliance breakdown.</p>
                                 </div>
-                                <span class="badge emerald" style="font-size: 0.75rem;">Dual Currency (USD / INR @ ₹83.50/$)</span>
+                                <span class="badge emerald" style="font-size: 0.75rem;">Modeled Estimates — Not Tax Advice</span>
                             </div>
                             
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px;">
-                                <!-- Sensitivity Table -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 16px;">
+                                <!-- Tornado Drivers Ranking Table -->
                                 <div style="background: rgba(0, 0, 0, 0.25); border-radius: 6px; padding: 14px;">
-                                    <h4 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #E2E8F0;">Payback Sensitivity Matrix (Years)</h4>
+                                    <h4 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #E2E8F0;">Key NPV Sensitivity Drivers (Ranked)</h4>
                                     <table class="premium-table" style="width: 100%; font-size: 0.8rem;">
                                         <thead>
                                             <tr>
-                                                <th>Scenario</th>
-                                                <th>-20% Delta</th>
-                                                <th>Base (0%)</th>
-                                                <th>+20% Delta</th>
+                                                <th>Rank</th>
+                                                <th>Parameter</th>
+                                                <th>Base</th>
+                                                <th>NPV Swing (₹)</th>
+                                                <th>Impact</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="twin-tornado-tbody">
                                             <tr>
-                                                <td><strong>Tariff Sensitivity</strong></td>
-                                                <td style="color: #F87171;">10.00 yrs</td>
-                                                <td style="color: #60A5FA;">8.00 yrs</td>
-                                                <td style="color: #10B981; font-weight: 700;">6.67 yrs</td>
+                                                <td>1</td>
+                                                <td><strong>Grid Tariff Rate</strong></td>
+                                                <td>₹11.50/kWh</td>
+                                                <td style="color: #10B981; font-weight: 700;">±₹1.12 Cr</td>
+                                                <td><span class="badge red" style="font-size: 0.7rem;">HIGH</span></td>
                                             </tr>
                                             <tr>
-                                                <td><strong>CapEx Sensitivity</strong></td>
-                                                <td style="color: #10B981; font-weight: 700;">6.40 yrs</td>
-                                                <td style="color: #60A5FA;">8.00 yrs</td>
-                                                <td style="color: #F87171;">9.60 yrs</td>
+                                                <td>2</td>
+                                                <td><strong>Installed CapEx</strong></td>
+                                                <td>₹45k/kW, ₹18k/kWh</td>
+                                                <td style="color: #60A5FA;">±₹39.15 L</td>
+                                                <td><span class="badge yellow" style="font-size: 0.7rem;">MEDIUM</span></td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Solar Yield Sensitivity</strong></td>
-                                                <td style="color: #F87171;">9.41 yrs</td>
-                                                <td style="color: #60A5FA;">8.00 yrs</td>
-                                                <td style="color: #10B981; font-weight: 700;">6.96 yrs</td>
+                                                <td>3</td>
+                                                <td><strong>Solar Yield</strong></td>
+                                                <td>4.50 kWh/kW/day</td>
+                                                <td style="color: #60A5FA;">±₹35.40 L</td>
+                                                <td><span class="badge yellow" style="font-size: 0.7rem;">MEDIUM</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td><strong>Discount Rate</strong></td>
+                                                <td>10.0% WACC</td>
+                                                <td style="color: #94A3B8;">±₹28.10 L</td>
+                                                <td><span class="badge emerald" style="font-size: 0.7rem;">LOW</span></td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <!-- Indian Fiscal Regime Card -->
+                                <!-- Indian Fiscal Regime Audit Card -->
                                 <div style="background: rgba(0, 0, 0, 0.25); border-radius: 6px; padding: 14px;">
                                     <h4 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #10B981; display: flex; align-items: center; gap: 6px;">
-                                        <span>🇮🇳</span> Indian Fiscal Regime (Income Tax Act Section 32)
+                                        <span>🇮🇳</span> Indian Fiscal Regime (Income Tax Act 1961)
                                     </h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
-                                        <tbody>
+                                        <tbody id="twin-tax-breakdown-tbody">
                                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                <td style="padding: 5px 0; color: #94A3B8;">Installed CapEx (INR):</td>
-                                                <td style="padding: 5px 0; text-align: right; color: #F8FAFC; font-weight: 600;">₹1,25,25,000</td>
+                                                <td style="padding: 5px 0; color: #94A3B8;">Selected Regime:</td>
+                                                <td id="tax-regime-name" style="padding: 5px 0; text-align: right; color: #F8FAFC; font-weight: 600;">Sec 32: Renewable (40% WDV)</td>
                                             </tr>
                                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                <td style="padding: 5px 0; color: #94A3B8;">Modeled Annual Savings (INR):</td>
-                                                <td style="padding: 5px 0; text-align: right; color: #10B981; font-weight: 600;">₹15,66,275 / yr</td>
+                                                <td style="padding: 5px 0; color: #94A3B8;">Corporate Tax Rate:</td>
+                                                <td id="tax-regime-rate" style="padding: 5px 0; text-align: right; color: #60A5FA; font-weight: 600;">25.17% (Sec 115BAA)</td>
                                             </tr>
                                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                <td style="padding: 5px 0; color: #94A3B8;">Section 32 Accelerated Dep. (40% WDV):</td>
-                                                <td style="padding: 5px 0; text-align: right; color: #38BDF8; font-weight: 600;">₹50,10,000 (Yr 1 Dep)</td>
+                                                <td style="padding: 5px 0; color: #94A3B8;">Year 1 Tax Depreciation:</td>
+                                                <td id="tax-year1-dep" style="padding: 5px 0; text-align: right; color: #38BDF8; font-weight: 600;">₹52,20,000</td>
                                             </tr>
                                             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                <td style="padding: 5px 0; color: #94A3B8;">Year 1 Tax Shield (@ 25.17% Corp Tax):</td>
-                                                <td style="padding: 5px 0; text-align: right; color: #34D399; font-weight: 700;">+₹12,61,017</td>
+                                                <td style="padding: 5px 0; color: #94A3B8;">Year 1 Tax Shield:</td>
+                                                <td id="tax-year1-shield" style="padding: 5px 0; text-align: right; color: #34D399; font-weight: 700;">+₹13,13,874</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 5px 0; color: #94A3B8;">Effective Indian Year 1 Cash Breakeven:</td>
-                                                <td style="padding: 5px 0; text-align: right; color: #10B981; font-weight: 700;">4.43 Years</td>
+                                                <td style="padding: 5px 0; color: #94A3B8;">Total Lifecycle Tax Shield:</td>
+                                                <td id="tax-total-shield" style="padding: 5px 0; text-align: right; color: #10B981; font-weight: 700;">₹32,84,685</td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                    <p id="tax-eligibility-note" style="margin: 8px 0 0 0; font-size: 0.72rem; color: #94A3B8; line-height: 1.3;">
+                                        Accelerated depreciation under Section 32 Appendix I. Subject to corporate taxpayer tax election under Section 115BAA.
+                                    </p>
                                 </div>
                             </div>
                         </div>

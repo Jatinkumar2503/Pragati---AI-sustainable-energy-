@@ -1016,27 +1016,59 @@ function renderTwinCashFlowChart(cashFlows) {
     if (twinCashFlowChart) {
         twinCashFlowChart.destroy();
     }
+
+    if (!cashFlows || cashFlows.length === 0) return;
+
+    // Support both array of numbers and array of cash_flow_table row objects
+    const isObjectArray = typeof cashFlows[0] === 'object';
+    const years = cashFlows.map((item, i) => isObjectArray ? `Yr ${item.year}` : `Yr ${i + 1}`);
+    const netFlows = cashFlows.map(item => isObjectArray ? (item.net_cashflow_inr !== undefined ? item.net_cashflow_inr : item.net_cf) : item);
+    const cumFlows = isObjectArray ? cashFlows.map(item => item.cumulative_cashflow_inr) : null;
     
-    const years = Array.from({ length: 20 }, (_, i) => `Yr ${i + 1}`);
-    
-    twinCashFlowChart = new Chart(ctx.getContext("2d"), {
+    const datasets = [{
         type: 'bar',
+        label: 'Annual Net Cash Flow (₹)',
+        data: netFlows,
+        backgroundColor: netFlows.map(val => val >= 0 ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'),
+        borderColor: netFlows.map(val => val >= 0 ? '#10B981' : '#EF4444'),
+        borderWidth: 1.5,
+        borderRadius: 4,
+        yAxisID: 'y'
+    }];
+
+    if (cumFlows && cumFlows.length > 0) {
+        datasets.push({
+            type: 'line',
+            label: 'Cumulative Cash Flow (₹)',
+            data: cumFlows,
+            borderColor: '#38BDF8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#38BDF8',
+            pointRadius: 3,
+            fill: false,
+            tension: 0.25,
+            yAxisID: 'y'
+        });
+    }
+
+    twinCashFlowChart = new Chart(ctx.getContext("2d"), {
         data: {
             labels: years,
-            datasets: [{
-                label: 'Annual Net Cash Flow ($)',
-                data: cashFlows,
-                backgroundColor: cashFlows.map(val => val >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
-                borderColor: cashFlows.map(val => val >= 0 ? '#10B981' : '#EF4444'),
-                borderWidth: 1.5,
-                borderRadius: 4
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
+                legend: { display: true, position: 'top', labels: { color: '#94A3B8', boxWidth: 12 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ₹${context.raw?.toLocaleString() || context.raw}`;
+                        }
+                    }
+                }
             },
             scales: {
                 x: {
@@ -1044,9 +1076,16 @@ function renderTwinCashFlowChart(cashFlows) {
                     ticks: { color: '#94A3B8' }
                 },
                 y: {
-                    title: { display: true, text: 'Net Cash Flow ($)', color: '#94A3B8' },
+                    title: { display: true, text: 'Cash Flow (₹)', color: '#94A3B8' },
                     grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    ticks: { color: '#64748B' }
+                    ticks: {
+                        color: '#64748B',
+                        callback: function(val) {
+                            if (Math.abs(val) >= 10000000) return '₹' + (val / 10000000).toFixed(1) + ' Cr';
+                            if (Math.abs(val) >= 100000) return '₹' + (val / 100000).toFixed(1) + ' L';
+                            return '₹' + (val / 1000).toFixed(0) + 'k';
+                        }
+                    }
                 }
             }
         }
@@ -1148,6 +1187,9 @@ async function runDigitalTwinSimulation() {
     const solar = parseFloat(document.getElementById("twin-solar")?.value || 250);
     const battery = parseFloat(document.getElementById("twin-battery")?.value || 100);
     const shift = parseFloat(document.getElementById("twin-shift")?.value || 20);
+    const taxRegime = document.getElementById("twin-tax-regime")?.value || "SECTION_32_RENEWABLE_40_WDV";
+    const discountRate = parseFloat(document.getElementById("twin-discount-rate")?.value || 10.0);
+    const horizonYears = parseInt(document.getElementById("twin-horizon")?.value || 15);
     
     const btn = document.getElementById("run-digital-twin-btn");
     if (btn) btn.innerText = "Simulating Scenarios... ⏳";
@@ -1161,7 +1203,10 @@ async function runDigitalTwinSimulation() {
                 base_monthly_kwh: 150000.0,
                 solar_capacity_kw: solar,
                 battery_storage_kwh: battery,
-                load_shift_pct: shift
+                load_shift_pct: shift,
+                simulation_years: horizonYears,
+                discount_rate_pct: discountRate,
+                tax_regime: taxRegime
             })
         });
 
@@ -1169,18 +1214,84 @@ async function runDigitalTwinSimulation() {
 
         const data = await res.json();
         const sim = data.result.simulation;
+        const fin = sim.financial_metrics;
+        const life = sim.lifecycle_analysis || {};
+        const tax = sim.tax_regime_audit || {};
 
-        // Update DOM metrics
+        // 1. Update Core KPI cards
         if (document.getElementById("twin-val-gen")) {
-            document.getElementById("twin-val-gen").innerText = `${sim.energy_metrics.monthly_solar_generation_kwh.toLocaleString()} kWh/mo`;
+            const annualGen = Math.round(sim.energy_metrics.monthly_solar_generation_kwh * 12);
+            document.getElementById("twin-val-gen").innerText = `${annualGen.toLocaleString()} kWh/yr`;
         }
         if (document.getElementById("twin-val-savings")) {
-            document.getElementById("twin-val-savings").innerText = `₹${sim.financial_metrics.annual_savings_inr.toLocaleString()}`;
+            document.getElementById("twin-val-savings").innerText = `₹${Math.round(fin.annual_savings_inr).toLocaleString()}`;
         }
         if (document.getElementById("twin-val-co2")) {
             document.getElementById("twin-val-co2").innerText = `${sim.carbon_metrics.annual_co2_reduction_tons} Tons CO₂`;
         }
+        if (document.getElementById("twin-val-npv")) {
+            const npvVal = life.net_present_value_inr !== undefined ? life.net_present_value_inr : fin.net_present_value_inr;
+            document.getElementById("twin-val-npv").innerText = `₹${Math.round(npvVal).toLocaleString()}`;
+        }
+        if (document.getElementById("twin-val-irr")) {
+            const irrVal = life.internal_rate_of_return_pct;
+            document.getElementById("twin-val-irr").innerText = (irrVal !== null && irrVal !== undefined) ? `${irrVal}%` : "N/A";
+        }
+        if (document.getElementById("twin-val-lcoe")) {
+            const lcoeVal = life.levelized_cost_of_energy_inr_kwh || fin.levelized_cost_of_energy_inr_kwh || 0.0;
+            document.getElementById("twin-val-lcoe").innerText = `₹${lcoeVal.toFixed(2)} /kWh`;
+        }
+        if (document.getElementById("twin-val-macrs")) {
+            const taxShield = tax.total_lifecycle_tax_shield_inr !== undefined ? tax.total_lifecycle_tax_shield_inr : life.total_tax_shield_inr;
+            document.getElementById("twin-val-macrs").innerText = `₹${Math.round(taxShield || 0).toLocaleString()}`;
+        }
+        if (document.getElementById("twin-val-peak")) {
+            const peakShave = (sim.energy_metrics.monthly_bess_shaved_kwh / 30).toFixed(1);
+            document.getElementById("twin-val-peak").innerText = `${peakShave} kW`;
+        }
 
+        // 2. Update ROI Section
+        if (document.getElementById("twin-val-capex")) {
+            document.getElementById("twin-val-capex").innerText = `₹${Math.round(fin.estimated_capex_inr).toLocaleString()}`;
+        }
+        if (document.getElementById("twin-val-simple-payback")) {
+            const simplePb = fin.undiscounted_simple_payback_years;
+            document.getElementById("twin-val-simple-payback").innerText = simplePb !== null && simplePb !== undefined ? `${simplePb} Years` : "No Payback";
+        }
+        if (document.getElementById("twin-val-payback")) {
+            const afterTaxPb = fin.after_tax_cashflow_breakeven_years;
+            document.getElementById("twin-val-payback").innerText = afterTaxPb !== null && afterTaxPb !== undefined ? `${afterTaxPb} Years` : "No Breakeven";
+        }
+
+        // 3. Render Lifecycle Cash Flow Chart
+        if (life.cash_flow_table && life.cash_flow_table.length > 0) {
+            renderTwinCashFlowChart(life.cash_flow_table);
+        }
+
+        // 4. Render Sensitivity Tornado Drivers Table
+        renderTornadoDriversTable(sim.sensitivity_tornado?.tornado_drivers);
+
+        // 5. Update Indian Fiscal Regime Breakdown Table
+        if (document.getElementById("tax-regime-name")) {
+            document.getElementById("tax-regime-name").innerText = tax.regime_name || "Income Tax Act Sec 32";
+        }
+        if (document.getElementById("tax-regime-rate")) {
+            document.getElementById("tax-regime-rate").innerText = `${tax.corporate_tax_rate_pct}% (${tax.depreciation_rate_pct}% WDV)`;
+        }
+        if (document.getElementById("tax-year1-dep")) {
+            document.getElementById("tax-year1-dep").innerText = `₹${Math.round(tax.year1_depreciation_inr || 0).toLocaleString()}`;
+        }
+        if (document.getElementById("tax-year1-shield")) {
+            document.getElementById("tax-year1-shield").innerText = `+₹${Math.round(tax.year1_tax_shield_inr || 0).toLocaleString()}`;
+        }
+        if (document.getElementById("tax-total-shield")) {
+            document.getElementById("tax-total-shield").innerText = `₹${Math.round(tax.total_lifecycle_tax_shield_inr || 0).toLocaleString()}`;
+        }
+        if (document.getElementById("tax-eligibility-note")) {
+            document.getElementById("tax-eligibility-note").innerText = tax.eligibility_disclosure || "";
+        }
+
+        // 6. XAI Card Drawer
         if (data.result.xai_card) {
             renderXAICardDrawer(data.result.xai_card);
         }
@@ -1189,6 +1300,30 @@ async function runDigitalTwinSimulation() {
     } finally {
         if (btn) btn.innerText = "Run Scenario Simulation ☀️";
     }
+}
+
+function renderTornadoDriversTable(drivers) {
+    const tbody = document.getElementById("twin-tornado-tbody");
+    if (!tbody || !drivers || drivers.length === 0) return;
+
+    let html = "";
+    drivers.forEach(d => {
+        const badgeClass = d.impact_level === "HIGH" ? "red" : (d.impact_level === "MEDIUM" ? "yellow" : "emerald");
+        const swingFormatted = d.npv_swing_inr >= 10000000 ?
+            `±₹${(d.npv_swing_inr / 10000000).toFixed(2)} Cr` :
+            `±₹${(d.npv_swing_inr / 100000).toFixed(2)} L`;
+
+        html += `
+            <tr>
+                <td>${d.rank}</td>
+                <td><strong>${d.parameter}</strong></td>
+                <td>${d.base_value}</td>
+                <td style="color: #60A5FA; font-weight: 600;">${swingFormatted}</td>
+                <td><span class="badge ${badgeClass}" style="font-size: 0.7rem;">${d.impact_level}</span></td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
 }
 
 async function openAuditLogDrawer() {
