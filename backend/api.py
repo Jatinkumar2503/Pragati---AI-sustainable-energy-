@@ -1315,18 +1315,45 @@ async def post_copilot(req: ChatRequest):
     return {"reply": reply}
 
 # Digital Twin & Carbon Analytics Models and Endpoints
+from engine.digital_twin import TAX_REGIMES
+
 class DigitalTwinRequest(BaseModel):
     region: str = Field("Western", description="Grid region: Northern, Western, Southern, Eastern, North-Eastern")
     base_monthly_kwh: float = Field(150000.0, description="Baseline monthly energy consumption in kWh")
     solar_capacity_kw: float = Field(250.0, description="Installed solar capacity in kW")
     battery_storage_kwh: float = Field(100.0, description="Battery storage capacity in kWh")
     load_shift_pct: float = Field(20.0, description="Percent of peak load shifted to off-peak hours")
+    ambient_temp_c: float = Field(34.0, description="Ambient operating temperature in degrees Celsius")
+    battery_chemistry: str = Field("LFP", description="Battery chemistry: LFP or NMC")
+    simulation_years: int = Field(15, description="Lifecycle simulation horizon in years (10-15)")
+    discount_rate_pct: float = Field(10.0, description="Discount rate / WACC percentage (e.g. 10.0%)")
+    tariff_escalation_pct: float = Field(4.0, description="Annual grid tariff escalation percentage (e.g. 4.0%)")
+    om_cost_pct_of_capex: float = Field(1.5, description="Annual O&M cost as percent of initial CapEx (e.g. 1.5%)")
+    om_escalation_pct: float = Field(4.0, description="Annual O&M cost inflation escalation rate (e.g. 4.0%)")
+    tax_regime: str = Field("SECTION_32_RENEWABLE_40_WDV", description="Indian tax depreciation regime: NO_TAX_BENEFIT, SECTION_32_RENEWABLE_40_WDV, STANDARD_CORPORATE_15_WDV")
+    corporate_tax_rate_pct: float = Field(25.17, description="Effective corporate income tax rate percentage")
+    inverter_replacement_year: int = Field(8, description="Year for scheduled inverter replacement")
+    bess_replacement_threshold_soh: float = Field(70.0, description="SOH percentage threshold triggering battery pack replacement")
+
+@app.get("/api/v1/simulation/tax_regimes")
+async def get_simulation_tax_regimes():
+    """
+    Returns available Indian Income Tax Act regimes for Digital Twin scenario modeling,
+    including eligibility criteria, statutory citations, and depreciation rates.
+    """
+    return {
+        "status": "success",
+        "tax_regimes": TAX_REGIMES,
+        "default_regime": "SECTION_32_RENEWABLE_40_WDV",
+        "statutory_note": "Section 32AD was a historical 15% investment allowance in backward areas; renewable depreciation is governed under Section 32(1) read with Rule 5 and Appendix I."
+    }
 
 @app.post("/api/v1/simulation/digital_twin")
 async def post_digital_twin_simulation(req: DigitalTwinRequest):
     """
     Simulates factory energy scenario (Solar PV, BESS, Load Shifting)
-    and returns financial ROI, carbon offset, and XAI Card.
+    and returns 10-15 year lifecycle financial validation, battery degradation feedback,
+    NPV, IRR, simple payback, after-tax breakeven, and XAI Card.
     """
     try:
         agent = DigitalTwinAgent()
@@ -1334,6 +1361,58 @@ async def post_digital_twin_simulation(req: DigitalTwinRequest):
         return {"status": "success", "result": result}
     except Exception as e:
         logger.error(f"Digital Twin simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/simulate")
+async def post_simulate_legacy_alias(req: Dict[str, Any]):
+    """
+    Legacy endpoint alias for Digital Twin simulation, supporting legacy frontend calls.
+    """
+    try:
+        solar = float(req.get("solar_capacity_kw", req.get("solar", 250.0)))
+        battery = float(req.get("battery_capacity_kwh", req.get("battery_storage_kwh", 100.0)))
+        shift = float(req.get("load_shift_pct", req.get("shift", 20.0)))
+        region = str(req.get("region", "Western"))
+        tax_regime = str(req.get("tax_regime", "SECTION_32_RENEWABLE_40_WDV"))
+
+        twin_req = DigitalTwinRequest(
+            region=region,
+            solar_capacity_kw=solar,
+            battery_storage_kwh=battery,
+            load_shift_pct=shift,
+            tax_regime=tax_regime
+        )
+        agent = DigitalTwinAgent()
+        result = agent.run(twin_req.model_dump())
+        sim = result["simulation"]
+        fin = sim["financial_metrics"]
+        life = sim.get("lifecycle_analysis", {})
+        carb = sim["carbon_metrics"]
+
+        # Flattened legacy format expected by older frontend handlers
+        return {
+            "status": "success",
+            "annual_solar_generation_kwh": sim["energy_metrics"]["monthly_solar_generation_kwh"] * 12.0,
+            "self_consumption_percent": 85.0,
+            "annual_financial_savings_dollars": fin["annual_savings_usd"],
+            "annual_financial_savings_inr": fin["annual_savings_inr"],
+            "annual_co2_offset_kg": carb["annual_co2_reduction_tons"] * 1000.0,
+            "capital_investment_dollars": fin["estimated_capex_usd"],
+            "capital_investment_inr": fin["estimated_capex_inr"],
+            "undiscounted_simple_payback_years": fin["undiscounted_simple_payback_years"],
+            "after_tax_cashflow_breakeven_years": fin["after_tax_cashflow_breakeven_years"],
+            "simple_payback_period_years": fin["payback_period_years"],
+            "net_present_value_dollars": life.get("net_present_value_usd", fin.get("net_present_value_usd", 0.0)),
+            "net_present_value_inr": life.get("net_present_value_inr", fin.get("net_present_value_inr", 0.0)),
+            "internal_rate_of_return_pct": life.get("internal_rate_of_return_pct"),
+            "lcoe_dollars_per_kwh": life.get("levelized_cost_of_energy_usd_kwh", 0.0),
+            "macrs_tax_shield_dollars": round(life.get("total_tax_shield_inr", 0.0) / 83.50, 2),
+            "peak_shaving_kw": sim["energy_metrics"]["monthly_bess_shaved_kwh"] / 30.0,
+            "yearly_cash_flows": [row["net_cashflow_usd"] for row in life.get("cash_flow_table", [])],
+            "result": result
+        }
+    except Exception as e:
+        logger.error(f"Legacy simulation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/carbon/audit")
