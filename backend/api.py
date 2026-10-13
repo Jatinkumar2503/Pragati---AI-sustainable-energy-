@@ -2073,6 +2073,69 @@ def get_demo_tenants():
         ]
     }
 
+# =====================================================================
+# PHASE 5 WORKSTREAM 4: 5-MINUTE REPEATABLE INDUSTRIAL DEMO ROUTER
+# =====================================================================
+from engine.demo_runner import IndustrialDemoRunner, DEMO_BENCHMARK_FIXTURE_V1
+
+_DEMO_RUNNER = IndustrialDemoRunner(decision_engine=DECISION_ENGINE_INSTANCE)
+
+@app.get("/api/v1/demo/scenario")
+def get_demo_scenario():
+    """
+    Returns fixed, versioned industrial benchmark scenario with explicit provenance.
+    """
+    return _DEMO_RUNNER.get_benchmark_scenario()
+
+@app.post("/api/v1/demo/reset")
+def post_demo_reset():
+    """
+    Resets demo alerts and decision state to deterministic baseline without deleting persistent rows.
+    """
+    return _DEMO_RUNNER.reset_demo_state()
+
+@app.post("/api/v1/demo/step/anomaly")
+def post_demo_step_anomaly():
+    """
+    Step 3: Injects critical anomaly and demonstrates deterministic alert deduplication and lifecycle resolution.
+    """
+    return _DEMO_RUNNER.run_step_anomaly_and_deduplication()
+
+@app.get("/api/v1/demo/step/forecast")
+def get_demo_step_forecast():
+    """
+    Step 4: Returns forecasting models, chronological holdout evaluation metrics, and explicit limitations.
+    """
+    return _DEMO_RUNNER.run_step_forecast_provenance()
+
+@app.post("/api/v1/demo/step/schedule")
+def post_demo_step_schedule():
+    """
+    Step 5: Optimizes EAF -> LRF -> CCM sequence with precedence and buffer lag constraints.
+    """
+    return _DEMO_RUNNER.run_step_schedule_optimization()
+
+@app.post("/api/v1/demo/step/simulation")
+def post_demo_step_simulation():
+    """
+    Step 6: Runs 15-year lifecycle Digital Twin simulation with Section 32 40% WDV and sensitivity.
+    """
+    return _DEMO_RUNNER.run_step_digital_twin_simulation()
+
+@app.post("/api/v1/demo/step/approve")
+def post_demo_step_approve():
+    """
+    Step 7: Records managerial signoff and returns immutable decision audit trail.
+    """
+    return _DEMO_RUNNER.run_step_managerial_approval()
+
+@app.post("/api/v1/demo/run_sequence")
+def post_demo_run_full_sequence():
+    """
+    Executes the full 5-minute repeatable demonstration sequence end-to-end and returns audit manifest.
+    """
+    return _DEMO_RUNNER.run_full_sequence()
+
 @app.post("/api/v1/pipeline/retrain")
 def trigger_automated_retraining(tenant_id: str = "demo_steel"):
     """

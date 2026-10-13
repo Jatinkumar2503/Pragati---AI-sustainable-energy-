@@ -503,6 +503,7 @@ python -m pytest backend/tests/ -q
 
 | Test Module | Tests | Status |
 | :--- | :--- | :--- |
+| `backend/tests/test_repeatable_demo.py` **(NEW - WS4)** | 12 | **PASSED** |
 | `backend/tests/test_deployment_hardening.py` **(NEW - WS3)** | 15 | **PASSED** |
 | `backend/tests/test_e2e_integration.py` **(NEW - Phase 5)** | 6 | **PASSED** |
 | `backend/tests/test_independent_financial_benchmarks.py` **(NEW - Phase 5)** | 9 | **PASSED** |
@@ -519,7 +520,7 @@ python -m pytest backend/tests/ -q
 | `backend/tests/test_privacy_shield.py` | 2 | **PASSED** |
 | `backend/tests/test_anomalies.py` | 1 | **PASSED** |
 | `backend/tests/test_digital_twin.py` | 3 | **PASSED** |
-| **Total Test Suite** | **136** | **100% PASSED (0 FAILURES)** |
+| **Total Test Suite** | **148** | **100% PASSED (0 FAILURES)** |
 
 ---
 
@@ -536,12 +537,30 @@ python -m pytest backend/tests/ -q
 | **5** | **Docker & Startup Scripts** | Verified `Dockerfile` and `docker-compose.yml` multi-service composition (TimescaleDB, Redis, FastAPI). Created portable relative-path launcher scripts `start_pragati.bat` (Windows) and `start_pragati.sh` (Linux/macOS) with automated dependency checks and environment file initialization. | **VERIFIED** |
 | **6** | **Frontend Integration** | Confirmed `API_BASE` points to `http://127.0.0.1:8000/api`. Verified `checkBackendStatus()` queries `/status` cleanly and updates UI dot (`pulse-dot green`/`pulse-dot red`). Verified CORS headers enabled for browser cross-origin requests. Tested in `TestErrorHandlingAndValidation`. | **VERIFIED** |
 
+---
+
+## 5. Phase 5 Workstream 4: Repeatable Five-Minute Industrial Demo Completed
+
+### Demo Architecture & 7-Step Sequence
+
+1. **Environment Readiness & Non-Destructive Reset (`/health`, `/api/v1/demo/reset`):** Checks readiness and resets alerts/decisions back to a deterministic baseline without deleting persistent database telemetry.
+2. **Benchmark Scenario Loading (`/api/v1/demo/scenario`):** Loads versioned fixture `STEEL_BENCHMARK_FIXTURE_V1` with explicitly labeled synthetic engineering provenance.
+3. **Anomaly & Deduplication Tracking (`/api/v1/demo/step/anomaly`):** Ingests severe EAF transformer thermal spike (98.4 °C), suppresses identical duplicate spike arriving within 3,600s suppression window, and tracks lifecycle transition through Operator Acknowledgment and Energy Manager Resolution.
+4. **Holdout Forecasting Provenance & Limitations (`/api/v1/demo/step/forecast`):** Evaluates Meta Prophet, Random Forest, and NumPy GRU models against a 2,880-sample chronological holdout window with zero data leakage. Recommends Weighted Ensemble Blend (WAPE 0.105, safe MAPE 10.7%). Explicitly states limitations.
+5. **Multi-Stage Task Sequencing (`/api/v1/demo/step/schedule`):** Solves EAF (450 kW, 2h) → LRF (300 kW, 2h) → CCM (200 kW, 3h) precedence ordering with 1h-3h buffer lag constraints. Produces constraint audit log (`C-PRECEDENCE-01: SATISFIED`, `C-BUFFER-LAG-01: BINDING`).
+6. **15-Year Digital Twin Lifecycle Simulation (`/api/v1/demo/step/simulation`):** Simulates 350 kW Solar PV + 150 kWh BESS with Indian Income Tax Act Section 32 40% WDV depreciation, battery degradation feedback (Year 14 replacement, 78.2% final SOH), NPV, IRR, and tornado sensitivity ordering.
+7. **Managerial Signoff & Audit History (`/api/v1/demo/step/approve`):** Records Chief Sustainability Officer (CSO) signoff, commits action to dispatch, and appends to immutable decision audit history.
+8. **One-Click Sequence Runner (`/api/v1/demo/run_sequence`):** Executes all 7 steps end-to-end and returns a verified audit manifest in under 3 seconds.
+9. **Documentation Runbook:** Documented in [DEMO_RUNBOOK.md](file:///c:/Users/Asus/Documents/sustainable%20platform/DEMO_RUNBOOK.md).
+
 ### Execution Command & Results
 ```bash
 python -m pytest backend/tests/ -q
-........................................................................ [ 52%]
-................................................................         [100%]
-136 passed, 16 warnings in 139.53s
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+....                                                                     [100%]
+148 passed, 16 warnings in 247.03s
 ```
+
 
 

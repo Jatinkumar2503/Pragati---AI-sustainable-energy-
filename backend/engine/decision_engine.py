@@ -23,6 +23,12 @@ class DecisionEngine:
         self._action_counter = 81
         self._initialize_default_state()
 
+    def reset(self):
+        """Resets decision history and current action state back to default demo baseline."""
+        self._action_counter = 81
+        self.decision_history = []
+        self._initialize_default_state()
+
     def _initialize_default_state(self):
         """Initial baseline state to ensure instant availability."""
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

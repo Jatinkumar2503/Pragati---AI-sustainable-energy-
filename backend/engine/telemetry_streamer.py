@@ -121,6 +121,10 @@ class TelemetryStreamer:
         for a in self.active_alerts:
             self.alert_history.append(dict(a))
 
+    def reset(self):
+        """Resets active alerts and alert history back to default demo baseline."""
+        self.__init__()
+
     def _sort_alerts(self, alerts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Sorts alerts deterministically by:
@@ -178,6 +182,7 @@ class TelemetryStreamer:
                             h.update(alert)
                     return {
                         "status": "deduplicated",
+                        "deduplicated": True,
                         "alert_id": alert["alert_id"],
                         "alert": alert,
                         "duplicate_count": alert["duplicate_count"],

@@ -207,7 +207,9 @@ def validate_task_graph(tasks: Optional[List[Dict[str, Any]]]) -> TaskGraphValid
         if load <= 0:
             errors.append(f"Task '{tid}' has non-positive power load: {load}")
             
-        min_lag = t.get("min_lag_h", 0)
+        min_lag = t.get("min_lag_h")
+        if min_lag is None:
+            min_lag = 0
         max_lag = t.get("max_lag_h")
         if min_lag < 0:
             errors.append(f"Task '{tid}' has negative min_lag_h: {min_lag}")
