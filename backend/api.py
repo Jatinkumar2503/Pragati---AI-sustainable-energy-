@@ -181,6 +181,8 @@ class TelemetryIngestRequest(BaseModel):
     scope2_co2_kg: float = Field(default=None, description="Scope 2 carbon in kg (optional)")
     scope3_co2_kg: float = Field(default=None, description="Scope 3 carbon in kg (optional)")
 
+@app.get("/health")
+@app.get("/api/health")
 @app.get("/api/status")
 def get_status():
     """

@@ -5,11 +5,20 @@ and backwards-compatible API key fallback.
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
-import jwt
+try:
+    import jwt
+    _JWT_ERROR = getattr(jwt, "PyJWTError", getattr(jwt, "JWTError", Exception))
+    _EXPIRED_ERROR = getattr(jwt, "ExpiredSignatureError", Exception)
+    HAS_JWT = True
+except ImportError:
+    jwt = None
+    _JWT_ERROR = Exception
+    _EXPIRED_ERROR = Exception
+    HAS_JWT = False
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "PRAGATI_PROD_SECRET_KEY_9928174128947192847")
 ALGORITHM = "HS256"
@@ -25,18 +34,23 @@ ROLE_PERMISSIONS = {
 }
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    if not HAS_JWT:
+        raise RuntimeError("JWT library is not installed.")
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+    now_utc = datetime.now(timezone.utc)
+    expire = now_utc + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire, "iat": now_utc})
     return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_access_token(token: str) -> Dict[str, Any]:
+    if not HAS_JWT:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="JWT library not available.")
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except jwt.ExpiredSignatureError:
+    except _EXPIRED_ERROR:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired.")
-    except jwt.JWTError:
+    except _JWT_ERROR:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization token.")
 
 def get_current_user(

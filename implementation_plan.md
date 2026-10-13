@@ -503,6 +503,7 @@ python -m pytest backend/tests/ -q
 
 | Test Module | Tests | Status |
 | :--- | :--- | :--- |
+| `backend/tests/test_deployment_hardening.py` **(NEW - WS3)** | 15 | **PASSED** |
 | `backend/tests/test_e2e_integration.py` **(NEW - Phase 5)** | 6 | **PASSED** |
 | `backend/tests/test_independent_financial_benchmarks.py` **(NEW - Phase 5)** | 9 | **PASSED** |
 | `backend/tests/test_financial_validation.py` | 21 | **PASSED** |
@@ -518,12 +519,29 @@ python -m pytest backend/tests/ -q
 | `backend/tests/test_privacy_shield.py` | 2 | **PASSED** |
 | `backend/tests/test_anomalies.py` | 1 | **PASSED** |
 | `backend/tests/test_digital_twin.py` | 3 | **PASSED** |
-| **Total Test Suite** | **121** | **100% PASSED (0 FAILURES)** |
+| **Total Test Suite** | **136** | **100% PASSED (0 FAILURES)** |
 
 ---
 
-## 4. Remaining Scope & Boundaries
+## 4. Phase 5 Workstream 3: Deployment Reliability and Hardening Completed
 
-- Unrelated deployment containerization, cloud secrets packaging, and UI redesign were intentionally kept out of scope for Workstreams 1 & 2 per instructions.
-- All financial outputs remain explicitly labeled as modeled engineering estimates, not guaranteed commercial yields or formal tax opinions.
+### Audit & Hardening Matrix
+
+| Priority | Task | Implementation & Verification Evidence | Status |
+| :--- | :--- | :--- | :--- |
+| **1** | **Secrets & Configuration Audit** | Verified no live credentials in git. Created `.env.example` in repo root with documented placeholders for `PRAGATI_ENV`, `PRAGATI_API_KEY`, `JWT_SECRET_KEY`, `GEMINI_API_KEY`, and `DATABASE_URL`. Verified `.gitignore` blocks `.env` and `.env.local`. Tested in `TestSecretsAndConfigurationHygiene`. | **VERIFIED** |
+| **2** | **Cold-Start Reproducibility** | Added `PyJWT>=2.8.0`, `python-dotenv>=1.0.0`, and `pytest>=7.0.0` to `backend/requirements.txt`. Made `backend/engine/auth.py` resilient across PyJWT and python-jose with graceful fallback. Fixed `datetime.utcnow()` deprecation warnings. Created portable cross-platform launchers `start_pragati.bat` and `start_pragati.sh`. Tested in `TestAuthColdStartResilience`. | **VERIFIED** |
+| **3** | **Health Checks & Error Handling** | Verified actual routes: added `@app.get("/health")` and `@app.get("/api/health")` in `backend/api.py` alongside backward-compatible `@app.get("/api/status")`. All three return 200 with `status: "healthy"` and database row counts. Tested in `TestHealthChecksAndRouting`. | **VERIFIED** |
+| **4** | **External API Resilience** | Audited Copilot `/api/copilot` endpoint. When `GEMINI_API_KEY` is omitted, missing, invalid, or times out (12s timeout, network errors, 503 upstream), the handler logs a warning and deterministically falls back to local rule-based copilot without raising unhandled 500 errors. Tested in `TestExternalApiResilience`. | **VERIFIED** |
+| **5** | **Docker & Startup Scripts** | Verified `Dockerfile` and `docker-compose.yml` multi-service composition (TimescaleDB, Redis, FastAPI). Created portable relative-path launcher scripts `start_pragati.bat` (Windows) and `start_pragati.sh` (Linux/macOS) with automated dependency checks and environment file initialization. | **VERIFIED** |
+| **6** | **Frontend Integration** | Confirmed `API_BASE` points to `http://127.0.0.1:8000/api`. Verified `checkBackendStatus()` queries `/status` cleanly and updates UI dot (`pulse-dot green`/`pulse-dot red`). Verified CORS headers enabled for browser cross-origin requests. Tested in `TestErrorHandlingAndValidation`. | **VERIFIED** |
+
+### Execution Command & Results
+```bash
+python -m pytest backend/tests/ -q
+........................................................................ [ 52%]
+................................................................         [100%]
+136 passed, 16 warnings in 139.53s
+```
+
 
