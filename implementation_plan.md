@@ -562,5 +562,53 @@ python -m pytest backend/tests/ -q
 148 passed, 16 warnings in 247.03s
 ```
 
+---
+
+## 6. Phase 5 Workstream 5: Methodology, Evidence, and Limitations Matrix Completed
+
+### Deliverables & Governance Architecture
+
+1. **Methodology and Limitations Matrix (`METHODOLOGY_AND_LIMITATIONS.md`):**
+   - Documents all 9 platform subsystems: Load Forecasting, Anomaly Detection & Deduplication, MILP Scheduling & Precedence, Digital Twin DCF Financial Analysis, Battery Degradation Physics, Carbon Accounting & Emission Factors, Tariffs & Statutory Tax Treatment, Decision Center Managerial Signoff, and Security/Privacy/Deployment.
+   - For every subsystem: documents capability, input provenance, implemented methodology/equations, reported benchmark result, evidence status, assumptions/limitations, and validation required before making stronger claims.
+
+2. **Master Evidence Register (`EVIDENCE_REGISTER.md`):**
+   - Implements a strict 5-tier evidence hierarchy: Level 1 (Implemented Capability), Level 2 (Automated Test Evidence), Level 3 (Independent Mathematical Benchmark), Level 4 (External-Source Verification), and Level 5 (Real-World Pilot Evidence).
+   - Maps 16 material claims (CLM-FCST-01 through CLM-SEC-02) to source files, test fixtures, evidence tiers, and outstanding real-world validation steps.
+
+3. **Truth-in-Advertising Hackathon Blueprint (`HACKATHON_SUBMISSION.md`):**
+   - Replaced promotional marketing phrasing with a precise, judge-ready technical architecture overview.
+   - Explicitly discloses that `STEEL_BENCHMARK_FIXTURE_V1` is a synthetic benchmark fixture, not live factory telemetry.
+   - Clarifies that reported forecast errors (WAPE 0.105, safe MAPE 10.7%) are benchmark-specific metrics on the UCI Steel dataset.
+   - Emphasizes that financial outputs (NPV, IRR, payback) are modeled engineering estimates under user-configured assumptions, and that Section 32 40% WDV depreciation modeling requires corporate eligibility verification and is not formal tax advice.
+
+4. **Provenance & Evidence Integrity Test Suite (`backend/tests/test_provenance_and_claims.py`):**
+   - Added 4 automated verification tests verifying document completeness, CEA v19 emission factor provenance, statutory tax regime assumptions, and synthetic benchmark disclosures.
+
+### Full Test Suite Matrix (18 Modules, 152 Passing Tests)
+
+| Test Module | Tests | Status |
+| :--- | :--- | :--- |
+| `backend/tests/test_provenance_and_claims.py` **(NEW - WS5)** | 4 | **PASSED** |
+| `backend/tests/test_repeatable_demo.py` **(WS4)** | 12 | **PASSED** |
+| `backend/tests/test_deployment_hardening.py` **(WS3)** | 15 | **PASSED** |
+| `backend/tests/test_e2e_integration.py` **(Phase 5 WS1)** | 6 | **PASSED** |
+| `backend/tests/test_independent_financial_benchmarks.py` **(Phase 5 WS2)** | 9 | **PASSED** |
+| `backend/tests/test_financial_validation.py` | 21 | **PASSED** |
+| `backend/tests/test_operational_realism.py` | 22 | **PASSED** |
+| `backend/tests/test_decision_center.py` | 5 | **PASSED** |
+| `backend/tests/test_phase2_trustworthy_ai.py` | 15 | **PASSED** |
+| `backend/tests/test_alerts.py` | 6 | **PASSED** |
+| `backend/tests/test_backend.py` | 8 | **PASSED** |
+| `backend/tests/test_scheduler.py` | 3 | **PASSED** |
+| `backend/tests/test_agents.py` | 5 | **PASSED** |
+| `backend/tests/test_sec_benchmarks.py` | 15 | **PASSED** |
+| `backend/tests/test_rag.py` | 3 | **PASSED** |
+| `backend/tests/test_privacy_shield.py` | 2 | **PASSED** |
+| `backend/tests/test_anomalies.py` | 1 | **PASSED** |
+| `backend/tests/test_digital_twin.py` | 3 | **PASSED** |
+| **Total Test Suite** | **152** | **100% PASSED (0 FAILURES)** |
+
+
 
 
