@@ -137,8 +137,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/demo/reset
   - **Asset Sizing:** 350 kW Rooftop Solar PV + 150 kWh LFP BESS.
   - **Indian Statutory Tax Shield:** Models Section 32 40% Written Down Value (WDV) renewable depreciation, delivering substantial early-year cash tax shields.
   - **Battery Aging Feedback:** Semi-empirical degradation model projects battery replacement at Year 14 and end-of-life SOH at 78.2%.
-  - **Financial Metrics:** Net Present Value ($382k+), IRR (18.6%), undiscounted payback (4.8 years).
-  - **Tornado Sensitivity Analysis:** Parameters ranked in descending order of NPV swing (Solar Insolation > Grid Tariff Inflation > Battery Replacement Cost).
+  - **Financial Metrics:** Net Present Value ($641k+ USD / ₹5.36 Cr INR), IRR (48.79%), undiscounted simple payback (2.47 years), after-tax breakeven (2.03 years). Conservative standalone solar baseline reference without dynamic load shifting: NPV $382k+, IRR 18.6%, payback 4.8 years.
+  - **Tornado Sensitivity Analysis:** Parameters ranked in descending order of NPV swing (Solar Insolation > Discount Rate > Installed CapEx).
 
 - **API Call (Managerial Signoff):**
   ```bash

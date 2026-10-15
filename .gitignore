@@ -41,3 +41,6 @@ package-lock.json
 # Word documents and lock files
 *.docx
 ~$*.docx
+
+# Generated local evidence files
+demo-validation-output.json
