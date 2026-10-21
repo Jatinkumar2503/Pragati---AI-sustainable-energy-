@@ -11,7 +11,7 @@ from typing import Dict, Any
 router = APIRouter(prefix="/api/v1/billing", tags=["SaaS Billing"])
 
 class CreateSubscriptionRequest(BaseModel):
-    plan_tier: str = Field(..., example="demo_pro_growth", description="Starter, Pro Growth, or Enterprise")
+    plan_tier: str = Field(..., examples=["demo_pro_growth"], description="Starter, Pro Growth, or Enterprise")
     gstin: str = Field("07AAAAA0000A1Z5", description="Customer 15-digit GSTIN number")
 
 @router.post("/subscribe")

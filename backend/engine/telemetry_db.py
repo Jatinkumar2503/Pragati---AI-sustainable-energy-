@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import sqlite3
 import logging
 import contextlib
@@ -232,6 +233,64 @@ class TelemetryDB(BaseDatabase):
             
             # Create Index on date
             conn.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_date ON telemetry (date);")
+            
+            # Create Table for Alert persistence and lifecycle transitions
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS alerts (
+                    alert_id TEXT PRIMARY KEY,
+                    timestamp TEXT,
+                    first_seen_timestamp TEXT,
+                    last_seen_timestamp TEXT,
+                    type TEXT,
+                    severity TEXT,
+                    equipment TEXT,
+                    value TEXT,
+                    threshold TEXT,
+                    status TEXT,
+                    duplicate_count INTEGER DEFAULT 1,
+                    mitigation TEXT,
+                    resolution_notes TEXT,
+                    resolved_by TEXT,
+                    resolved_at TEXT,
+                    raw_json TEXT
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts (status);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_timestamp ON alerts (timestamp);")
+
+            # Create Table for Decision Center Audit History
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS decision_history (
+                    action_id TEXT PRIMARY KEY,
+                    title TEXT,
+                    status TEXT,
+                    created_at TEXT,
+                    approved_at TEXT,
+                    approved_by TEXT,
+                    rejected_at TEXT,
+                    rejected_by TEXT,
+                    notes TEXT,
+                    rejection_reason TEXT,
+                    sector TEXT,
+                    issue_summary TEXT,
+                    raw_json TEXT
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_decision_status ON decision_history (status);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_decision_created ON decision_history (created_at);")
+
+            # Create Table for Model and Operational Monitoring Metrics
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS operational_metrics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    metric_type TEXT,
+                    metric_name TEXT,
+                    metric_value REAL,
+                    metadata_json TEXT
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_metrics_type_ts ON operational_metrics (metric_type, timestamp);")
             conn.commit()
             
             # Schema migration for existing databases: add Scope 1/2/3 columns if missing
@@ -316,6 +375,202 @@ class TelemetryDB(BaseDatabase):
                 conn.commit()
                 
         self.execute_with_retry(clear_action)
+
+    # -------------------------------------------------------------
+    # Decision Center Persistence & Recovery Methods
+    # -------------------------------------------------------------
+    def upsert_decision(self, decision: dict):
+        """
+        Idempotently inserts or updates a Decision Center action item.
+        """
+        def action():
+            with self.get_connection() as conn:
+                raw_json = json.dumps(decision)
+                conn.execute("""
+                    INSERT INTO decision_history (
+                        action_id, title, status, created_at, approved_at, approved_by,
+                        rejected_at, rejected_by, notes, rejection_reason, sector, issue_summary, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(action_id) DO UPDATE SET
+                        title=excluded.title,
+                        status=excluded.status,
+                        approved_at=excluded.approved_at,
+                        approved_by=excluded.approved_by,
+                        rejected_at=excluded.rejected_at,
+                        rejected_by=excluded.rejected_by,
+                        notes=excluded.notes,
+                        rejection_reason=excluded.rejection_reason,
+                        sector=excluded.sector,
+                        issue_summary=excluded.issue_summary,
+                        raw_json=excluded.raw_json;
+                """, (
+                    decision.get("action_id"),
+                    decision.get("title"),
+                    decision.get("status"),
+                    decision.get("created_at"),
+                    decision.get("approved_at"),
+                    decision.get("approved_by"),
+                    decision.get("rejected_at"),
+                    decision.get("rejected_by"),
+                    decision.get("notes"),
+                    decision.get("rejection_reason"),
+                    decision.get("sector"),
+                    decision.get("issue_summary"),
+                    raw_json
+                ))
+                conn.commit()
+        return self.execute_with_retry(action)
+
+    def get_all_decisions(self) -> list:
+        """
+        Retrieves all historical decision items ordered chronologically.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM decision_history ORDER BY created_at ASC;")
+            rows = cursor.fetchall()
+            decisions = []
+            for r in rows:
+                if r["raw_json"]:
+                    try:
+                        d = json.loads(r["raw_json"])
+                        decisions.append(d)
+                        continue
+                    except Exception:
+                        pass
+                decisions.append(dict(r))
+            return decisions
+
+    def get_decision(self, action_id: str) -> dict:
+        """
+        Retrieves a single decision item by action_id.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM decision_history WHERE action_id = ? LIMIT 1;", (action_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            if row["raw_json"]:
+                try:
+                    return json.loads(row["raw_json"])
+                except Exception:
+                    pass
+            return dict(row)
+
+    # -------------------------------------------------------------
+    # Alerts Persistence & Lifecycle Methods
+    # -------------------------------------------------------------
+    def upsert_alert(self, alert: dict):
+        """
+        Idempotently inserts or updates an alert with full lifecycle status and transitions.
+        """
+        def action():
+            with self.get_connection() as conn:
+                raw_json = json.dumps(alert)
+                conn.execute("""
+                    INSERT INTO alerts (
+                        alert_id, timestamp, first_seen_timestamp, last_seen_timestamp,
+                        type, severity, equipment, value, threshold, status,
+                        duplicate_count, mitigation, resolution_notes, resolved_by, resolved_at, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(alert_id) DO UPDATE SET
+                        timestamp=excluded.timestamp,
+                        last_seen_timestamp=excluded.last_seen_timestamp,
+                        status=excluded.status,
+                        duplicate_count=excluded.duplicate_count,
+                        mitigation=excluded.mitigation,
+                        resolution_notes=excluded.resolution_notes,
+                        resolved_by=excluded.resolved_by,
+                        resolved_at=excluded.resolved_at,
+                        raw_json=excluded.raw_json;
+                """, (
+                    alert.get("alert_id"),
+                    alert.get("timestamp"),
+                    alert.get("first_seen_timestamp", alert.get("timestamp")),
+                    alert.get("last_seen_timestamp", alert.get("timestamp")),
+                    alert.get("type"),
+                    alert.get("severity"),
+                    alert.get("equipment"),
+                    str(alert.get("value")),
+                    str(alert.get("threshold")),
+                    alert.get("status"),
+                    int(alert.get("duplicate_count", 1)),
+                    alert.get("mitigation"),
+                    alert.get("resolution_notes"),
+                    alert.get("resolved_by"),
+                    alert.get("resolved_at"),
+                    raw_json
+                ))
+                conn.commit()
+        return self.execute_with_retry(action)
+
+    def get_all_alerts(self, status: str = None) -> list:
+        """
+        Retrieves alerts ordered by timestamp descending, optionally filtered by status.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if status:
+                cursor.execute("SELECT * FROM alerts WHERE status = ? ORDER BY timestamp DESC;", (status,))
+            else:
+                cursor.execute("SELECT * FROM alerts ORDER BY timestamp DESC;")
+            rows = cursor.fetchall()
+            alerts = []
+            for r in rows:
+                if r["raw_json"]:
+                    try:
+                        a = json.loads(r["raw_json"])
+                        alerts.append(a)
+                        continue
+                    except Exception:
+                        pass
+                alerts.append(dict(r))
+            return alerts
+
+    # -------------------------------------------------------------
+    # Operational & Model Monitoring Metrics Persistence
+    # -------------------------------------------------------------
+    def record_operational_metric(self, metric_type: str, metric_name: str, metric_value: float, metadata: dict = None):
+        """
+        Records an operational monitoring point (e.g. forecast error, solver duration, telemetry drift).
+        """
+        def action():
+            with self.get_connection() as conn:
+                ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                meta_json = json.dumps(metadata) if metadata else "{}"
+                conn.execute("""
+                    INSERT INTO operational_metrics (timestamp, metric_type, metric_name, metric_value, metadata_json)
+                    VALUES (?, ?, ?, ?, ?);
+                """, (ts, metric_type, metric_name, float(metric_value), meta_json))
+                conn.commit()
+        return self.execute_with_retry(action)
+
+    def get_operational_metrics(self, metric_type: str = None, limit: int = 50) -> list:
+        """
+        Retrieves recent operational monitoring metrics.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if metric_type:
+                cursor.execute("""
+                    SELECT * FROM operational_metrics WHERE metric_type = ? ORDER BY timestamp DESC LIMIT ?;
+                """, (metric_type, limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM operational_metrics ORDER BY timestamp DESC LIMIT ?;
+                """, (limit,))
+            rows = cursor.fetchall()
+            metrics = []
+            for r in rows:
+                m = dict(r)
+                if m.get("metadata_json"):
+                    try:
+                        m["metadata"] = json.loads(m["metadata_json"])
+                    except Exception:
+                        pass
+                metrics.append(m)
+            return metrics
 
     def close(self):
         """

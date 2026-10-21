@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: pragati_db
       POSTGRES_USER: pragati_admin
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-PragatiProdSecure2026!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_to_a_secure_password_in_production}
     ports:
       - "5432:5432"
     volumes:
@@ -36,7 +36,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://pragati_admin:PragatiProdSecure2026!@timescaledb:5432/pragati_db
+      - DATABASE_URL=postgresql://pragati_admin:${DB_PASSWORD:-change_me_to_a_secure_password_in_production}@timescaledb:5432/pragati_db
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:

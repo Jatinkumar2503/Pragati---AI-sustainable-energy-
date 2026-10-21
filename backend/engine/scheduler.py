@@ -804,8 +804,9 @@ def solve_milp_schedule(
     B_rate = battery_rate_kw
     eta = battery_efficiency
     
-    lb[soc_offset : soc_offset + 24] = 0.0
-    ub[soc_offset : soc_offset + 24] = B_cap
+    # Battery state-of-charge bounds: respect 20%-90% health buffer limits
+    lb[soc_offset : soc_offset + 24] = 0.20 * B_cap
+    ub[soc_offset : soc_offset + 24] = 0.90 * B_cap
     
     lb[c_offset : c_offset + 24] = 0.0
     ub[c_offset : c_offset + 24] = B_rate

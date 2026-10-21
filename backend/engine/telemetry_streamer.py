@@ -39,10 +39,37 @@ class TelemetryStreamer:
     active facility operational alerts with deterministic deduplication,
     configurable suppression windows, and complete audit provenance.
     """
-    def __init__(self):
+    def __init__(self, db_instance: Any = None):
+        self.db = db_instance
         self._next_alert_id = 1004
         self.alert_history: List[Dict[str, Any]] = []
-        
+        self._initialize_baseline_alerts()
+        self._load_from_db()
+
+    def attach_db(self, db_instance: Any):
+        """Attaches persistent DB handle and loads saved alerts."""
+        self.db = db_instance
+        self._load_from_db()
+
+    def _load_from_db(self):
+        """Restores alert state from persistent database."""
+        if self.db is not None:
+            try:
+                saved_alerts = self.db.get_all_alerts()
+                if saved_alerts:
+                    self.alert_history = saved_alerts
+                    self.active_alerts = [a for a in saved_alerts if a.get("status") in ("TRIGGERED", "ACKNOWLEDGED")]
+                    # update next_alert_id
+                    max_id = 1003
+                    for a in saved_alerts:
+                        aid = a.get("alert_id", "")
+                        if aid.startswith("ALT-") and aid[4:].isdigit():
+                            max_id = max(max_id, int(aid[4:]))
+                    self._next_alert_id = max_id + 1
+            except Exception:
+                pass
+
+    def _initialize_baseline_alerts(self):
         # Initial baseline alerts with full lifecycle metadata
         self.active_alerts: List[Dict[str, Any]] = [
             {
@@ -180,6 +207,11 @@ class TelemetryStreamer:
                     for h in self.alert_history:
                         if h.get("alert_id") == alert.get("alert_id"):
                             h.update(alert)
+                    if self.db is not None:
+                        try:
+                            self.db.upsert_alert(alert)
+                        except Exception:
+                            pass
                     return {
                         "status": "deduplicated",
                         "deduplicated": True,
@@ -218,6 +250,11 @@ class TelemetryStreamer:
         }
         self.active_alerts.append(new_alert)
         self.alert_history.append(dict(new_alert))
+        if self.db is not None:
+            try:
+                self.db.upsert_alert(new_alert)
+            except Exception:
+                pass
         return {
             "status": "triggered",
             "alert_id": alert_id,
@@ -301,6 +338,11 @@ class TelemetryStreamer:
                 for h in self.alert_history:
                     if h.get("alert_id") == alert_id:
                         h.update(alert)
+                if self.db is not None:
+                    try:
+                        self.db.upsert_alert(alert)
+                    except Exception:
+                        pass
                 return {"status": "success", "alert": alert}
         return {"status": "error", "message": f"Alert ID {alert_id} not found."}
 
@@ -327,6 +369,11 @@ class TelemetryStreamer:
                 for h in self.alert_history:
                     if h.get("alert_id") == alert_id:
                         h.update(alert)
+                if self.db is not None:
+                    try:
+                        self.db.upsert_alert(alert)
+                    except Exception:
+                        pass
                 return {"status": "success", "alert": alert}
         return {"status": "error", "message": f"Alert ID {alert_id} not found."}
 

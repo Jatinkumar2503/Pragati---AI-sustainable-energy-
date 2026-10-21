@@ -17,17 +17,41 @@ class DecisionEngine:
     Orchestrates live telemetry anomalies, time-series load forecasting,
     and MILP shift optimization to produce traceable, actionable recommendations.
     """
-    def __init__(self):
+    def __init__(self, db_instance: Any = None):
+        self.db = db_instance
         self.current_decision: Optional[Dict[str, Any]] = None
         self.decision_history: List[Dict[str, Any]] = []
         self._action_counter = 81
         self._initialize_default_state()
+        self._load_from_db()
+
+    def _load_from_db(self):
+        """Loads saved decisions from persistent database if available."""
+        if self.db is not None:
+            try:
+                saved = self.db.get_all_decisions()
+                if saved:
+                    self.decision_history = saved
+                    self.current_decision = saved[-1]
+                    logger.info(f"Loaded {len(saved)} decisions from persistent database.")
+            except Exception as e:
+                logger.warning(f"Could not load decisions from DB: {e}")
+
+    def attach_db(self, db_instance: Any):
+        """Attaches persistent DB handle."""
+        self.db = db_instance
+        self._load_from_db()
 
     def reset(self):
         """Resets decision history and current action state back to default demo baseline."""
         self._action_counter = 81
         self.decision_history = []
         self._initialize_default_state()
+        if self.db is not None:
+            try:
+                self.db.upsert_decision(self.current_decision)
+            except Exception:
+                pass
 
     def _initialize_default_state(self):
         """Initial baseline state to ensure instant availability."""
@@ -331,34 +355,47 @@ class DecisionEngine:
 
         self.current_decision = decision
         self.decision_history.append(dict(decision))
+        if self.db is not None:
+            try:
+                self.db.upsert_decision(decision)
+            except Exception as e:
+                logger.error(f"Failed to persist decision to DB: {e}")
         logger.info(f"Generated new Decision Center recommendation: {action_id}")
         return decision
 
     def approve_decision(self, action_id: str, manager_name: str = "Operations Manager", notes: str = "") -> Dict[str, Any]:
         """Approves a recommendation with managerial audit signature."""
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if not self.current_decision or self.current_decision.get("action_id") != action_id:
-            # Check history
-            for item in reversed(self.decision_history):
+        if self.current_decision and self.current_decision.get("action_id") == action_id:
+            self.current_decision["status"] = "APPROVED"
+            self.current_decision["approved_by"] = manager_name
+            self.current_decision["approved_at"] = now_str
+            self.current_decision["notes"] = notes or "Approved schedule shift; automated dispatch order sent to SCADA queue."
+            for item in self.decision_history:
                 if item.get("action_id") == action_id:
-                    item["status"] = "APPROVED"
-                    item["approved_by"] = manager_name
-                    item["approved_at"] = now_str
-                    item["notes"] = notes or "Approved schedule shift; automated dispatch order sent to SCADA queue."
-                    self.current_decision = item
-                    return {"status": "success", "decision": item}
+                    item.update(self.current_decision)
+            if self.db is not None:
+                try:
+                    self.db.upsert_decision(self.current_decision)
+                except Exception as e:
+                    logger.error(f"Failed to persist approved decision to DB: {e}")
+            return {"status": "success", "decision": self.current_decision}
         
-        self.current_decision["status"] = "APPROVED"
-        self.current_decision["approved_by"] = manager_name
-        self.current_decision["approved_at"] = now_str
-        self.current_decision["notes"] = notes or "Approved schedule shift; automated dispatch order sent to SCADA queue."
-        
-        # Also sync in history
-        for item in self.decision_history:
+        for item in reversed(self.decision_history):
             if item.get("action_id") == action_id:
-                item.update(self.current_decision)
-
-        return {"status": "success", "decision": self.current_decision}
+                item["status"] = "APPROVED"
+                item["approved_by"] = manager_name
+                item["approved_at"] = now_str
+                item["notes"] = notes or "Approved schedule shift; automated dispatch order sent to SCADA queue."
+                self.current_decision = item
+                if self.db is not None:
+                    try:
+                        self.db.upsert_decision(item)
+                    except Exception as e:
+                        logger.error(f"Failed to persist approved decision to DB: {e}")
+                return {"status": "success", "decision": item}
+                
+        return {"status": "error", "message": f"Action ID {action_id} not found."}
 
     def reject_decision(self, action_id: str, manager_name: str = "Operations Manager", reason: str = "") -> Dict[str, Any]:
         """Rejects a recommendation with managerial rejection rationale."""
@@ -368,9 +405,15 @@ class DecisionEngine:
             self.current_decision["rejected_by"] = manager_name
             self.current_decision["rejected_at"] = now_str
             self.current_decision["notes"] = reason or "Rejected by plant manager due to operational constraints."
+            self.current_decision["rejection_reason"] = self.current_decision["notes"]
             for item in self.decision_history:
                 if item.get("action_id") == action_id:
                     item.update(self.current_decision)
+            if self.db is not None:
+                try:
+                    self.db.upsert_decision(self.current_decision)
+                except Exception as e:
+                    logger.error(f"Failed to persist rejected decision to DB: {e}")
             return {"status": "success", "decision": self.current_decision}
             
         for item in reversed(self.decision_history):
@@ -379,6 +422,13 @@ class DecisionEngine:
                 item["rejected_by"] = manager_name
                 item["rejected_at"] = now_str
                 item["notes"] = reason or "Rejected by plant manager due to operational constraints."
+                item["rejection_reason"] = item["notes"]
+                self.current_decision = item
+                if self.db is not None:
+                    try:
+                        self.db.upsert_decision(item)
+                    except Exception as e:
+                        logger.error(f"Failed to persist rejected decision to DB: {e}")
                 return {"status": "success", "decision": item}
                 
         return {"status": "error", "message": f"Action ID {action_id} not found."}

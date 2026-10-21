@@ -2021,6 +2021,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.updateDecisionStatusUI = function(status, approvedBy, approvedAt) {
         const pill = document.getElementById("dc-status-pill");
         const btn = document.getElementById("dc-approve-action-btn");
+        const rejectBtn = document.getElementById("dc-reject-action-btn");
         const logText = document.getElementById("dc-approval-log-text");
 
         if (status === "APPROVED") {
@@ -2034,6 +2035,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.style.cursor = "default";
                 btn.innerText = "✔️ Action Committed";
             }
+            if (rejectBtn) {
+                rejectBtn.disabled = true;
+                rejectBtn.style.opacity = "0.4";
+                rejectBtn.style.cursor = "default";
+            }
             if (logText) {
                 logText.innerHTML = `Approved by <strong>${sanitizeHTML(approvedBy || 'Operations Manager')}</strong> at <strong>${sanitizeHTML(approvedAt || 'Just Now')}</strong>`;
             }
@@ -2044,11 +2050,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             if (btn) {
                 btn.disabled = true;
-                btn.style.opacity = "0.6";
-                btn.innerText = "❌ Action Rejected";
+                btn.style.opacity = "0.4";
+                btn.style.cursor = "default";
+                btn.innerText = "✅ Approve Action";
+            }
+            if (rejectBtn) {
+                rejectBtn.disabled = true;
+                rejectBtn.style.opacity = "0.6";
+                rejectBtn.style.cursor = "default";
+                rejectBtn.innerText = "❌ Action Rejected";
             }
             if (logText) {
-                logText.innerHTML = `Rejected at <strong>${sanitizeHTML(approvedAt || 'Just Now')}</strong>`;
+                logText.innerHTML = `Rejected by <strong>${sanitizeHTML(approvedBy || 'Operations Lead')}</strong> at <strong>${sanitizeHTML(approvedAt || 'Just Now')}</strong>`;
             }
         } else {
             if (pill) {
@@ -2061,10 +2074,114 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.style.cursor = "pointer";
                 btn.innerText = "✅ Approve Action";
             }
+            if (rejectBtn) {
+                rejectBtn.disabled = false;
+                rejectBtn.style.opacity = "1";
+                rejectBtn.style.cursor = "pointer";
+                rejectBtn.innerText = "❌ Reject Action";
+            }
             if (logText) {
                 logText.innerHTML = "Status: <em>Awaiting managerial review</em>";
             }
         }
+    };
+
+    window.openRejectModal = function() {
+        const modal = document.getElementById("reject-decision-modal");
+        const badge = document.getElementById("reject-modal-action-id");
+        const managerInput = document.getElementById("reject-manager-name");
+        if (badge) badge.innerText = `Action ID: ${window.currentDecisionActionId || "ACT-2026-081"}`;
+        if (managerInput) managerInput.value = currentUserRole === "Operator" ? "Operations Manager" : `${currentUserRole} Signoff`;
+        if (modal) modal.style.display = "flex";
+    };
+
+    window.closeRejectModal = function() {
+        const modal = document.getElementById("reject-decision-modal");
+        if (modal) modal.style.display = "none";
+    };
+
+    window.submitRejectDecision = async function() {
+        const actionId = window.currentDecisionActionId || "ACT-2026-081";
+        const managerName = document.getElementById("reject-manager-name")?.value || "Operations Manager";
+        const reason = document.getElementById("reject-reason-text")?.value || "Operational overhaul schedule conflict";
+        
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/reject`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": API_KEY
+                },
+                body: JSON.stringify({
+                    action_id: actionId,
+                    manager_name: managerName,
+                    reason: reason
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                window.closeRejectModal();
+                const dec = data.decision_state;
+                window.updateDecisionStatusUI("REJECTED", dec.rejected_by, dec.rejected_at);
+                alert(`❌ Manager Rejection Recorded!\n\nAction #${actionId} was rejected by ${managerName}.\nReason: ${reason}\nRecorded in immutable audit history.`);
+            } else {
+                alert(`Rejection error: ${data.detail || "Failed to record rejection"}`);
+            }
+        } catch (e) {
+            console.error("Failed to reject action:", e);
+            alert(`Network error: ${e.message}`);
+        }
+    };
+
+    window.openDecisionHistoryModal = async function() {
+        const modal = document.getElementById("decision-history-modal");
+        const tbody = document.getElementById("decision-history-tbody");
+        const countBadge = document.getElementById("decision-history-count-badge");
+        if (modal) modal.style.display = "flex";
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94A3B8; padding: 18px;">Loading decision history ledger...</td></tr>`;
+        
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/history`, {
+                headers: { "X-API-Key": API_KEY }
+            });
+            const data = await res.json();
+            const history = data.history || [];
+            if (countBadge) countBadge.innerText = `Total Records: ${data.total_count || history.length}`;
+            
+            if (!tbody) return;
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94A3B8; padding: 18px;">No decision records found.</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = history.slice().reverse().map(item => {
+                const st = item.status || "PENDING_APPROVAL";
+                const badgeBg = st === "APPROVED" ? "background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981;" : (st === "REJECTED" ? "background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444;" : "background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B;");
+                const signer = item.approved_by || item.rejected_by || "Awaiting Review";
+                const ts = item.approved_at || item.rejected_at || item.created_at || "—";
+                const hashVal = item.provenance?.audit_hash || "SHA256-verified";
+                const impactVal = item.schedule_alternative ? `₹${(item.schedule_alternative.monthly_recurring_savings_inr || (item.schedule_alternative.monthly_recurring_savings_usd * 83)).toLocaleString()} / mo` : "Modeled Impact";
+                
+                return `
+                    <tr>
+                        <td><strong style="color: #60A5FA;">${item.action_id}</strong></td>
+                        <td style="color: #F8FAFC; max-width: 260px;">${sanitizeHTML(item.title || 'Schedule Optimization')}</td>
+                        <td style="color: #94A3B8; font-size: 0.78rem;">${ts}</td>
+                        <td><span class="badge" style="${badgeBg}; font-size: 0.72rem; font-weight: 700;">${st}</span></td>
+                        <td style="color: #CBD5E1;">${sanitizeHTML(signer)}</td>
+                        <td style="color: #10B981; font-weight: 600;">${impactVal}</td>
+                        <td style="color: #64748B; font-family: monospace; font-size: 0.72rem;">${hashVal}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444; padding: 18px;">Failed to fetch decision history.</td></tr>`;
+        }
+    };
+
+    window.closeDecisionHistoryModal = function() {
+        const modal = document.getElementById("decision-history-modal");
+        if (modal) modal.style.display = "none";
     };
 
     window.approveDecisionAction = async function() {

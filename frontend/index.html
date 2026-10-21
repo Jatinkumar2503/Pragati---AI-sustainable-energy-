@@ -78,7 +78,7 @@
                 </div>
                 <div class="header-actions" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <div class="demo-badge-pill" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #047857; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 6px;">
-                        <span>🟢</span> Live Telemetry Stream Connected
+                        <span>🟢</span> Real-Time Stream (Sandbox Replay)
                     </div>
                     <select id="demo-tenant-select" class="premium-select" onchange="switchDemoTenant(this.value)" style="padding: 8px 14px; font-size: 0.85rem; font-weight: 700; background: #FAF6EE; border: 1px solid rgba(200, 190, 170, 0.8); border-radius: 12px; color: #1F2B24; cursor: pointer;">
                         <option value="demo_steel" selected>🏭 DAEWOO Steel (Faridabad)</option>
@@ -232,6 +232,8 @@
                             <button id="dc-generate-action-btn" class="premium-btn" onclick="generateDecisionAction()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; width: auto; font-weight: 600;">⚡ Re-Analyze Live</button>
                             <button id="dc-view-evidence-btn" class="premium-btn" onclick="openEvidenceModal()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); width: auto;">🔍 View Evidence</button>
                             <button id="dc-compare-plans-btn" class="premium-btn" onclick="openPlanComparisonModal()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; width: auto;">⚖️ Compare Plans</button>
+                            <button id="dc-audit-history-btn" class="premium-btn" onclick="openDecisionHistoryModal()" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #F59E0B; width: auto; font-weight: 600;">📜 Audit Trail</button>
+                            <button id="dc-reject-action-btn" class="premium-btn" onclick="openRejectModal()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #EF4444; width: auto; font-weight: 700;">❌ Reject Action</button>
                             <button id="dc-approve-action-btn" class="premium-btn" onclick="approveDecisionAction()" style="background: #10B981; border: 1px solid #059669; color: white; width: auto; font-weight: 700;">✅ Approve Action</button>
                         </div>
                     </div>
@@ -1367,6 +1369,82 @@
                     <button class="premium-btn" onclick="closePlanComparisonModal()" style="width: auto; background: rgba(255, 255, 255, 0.08);">Close</button>
                     <button class="premium-btn" onclick="approveDecisionAction(); closePlanComparisonModal();" style="width: auto; background: #10B981; font-weight: 700;">Approve This Schedule</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Decision Modal -->
+    <div id="reject-decision-modal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+        <div class="modal-content card" style="max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto; background: #18221D; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); border-radius: 16px;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">❌</span>
+                    <div>
+                        <h3 style="margin: 0; color: #F87171; font-size: 1.15rem;">Reject Optimization Recommendation</h3>
+                        <span id="reject-modal-action-id" style="font-size: 0.75rem; color: #94A3B8;">Action ID: ACT-2026-081</span>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeRejectModal()" style="background: none; border: none; font-size: 1.4rem; color: #94A3B8; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px 0;">
+                <p style="font-size: 0.85rem; color: #CBD5E1; margin-top: 0;">
+                    Please provide operational reasoning for rejecting this recommended schedule shift. The reason and manager audit signoff will be permanently recorded in the immutable audit log.
+                </p>
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #94A3B8; margin-bottom: 6px;">Manager / Reviewer Name:</label>
+                    <input type="text" id="reject-manager-name" class="premium-input" value="Operations Manager" style="width: 100%; padding: 8px 12px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #F8FAFC; font-size: 0.85rem;">
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #94A3B8; margin-bottom: 6px;">Operational Rejection Reason:</label>
+                    <textarea id="reject-reason-text" rows="3" class="premium-input" placeholder="e.g. Emergency furnace maintenance scheduled during proposed midday window." style="width: 100%; padding: 8px 12px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #F8FAFC; font-size: 0.85rem; resize: vertical;">Emergency maintenance scheduled on annealing bay during proposed slot.</textarea>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; color: #FCA5A5;">
+                    ⚠️ Rejecting will leave current production schedule in place. Anticipated peak tariff surcharge of $650.00 will apply unless an alternative slot is resolved.
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 12px 0 0 0; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="premium-btn" onclick="closeRejectModal()" style="width: auto; background: rgba(255, 255, 255, 0.08); color: #CBD5E1;">Cancel</button>
+                <button class="premium-btn" onclick="submitRejectDecision()" style="width: auto; background: #DC2626; color: white; font-weight: 700;">Confirm Rejection ❌</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision Center Audit History Modal -->
+    <div id="decision-history-modal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+        <div class="modal-content card" style="max-width: 960px; width: 100%; max-height: 85vh; overflow-y: auto; background: #18221D; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7); border-radius: 16px;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">📜</span>
+                    <div>
+                        <h3 style="margin: 0; color: #F59E0B; font-size: 1.25rem;">Decision Center Audit & Approval History</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Tamper-evident ledger of AI optimization recommendations, managerial signoffs, and audit signatures.</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeDecisionHistoryModal()" style="background: none; border: none; font-size: 1.4rem; color: #94A3B8; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px 0;">
+                <div class="table-container" style="max-height: 55vh; overflow-y: auto;">
+                    <table class="premium-table" style="width: 100%; font-size: 0.82rem;" id="decision-history-table">
+                        <thead>
+                            <tr>
+                                <th>Action ID</th>
+                                <th>Recommendation / Directive</th>
+                                <th>Generated / Signed</th>
+                                <th>Status</th>
+                                <th>Authorized By</th>
+                                <th>Modeled Impact</th>
+                                <th>Audit Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="decision-history-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 12px 0 0 0; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
+                <span id="decision-history-count-badge" style="font-size: 0.8rem; color: #94A3B8;">Showing historical decision records</span>
+                <button class="premium-btn" onclick="closeDecisionHistoryModal()" style="width: auto; background: rgba(255, 255, 255, 0.1); color: #CBD5E1;">Close</button>
             </div>
         </div>
     </div>

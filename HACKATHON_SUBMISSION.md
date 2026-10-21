@@ -57,22 +57,24 @@ PRAGATI AI is an industrial decision-support and optimization system that bridge
 All reported performance metrics are evaluated against the versioned benchmark fixture `STEEL_BENCHMARK_FIXTURE_V1` and the UCI Steel Industry Dataset (35,040 observations).
 
 ### 3.1 Primary Smelting Plant Benchmark (`STEEL_BENCHMARK_FIXTURE_V1`)
-*Evaluated for Faridabad Alloy Works: 350 kW Solar PV + 150 kWh BESS with 25% peak load shifting and Section 32 40% WDV depreciation.*
+*Evaluated for Faridabad Heavy Steel Smelting Plant: 250 kWp Solar PV + 100 kWh LFP BESS with 20% peak load shifting, 10% discount rate, and Section 32 40% WDV depreciation.*
 
 | Subsystem | Metric | Evaluated Value | Evaluation Condition / Provenance |
 | :--- | :--- | :---: | :--- |
 | **Forecasting Ensemble** | Weighted Absolute Percentage Error (WAPE) | **0.105 (10.5%)** | 3-fold rolling chronological holdout (2,880 samples) |
 | **Forecasting Ensemble** | Safe Mean Absolute Percentage Error (Safe MAPE) | **10.7%** | Denominators $<1.0\text{ kWh}$ clipped to prevent zero-division |
-| **Forecasting Ensemble** | Mean Absolute Error (MAE) | **11.90 kWh** | Chronological holdout on UCI Steel dataset |
-| **Forecasting Ensemble** | Root Mean Squared Error (RMSE) | **15.65 kWh** | Chronological holdout on UCI Steel dataset |
+| **Forecasting Ensemble** | Mean Absolute Error (MAE) | **6.74 kW (11.90 kWh)** | Chronological holdout on UCI Steel dataset |
+| **Forecasting Ensemble** | Root Mean Squared Error (RMSE) | **14.36 kW (15.65 kWh)**| Chronological holdout on UCI Steel dataset |
 | **MILP Shift Scheduler** | Multi-Stage Daily Cost Savings | **$130.45 / day (38.35%)** | Sequential EAF $\rightarrow$ LRF $\rightarrow$ CCM batch (2,100 kWh total) shifted from peak to off-peak/solar |
 | **MILP Shift Scheduler** | Constraint Feasibility | **100% Feasible** | Precedence (`SATISFIED`), buffer lags (`BINDING`), 450 kW ceiling (`BINDING`) |
-| **Digital Twin (15-Yr)** | Net Present Value (NPV) | **$641,839 USD** (₹5.36 Cr) | 350 kW Solar + 150 kWh BESS at 10% discount rate with load shifting |
-| **Digital Twin (15-Yr)** | Internal Rate of Return (IRR) | **48.79%** | Safe numerical bisection algorithm over $[-40\%, +300\%]$ |
-| **Digital Twin (15-Yr)** | Simple Payback Period | **2.47 Years** | Undiscounted capital recovery on $220,958 initial CapEx |
-| **Digital Twin (15-Yr)** | After-Tax Breakeven Period | **2.03 Years** | Incorporates Section 32 40% WDV tax depreciation shield ($55,924) |
-| **BESS Degradation** | 15-Year Final State of Health (SOH) | **78.20%** | LFP chemistry @ 35 °C ambient; pack replacement scheduled at Year 14 |
-| **Carbon Accounting** | Scope 2 Abatement | **268 tons CO₂/yr** | Traced to CEA CO2 Baseline Database v19 (0.716 kg CO₂/kWh) |
+| **Digital Twin (15-Yr)** | Initial Capital Outlay (CapEx) | **$156,287 USD** (₹1.305 Cr)| 250 kWp Solar PV (₹1.125 Cr) + 100 kWh BESS (₹18.0 Lakh) |
+| **Digital Twin (15-Yr)** | Year 1 Operating Cost Savings | **$64,953 USD** (₹54.24 Lakh)| Solar generation + battery peak shaving + 20% load shifting arbitrage |
+| **Digital Twin (15-Yr)** | Net Present Value (NPV) | **$454,494 USD** (₹3.795 Cr) | 15-year DCF at 10.0% WACC with 4% tariff escalation |
+| **Digital Twin (15-Yr)** | Internal Rate of Return (IRR) | **48.83%** | Safe numerical bisection algorithm over $[-40\%, +300\%]$ |
+| **Digital Twin (15-Yr)** | Simple Payback Period | **2.47 Years** | Undiscounted capital recovery on $156,287 initial CapEx |
+| **Digital Twin (15-Yr)** | After-Tax Breakeven Period | **2.03 Years** | Incorporates Section 32 40% WDV tax depreciation shield (₹13.14 Lakh Year 1) |
+| **BESS Degradation** | 15-Year Final State of Health (SOH) | **78.20%** | LFP chemistry @ 34 °C ambient; pack replacement threshold: 70% SOH |
+| **Carbon Accounting** | Scope 2 Abatement | **226 tons CO₂/yr** | Traced to CEA CO2 Baseline Database v20 (Western Grid: 0.79 kg CO₂/kWh) |
 
 ### 3.2 Conservative Reference Baseline (Standalone Solar / Single Machine)
 *Sensitivity reference without multi-stage load shift arbitrage or under higher project hurdle rates:*
