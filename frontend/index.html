@@ -421,16 +421,62 @@
             <!-- TAB 2: ANOMALIES -->
             <div class="tab-panel" id="tab-anomalies">
                 <!-- Real-time Meter & Alert Center -->
-                <div class="card" style="margin-bottom: 24px; background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="card" style="margin-bottom: 24px; border: 1px solid rgba(16, 185, 129, 0.3);">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span class="pulse-dot green"></span>
                             <h2>Live Meter Stream & Alert Center</h2>
                         </div>
-                        <button class="premium-btn" style="padding: 8px 16px; font-size: 0.85rem; width: auto !important; margin-top: 0 !important;" onclick="fetchActiveAlerts()">Refresh Alerts 🔄</button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="meter-stream-badge">
+                                <span class="pulse-dot green" style="width: 7px; height: 7px;"></span>
+                                Sub-Second Modbus Ingestion
+                            </span>
+                            <button class="premium-btn" style="padding: 8px 16px; font-size: 0.85rem; width: auto !important; margin-top: 0 !important;" onclick="fetchActiveAlerts()">Refresh Alerts 🔄</button>
+                        </div>
                     </div>
-                    <div id="live-alerts-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
-                        <p style="color: #94A3B8; font-size: 0.9rem;">Polling active facility alerts...</p>
+
+                    <!-- Live Meter Stream Ticker Strip -->
+                    <div class="meter-stream-ticker">
+                        <div class="meter-stream-header">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1rem;">⚡</span>
+                                <strong style="font-size: 0.88rem; color: #1F2B24; font-weight: 800;">Real-Time Factory Substation Bus Telemetry</strong>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 600;">(Replay Stream · Western Grid)</span>
+                            </div>
+                            <span id="telemetry-stream-ts" style="font-size: 0.78rem; color: #475569; font-family: monospace; font-weight: 700;">🕒 Polling meter stream...</span>
+                        </div>
+                        <div class="meter-stream-grid">
+                            <div class="meter-metric-card">
+                                <div class="meter-metric-label">Active Power</div>
+                                <div class="meter-metric-val" id="stream-val-power">248.5 kW</div>
+                            </div>
+                            <div class="meter-metric-card">
+                                <div class="meter-metric-label">3-Phase Voltage</div>
+                                <div class="meter-metric-val" id="stream-val-voltage">415.8 V</div>
+                            </div>
+                            <div class="meter-metric-card">
+                                <div class="meter-metric-label">Power Factor</div>
+                                <div class="meter-metric-val" id="stream-val-pf" style="color: #059669;">0.93 Lag</div>
+                            </div>
+                            <div class="meter-metric-card">
+                                <div class="meter-metric-label">Currents (R-Y-B)</div>
+                                <div class="meter-metric-val" id="stream-val-current" style="font-size: 0.95rem; font-family: monospace; letter-spacing: -0.5px;">372 / 369 / 375 A</div>
+                            </div>
+                            <div class="meter-metric-card">
+                                <div class="meter-metric-label">Xfmr Core Temp</div>
+                                <div class="meter-metric-val" id="stream-val-temp" style="color: #DC2626;">90.4 °C</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 6px;">
+                        <span style="font-size: 0.82rem; font-weight: 800; color: #1F2B24; text-transform: uppercase; letter-spacing: 0.5px;">Active Operational Alerts & Threshold Breaches</span>
+                        <span id="active-alerts-count-badge" class="badge red-bg" style="font-size: 0.75rem;">3 Active</span>
+                    </div>
+
+                    <div id="live-alerts-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                        <p style="color: #64748B; font-size: 0.9rem;">Polling active facility alerts...</p>
                     </div>
                 </div>
 

@@ -1389,60 +1389,14 @@ window.addEventListener("keydown", (e) => {
 
 // Day 4: Real-time Telemetry Stream & Alert Center
 async function fetchActiveAlerts() {
-    const container = document.getElementById("live-alerts-list");
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/v1/alerts/active`);
-        const data = await res.json();
-        const alerts = data.result.alerts || [];
-
-        if (alerts.length === 0) {
-            container.innerHTML = `<p style="color: #10B981; font-weight: 500;">✓ All facility meters nominal. 0 active operational alerts.</p>`;
-            return;
-        }
-
-        let html = "";
-        alerts.forEach(a => {
-            let badgeBg = a.severity === "CRITICAL" ? "#DC2626" : (a.severity === "HIGH" ? "#D97706" : "#D97706");
-            let isAck = a.status === "ACKNOWLEDGED";
-            html += `
-                <div style="background: #FAF6EE; border: 1px solid rgba(200, 190, 170, 0.6); border-radius: 14px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(60, 52, 38, 0.04);">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                            <span style="background: ${badgeBg}; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">${a.severity}</span>
-                            <strong style="color: #1F2B24; font-size: 1rem; font-weight: 800;">${a.type} — ${a.equipment}</strong>
-                        </div>
-                        <div style="font-size: 0.88rem; color: #526357; font-weight: 600;">Value: <span style="color: #DC2626; font-weight: 800;">${a.value}</span> (Safety Limit: <span style="color: #1F2B24; font-weight: 700;">${a.threshold}</span>)</div>
-                        <div style="font-size: 0.85rem; color: #047857; margin-top: 6px; font-weight: 700;">Mitigation: ${a.mitigation}</div>
-                    </div>
-                    <div>
-                        ${isAck 
-                            ? `<span style="color: #047857; font-size: 0.85rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 10px; display: inline-block;">✓ Acknowledged by ${a.acknowledged_by}</span>`
-                            : `<button class="premium-btn" style="padding: 8px 16px; font-size: 0.85rem; width: auto !important; margin-top: 0 !important; background: #DC2626;" onclick="acknowledgeAlert('${a.alert_id}')">Acknowledge Alert 🚨</button>`
-                        }
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    } catch (e) {
-        container.innerHTML = `<p style="color: #EF4444;">Failed to fetch live alerts.</p>`;
+    if (window.fetchActiveAlerts) {
+        return window.fetchActiveAlerts();
     }
 }
 
 async function acknowledgeAlert(alertId) {
-    try {
-        const res = await fetch(`${API_BASE}/v1/alerts/acknowledge`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ alert_id: alertId, operator_name: "Shift Operator" })
-        });
-        if (res.ok) {
-            fetchActiveAlerts();
-        }
-    } catch (e) {
-        console.error("Alert acknowledgment failed:", e);
+    if (window.acknowledgeAlert) {
+        return window.acknowledgeAlert(alertId);
     }
 }
 
@@ -2241,6 +2195,45 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     // ALERT MANAGEMENT & GROUPED EVENTS HANDLERS
     // ==========================================
+    // ==========================================
+    // ALERT MANAGEMENT & GROUPED EVENTS HANDLERS (HIGH-CONTRAST LIGHT THEME)
+    // ==========================================
+    window.pollLiveTelemetryStream = async function() {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/telemetry/stream`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const s = data.stream;
+            if (!s) return;
+
+            const pEl = document.getElementById("stream-val-power");
+            const vEl = document.getElementById("stream-val-voltage");
+            const pfEl = document.getElementById("stream-val-pf");
+            const cEl = document.getElementById("stream-val-current");
+            const tEl = document.getElementById("stream-val-temp");
+            const tsEl = document.getElementById("telemetry-stream-ts");
+
+            if (pEl) pEl.innerText = `${s.active_load_kw.toFixed(1)} kW`;
+            if (vEl) vEl.innerText = `${s.grid_voltage_v.toFixed(1)} V`;
+            if (pfEl) {
+                pfEl.innerText = `${s.power_factor.toFixed(2)} ${s.power_factor >= 0.90 ? 'Lag' : 'LOW PF ⚠️'}`;
+                pfEl.style.color = s.power_factor >= 0.90 ? '#059669' : '#DC2626';
+            }
+            if (cEl && s.phase_currents_a) {
+                cEl.innerText = `${s.phase_currents_a.r_phase.toFixed(0)} / ${s.phase_currents_a.y_phase.toFixed(0)} / ${s.phase_currents_a.b_phase.toFixed(0)} A`;
+            }
+            if (tEl) {
+                tEl.innerText = `${s.transformer_temp_c.toFixed(1)} °C`;
+                tEl.style.color = s.transformer_temp_c >= 85.0 ? '#DC2626' : (s.transformer_temp_c >= 75.0 ? '#D97706' : '#059669');
+            }
+            if (tsEl) {
+                tsEl.innerText = `🕒 Ingested: ${s.timestamp.split(' ')[1] || s.timestamp}`;
+            }
+        } catch (e) {
+            // silent retry
+        }
+    };
+
     window.fetchActiveAlerts = async function() {
         const listEl = document.getElementById("live-alerts-list");
         if (!listEl) return;
@@ -2250,37 +2243,68 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             const alerts = (data.result && data.result.alerts) ? data.result.alerts : [];
 
+            const countBadge = document.getElementById("active-alerts-count-badge");
+            if (countBadge) {
+                const activeCount = alerts.filter(a => a.status === "TRIGGERED" || a.status === "ACKNOWLEDGED").length;
+                countBadge.innerText = `${activeCount} Active`;
+                countBadge.className = activeCount > 0 ? "badge red-bg" : "badge green-bg";
+            }
+
             if (alerts.length === 0) {
-                listEl.innerHTML = `<div style="padding: 12px; color: #10B981; font-weight: 500;">✔️ All facility equipment operating within nominal thresholds. 0 active alerts.</div>`;
+                listEl.innerHTML = `
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 20px; text-align: center; color: #166534;">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 6px;">✔️</span>
+                        <strong style="font-size: 1rem; color: #14532D;">All Facility Equipment Operating Nominally</strong>
+                        <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #15803D;">0 active threshold breaches across transformer and motor bus lines.</p>
+                    </div>`;
                 return;
             }
 
             let html = "";
             alerts.forEach(a => {
-                const sevColor = a.severity === "CRITICAL" ? "#EF4444" : (a.severity === "HIGH" ? "#F59E0B" : "#06B6D4");
+                const sev = (a.severity || "MEDIUM").toUpperCase();
+                const sevClass = sev === "CRITICAL" ? "critical" : (sev === "HIGH" ? "high" : "medium");
+                const sevBadgeBg = sev === "CRITICAL" ? "#FEE2E2" : (sev === "HIGH" ? "#FEF3C7" : "#DBEAFE");
+                const sevBadgeColor = sev === "CRITICAL" ? "#991B1B" : (sev === "HIGH" ? "#92400E" : "#1E40AF");
+                const sevBorder = sev === "CRITICAL" ? "#FCA5A5" : (sev === "HIGH" ? "#FCD34D" : "#93C5FD");
+
                 const isAck = a.status === "ACKNOWLEDGED";
                 const isRes = a.status === "RESOLVED";
 
                 html += `
-                    <div style="background: rgba(0, 0, 0, 0.25); border-left: 3px solid ${sevColor}; padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <strong style="color: #F8FAFC; font-size: 0.95rem;">${a.alert_id}: ${a.type}</strong>
-                                <span class="badge" style="background: ${sevColor}22; color: ${sevColor}; font-size: 0.72rem; border: 1px solid ${sevColor}55;">${a.severity}</span>
-                                <span style="font-size: 0.75rem; color: #94A3B8;">${a.timestamp}</span>
+                    <div class="alert-item-card ${sevClass}">
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="alert-id-pill">${a.alert_id}</span>
+                                <span class="alert-title-text">${a.type}</span>
+                                <span style="background: ${sevBadgeBg}; color: ${sevBadgeColor}; border: 1px solid ${sevBorder}; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; text-transform: uppercase;">${sev}</span>
+                                <span class="alert-timestamp">🕒 ${a.timestamp}</span>
                             </div>
-                            <div style="font-size: 0.85rem; color: #CBD5E1; margin-top: 4px;">
-                                <strong>Equipment:</strong> ${a.equipment} | <strong>Reading:</strong> ${a.value} (Limit: ${a.threshold})
+                            <div class="alert-metrics-row">
+                                <strong style="color: #0F172A;">Equipment:</strong> <span style="color: #1E293B; font-weight: 700;">${a.equipment}</span>
+                                &nbsp;·&nbsp;
+                                <strong style="color: #0F172A;">Telemetry Reading:</strong> <span class="alert-value-tag">${a.value}</span>
+                                &nbsp;·&nbsp;
+                                <strong style="color: #0F172A;">Safety Limit:</strong> <span style="color: #475569; font-weight: 700;">${a.threshold}</span>
                             </div>
-                            <div style="font-size: 0.82rem; color: #10B981; margin-top: 2px;">
-                                <strong>Directive:</strong> ${a.mitigation}
+                            <div class="alert-directive-box">
+                                <span style="font-size: 1.1rem;">💡</span>
+                                <div><strong style="color: #166534;">Corrective Directive:</strong> ${a.mitigation}</div>
                             </div>
-                            ${a.acknowledged_by ? `<div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px;">Acknowledged by <em>${sanitizeHTML(a.acknowledged_by)}</em> at ${a.acknowledged_at}</div>` : ''}
+                            ${a.acknowledged_by ? `
+                                <div class="alert-ack-pill">
+                                    ✓ Acknowledged by <strong>${sanitizeHTML(a.acknowledged_by)}</strong> at ${a.acknowledged_at}
+                                </div>` : ''}
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <span class="badge ${isRes ? 'green-bg' : (isAck ? 'blue-bg' : 'warning-bg')}" style="font-size: 0.75rem;">${a.status}</span>
-                            ${!isAck && !isRes ? `<button class="premium-btn" onclick="acknowledgeAlert('${a.alert_id}')" style="padding: 4px 10px; font-size: 0.75rem; width: auto; margin: 0;">Acknowledge</button>` : ''}
-                            ${isAck ? `<button class="premium-btn" onclick="resolveAlert('${a.alert_id}')" style="padding: 4px 10px; font-size: 0.75rem; width: auto; margin: 0; background: #10B981;">Resolve</button>` : ''}
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; ${
+                                isRes ? 'background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0;' :
+                                (isAck ? 'background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;' : 'background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;')
+                            }">${a.status}</span>
+                            ${!isAck && !isRes ? `
+                                <button class="premium-btn" onclick="acknowledgeAlert('${a.alert_id}')" style="padding: 7px 16px; font-size: 0.82rem; width: auto; margin: 0; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);">Acknowledge 🛡️</button>` : ''}
+                            ${isAck ? `
+                                <button class="premium-btn" onclick="resolveAlert('${a.alert_id}')" style="padding: 7px 16px; font-size: 0.82rem; width: auto; margin: 0; background: linear-gradient(135deg, #16A34A 0%, #15803D 100%); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);">Resolve ✓</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -2336,20 +2360,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let html = "";
             events.forEach(evt => {
-                const sevColor = evt.severity === "CRITICAL" ? "#EF4444" : (evt.severity === "HIGH" ? "#F59E0B" : "#06B6D4");
+                const sev = (evt.severity || "MEDIUM").toUpperCase();
+                const sevClass = sev === "CRITICAL" ? "critical" : (sev === "HIGH" ? "high" : "medium");
+                const sevBadgeBg = sev === "CRITICAL" ? "#FEE2E2" : (sev === "HIGH" ? "#FEF3C7" : "#DBEAFE");
+                const sevBadgeColor = sev === "CRITICAL" ? "#991B1B" : (sev === "HIGH" ? "#92400E" : "#1E40AF");
+                const sevBorder = sev === "CRITICAL" ? "#FCA5A5" : (sev === "HIGH" ? "#FCD34D" : "#93C5FD");
+
                 html += `
-                    <div style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid ${sevColor}; padding: 12px 14px; border-radius: 4px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <strong style="color: #F8FAFC; font-size: 0.9rem;">${evt.event_id}: ${evt.event_type}</strong>
-                                <span class="badge" style="background: ${sevColor}22; color: ${sevColor}; font-size: 0.7rem; border: 1px solid ${sevColor}55;">${evt.severity}</span>
-                                <span style="font-size: 0.75rem; color: #94A3B8;">${evt.start_time} (${evt.duration_minutes} min duration)</span>
+                    <div class="event-item-card ${sevClass}">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <strong style="color: #0F172A; font-size: 0.95rem; font-weight: 800; font-family: 'Outfit', sans-serif;">${evt.event_id}: ${evt.event_type}</strong>
+                                <span style="background: ${sevBadgeBg}; color: ${sevBadgeColor}; border: 1px solid ${sevBorder}; font-size: 0.7rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; text-transform: uppercase;">${sev}</span>
+                                <span style="font-size: 0.78rem; color: #475569; font-family: monospace; font-weight: 600;">🕒 ${evt.start_time} (${evt.duration_minutes} min duration)</span>
                             </div>
-                            <div style="font-size: 0.8rem; color: #CBD5E1; margin-top: 4px;"><strong>Evidence:</strong> ${evt.evidence}</div>
-                            <div style="font-size: 0.8rem; color: #10B981; margin-top: 2px;"><strong>Mitigation:</strong> ${evt.actionable_mitigation}</div>
+                            <div style="font-size: 0.85rem; color: #334155; margin-top: 6px; line-height: 1.5;">
+                                <strong style="color: #0F172A;">Statistical Evidence:</strong> <span style="color: #334155; font-weight: 500;">${evt.evidence}</span>
+                            </div>
+                            <div style="font-size: 0.82rem; color: #166534; margin-top: 6px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; padding: 6px 10px; font-weight: 600;">
+                                <strong style="color: #14532D;">Recommended Action:</strong> ${evt.actionable_mitigation}
+                            </div>
                         </div>
-                        <div>
-                            <span class="badge ${evt.status === 'RESOLVED' ? 'green-bg' : 'warning-bg'}" style="font-size: 0.75rem;">${evt.status}</span>
+                        <div style="margin-left: 10px;">
+                            <span class="badge ${evt.status === 'RESOLVED' ? 'green-bg' : 'warning-bg'}" style="font-size: 0.75rem; font-weight: 700;">${evt.status}</span>
                         </div>
                     </div>
                 `;
@@ -2359,6 +2392,10 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Failed to load grouped events:", e);
         }
     };
+
+    // Start live meter stream polling on interval
+    window.pollLiveTelemetryStream();
+    setInterval(window.pollLiveTelemetryStream, 3500);
 
     init3DTilt();
     setTimeout(init3DTilt, 1000);
