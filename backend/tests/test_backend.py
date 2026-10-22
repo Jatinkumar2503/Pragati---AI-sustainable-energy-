@@ -349,6 +349,10 @@ class TestPragatiBackend(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()["rows_inserted"], 2)
         
+        # Restore full historical dataset so subsequent test runs and web dashboard remain healthy
+        from backend.api import DB_INSTANCE
+        DB_INSTANCE.init_db()
+        
         # Reset environment settings for other tests
         os.environ["PRAGATI_ENV"] = "test"
 

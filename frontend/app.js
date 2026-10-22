@@ -303,7 +303,9 @@ function switchTab(targetTab) {
     }
 
     // Trigger tab-specific loaders
-    if (targetTab === "tab-decision-center") {
+    if (targetTab === "tab-dashboard") {
+        loadTelemetry();
+    } else if (targetTab === "tab-decision-center") {
         loadDecisionCenter();
     } else if (targetTab === "tab-anomalies") {
         fetchActiveAlerts();

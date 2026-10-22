@@ -377,6 +377,11 @@ def get_telemetry(days: int = Query(7, ge=1, le=365, description="Number of days
     """
     try:
         df_filtered = DB_INSTANCE.query_recent_telemetry(days)
+        if df_filtered.empty or len(df_filtered) < 24:
+            logger.info("Telemetry database empty or insufficient in get_telemetry. Re-bootstrapping historical dataset...")
+            DB_INSTANCE.init_db()
+            df_filtered = DB_INSTANCE.query_recent_telemetry(days)
+            
         df_tenant = apply_tenant_profile(df_filtered, tenant_id)
         
         # Resample to hourly averages to keep network payload light and charts readable
