@@ -10,7 +10,78 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20000.0">
+    <link rel="stylesheet" href="style.css?v=20261022.30">
+    <style id="scada-telemetry-and-alerts-styles">
+        /* SCADA Telemetry Stream Table Styling (Cache-Resistant) */
+        .scada-telemetry-container {
+            background: #FFFFFF !important;
+            border: 1px solid #CBD5E1 !important;
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            margin-top: 14px !important;
+            margin-bottom: 22px !important;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+        }
+        .scada-meter-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            text-align: left !important;
+            font-size: 0.85rem !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        .scada-meter-table thead tr {
+            background: #F1F5F9 !important;
+            border-bottom: 2px solid #CBD5E1 !important;
+            color: #334155 !important;
+            font-size: 0.72rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.6px !important;
+            font-weight: 800 !important;
+        }
+        .scada-meter-table th, .scada-meter-table td {
+            padding: 12px 16px !important;
+        }
+        .scada-meter-table tbody tr {
+            border-bottom: 1px solid #E2E8F0 !important;
+            transition: background 0.15s ease !important;
+        }
+        .scada-meter-table tbody tr:hover {
+            background: #F1F5F9 !important;
+        }
+        .scada-meter-table tbody tr:last-child {
+            border-bottom: none !important;
+        }
+        .alert-item-card {
+            background: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: 14px !important;
+            padding: 18px 22px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 16px !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+        }
+        .alert-item-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+        }
+        .alert-item-card.critical {
+            border-left: 6px solid #DC2626 !important;
+            background: linear-gradient(90deg, rgba(254, 242, 242, 0.7) 0%, #FFFFFF 15%) !important;
+        }
+        .alert-item-card.high {
+            border-left: 6px solid #D97706 !important;
+            background: linear-gradient(90deg, rgba(254, 243, 199, 0.6) 0%, #FFFFFF 15%) !important;
+        }
+        .alert-item-card.medium {
+            border-left: 6px solid #2563EB !important;
+            background: linear-gradient(90deg, rgba(239, 246, 255, 0.7) 0%, #FFFFFF 15%) !important;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -436,37 +507,106 @@
                         </div>
                     </div>
 
-                    <!-- Live Meter Stream Ticker Strip -->
-                    <div class="meter-stream-ticker">
-                        <div class="meter-stream-header">
+                    <!-- Real-Time SCADA Meter Stream Telemetry Table -->
+                    <div class="scada-telemetry-container" style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 14px; overflow: hidden; margin-top: 14px; margin-bottom: 22px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);">
+                        <div style="background: #F8FAFC; padding: 12px 18px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 1rem;">⚡</span>
-                                <strong style="font-size: 0.88rem; color: #1F2B24; font-weight: 800;">Real-Time Factory Substation Bus Telemetry</strong>
-                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 600;">(Replay Stream · Western Grid)</span>
+                                <span style="font-size: 1.1rem;">⚡</span>
+                                <strong style="font-size: 0.9rem; color: #0F172A; font-weight: 800; letter-spacing: -0.2px;">Real-Time Factory Substation Telemetry Channels</strong>
+                                <span style="font-size: 0.75rem; color: #64748B; font-weight: 600;">(SCADA Replay Stream · Western Regional Grid)</span>
                             </div>
-                            <span id="telemetry-stream-ts" style="font-size: 0.78rem; color: #475569; font-family: monospace; font-weight: 700;">🕒 Polling meter stream...</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: #047857; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 3px 10px; border-radius: 20px; text-transform: uppercase;">
+                                    <span class="pulse-dot green" style="width: 6px; height: 6px; display: inline-block;"></span> MODBUS RTU / TCP
+                                </span>
+                                <span id="telemetry-stream-ts" style="font-size: 0.78rem; color: #475569; font-family: monospace; font-weight: 700;">🕒 Ingested: live</span>
+                            </div>
                         </div>
-                        <div class="meter-stream-grid">
-                            <div class="meter-metric-card">
-                                <div class="meter-metric-label">Active Power</div>
-                                <div class="meter-metric-val" id="stream-val-power">248.5 kW</div>
-                            </div>
-                            <div class="meter-metric-card">
-                                <div class="meter-metric-label">3-Phase Voltage</div>
-                                <div class="meter-metric-val" id="stream-val-voltage">415.8 V</div>
-                            </div>
-                            <div class="meter-metric-card">
-                                <div class="meter-metric-label">Power Factor</div>
-                                <div class="meter-metric-val" id="stream-val-pf" style="color: #059669;">0.93 Lag</div>
-                            </div>
-                            <div class="meter-metric-card">
-                                <div class="meter-metric-label">Currents (R-Y-B)</div>
-                                <div class="meter-metric-val" id="stream-val-current" style="font-size: 0.95rem; font-family: monospace; letter-spacing: -0.5px;">372 / 369 / 375 A</div>
-                            </div>
-                            <div class="meter-metric-card">
-                                <div class="meter-metric-label">Xfmr Core Temp</div>
-                                <div class="meter-metric-val" id="stream-val-temp" style="color: #DC2626;">90.4 °C</div>
-                            </div>
+                        <div style="overflow-x: auto;">
+                            <table class="scada-meter-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; font-family: 'Inter', sans-serif;">
+                                <thead>
+                                    <tr style="background: #F1F5F9; border-bottom: 2px solid #CBD5E1; color: #334155; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800;">
+                                        <th style="padding: 11px 16px;">Telemetry Channel</th>
+                                        <th style="padding: 11px 16px;">Sensor / Register</th>
+                                        <th style="padding: 11px 16px;">Live Stream Value</th>
+                                        <th style="padding: 11px 16px;">Nominal Baseline</th>
+                                        <th style="padding: 11px 16px;">Operational Status</th>
+                                        <th style="padding: 11px 16px; text-align: right;">Modbus Quality</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #E2E8F0; background: #FFFFFF; transition: background 0.15s ease;">
+                                        <td style="padding: 12px 16px; font-weight: 700; color: #0F172A;">
+                                            <span style="margin-right: 6px;">⚡</span>Active Substation Load
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #64748B; font-family: monospace; font-size: 0.8rem;">REG-40012 · Feeder-01 Bus</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-val-power" style="font-size: 1.15rem; font-weight: 800; color: #0F172A; font-family: 'Outfit', sans-serif;">253.9 kW</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">≤ 320 kW (Target Shift Window)</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-status-power" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;">● NOMINAL LOAD</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; text-align: right; color: #059669; font-weight: 700; font-family: monospace; font-size: 0.8rem;">100% Valid</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #E2E8F0; background: #F8FAFC; transition: background 0.15s ease;">
+                                        <td style="padding: 12px 16px; font-weight: 700; color: #0F172A;">
+                                            <span style="margin-right: 6px;">🔌</span>3-Phase Grid Voltage
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #64748B; font-family: monospace; font-size: 0.8rem;">REG-40014 · 415V Secondary</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-val-voltage" style="font-size: 1.15rem; font-weight: 800; color: #0F172A; font-family: 'Outfit', sans-serif;">412.8 V</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">415.0 V ± 5% (394 – 435 V)</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-status-voltage" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;">● IN GRID TOLERANCE</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; text-align: right; color: #059669; font-weight: 700; font-family: monospace; font-size: 0.8rem;">100% Valid</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #E2E8F0; background: #FFFFFF; transition: background 0.15s ease;">
+                                        <td style="padding: 12px 16px; font-weight: 700; color: #0F172A;">
+                                            <span style="margin-right: 6px;">⏱️</span>Power Factor (cos φ)
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #64748B; font-family: monospace; font-size: 0.8rem;">REG-40018 · APFC Capacitor Bus</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-val-pf" style="font-size: 1.15rem; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif;">0.90 Lag</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">≥ 0.90 Lag (DISCOM Tariff Threshold)</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-status-pf" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D;">▲ AT MARGIN (0.90)</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; text-align: right; color: #059669; font-weight: 700; font-family: monospace; font-size: 0.8rem;">100% Valid</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #E2E8F0; background: #F8FAFC; transition: background 0.15s ease;">
+                                        <td style="padding: 12px 16px; font-weight: 700; color: #0F172A;">
+                                            <span style="margin-right: 6px;">📊</span>Phase Currents (R-Y-B)
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #64748B; font-family: monospace; font-size: 0.8rem;">REG-40020..22 · CT 500:5</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-val-current" style="font-size: 1.05rem; font-weight: 800; color: #0F172A; font-family: monospace; letter-spacing: -0.5px;">377 / 373 / 381 A</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">Max 420 A · Phase Imbalance &lt; 5%</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-status-current" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;">● BALANCED (2.1%)</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; text-align: right; color: #059669; font-weight: 700; font-family: monospace; font-size: 0.8rem;">100% Valid</td>
+                                    </tr>
+                                    <tr style="background: #FFFFFF; transition: background 0.15s ease;">
+                                        <td style="padding: 12px 16px; font-weight: 700; color: #0F172A;">
+                                            <span style="margin-right: 6px;">🌡️</span>Transformer T-02 Core Temp
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #64748B; font-family: monospace; font-size: 0.8rem;">REG-40028 · PT100 RTD Sensor</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-val-temp" style="font-size: 1.15rem; font-weight: 800; color: #DC2626; font-family: 'Outfit', sans-serif;">89.6 °C</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">Trip: 95.0 °C · Warning: 85.0 °C</td>
+                                        <td style="padding: 12px 16px;">
+                                            <span id="stream-status-temp" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 800; background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5;">⚠️ OVERHEAT (ALERT)</span>
+                                        </td>
+                                        <td style="padding: 12px 16px; text-align: right; color: #059669; font-weight: 700; font-family: monospace; font-size: 0.8rem;">100% Valid</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 

@@ -2213,19 +2213,112 @@ document.addEventListener("DOMContentLoaded", () => {
             const tEl = document.getElementById("stream-val-temp");
             const tsEl = document.getElementById("telemetry-stream-ts");
 
+            const stPowerEl = document.getElementById("stream-status-power");
+            const stVoltageEl = document.getElementById("stream-status-voltage");
+            const stPfEl = document.getElementById("stream-status-pf");
+            const stCurrentEl = document.getElementById("stream-status-current");
+            const stTempEl = document.getElementById("stream-status-temp");
+
             if (pEl) pEl.innerText = `${s.active_load_kw.toFixed(1)} kW`;
+            if (stPowerEl) {
+                if (s.active_load_kw > 320) {
+                    stPowerEl.innerText = "⚠️ PEAK LOAD SURCHARGE";
+                    stPowerEl.style.background = "#FEE2E2";
+                    stPowerEl.style.color = "#991B1B";
+                    stPowerEl.style.borderColor = "#FCA5A5";
+                } else {
+                    stPowerEl.innerText = "● NOMINAL LOAD";
+                    stPowerEl.style.background = "#ECFDF5";
+                    stPowerEl.style.color = "#065F46";
+                    stPowerEl.style.borderColor = "#A7F3D0";
+                }
+            }
+
             if (vEl) vEl.innerText = `${s.grid_voltage_v.toFixed(1)} V`;
+            if (stVoltageEl) {
+                if (s.grid_voltage_v < 394 || s.grid_voltage_v > 435) {
+                    stVoltageEl.innerText = "⚠️ VOLTAGE SAG/SURGE";
+                    stVoltageEl.style.background = "#FEE2E2";
+                    stVoltageEl.style.color = "#991B1B";
+                    stVoltageEl.style.borderColor = "#FCA5A5";
+                } else {
+                    stVoltageEl.innerText = "● IN GRID TOLERANCE";
+                    stVoltageEl.style.background = "#ECFDF5";
+                    stVoltageEl.style.color = "#065F46";
+                    stVoltageEl.style.borderColor = "#A7F3D0";
+                }
+            }
+
             if (pfEl) {
                 pfEl.innerText = `${s.power_factor.toFixed(2)} ${s.power_factor >= 0.90 ? 'Lag' : 'LOW PF ⚠️'}`;
                 pfEl.style.color = s.power_factor >= 0.90 ? '#059669' : '#DC2626';
             }
-            if (cEl && s.phase_currents_a) {
-                cEl.innerText = `${s.phase_currents_a.r_phase.toFixed(0)} / ${s.phase_currents_a.y_phase.toFixed(0)} / ${s.phase_currents_a.b_phase.toFixed(0)} A`;
+            if (stPfEl) {
+                if (s.power_factor < 0.90) {
+                    stPfEl.innerText = `⚠️ PENALTY BREACH (${s.power_factor.toFixed(2)})`;
+                    stPfEl.style.background = "#FEE2E2";
+                    stPfEl.style.color = "#991B1B";
+                    stPfEl.style.borderColor = "#FCA5A5";
+                } else if (s.power_factor < 0.92) {
+                    stPfEl.innerText = `▲ AT MARGIN (${s.power_factor.toFixed(2)})`;
+                    stPfEl.style.background = "#FEF3C7";
+                    stPfEl.style.color = "#92400E";
+                    stPfEl.style.borderColor = "#FCD34D";
+                } else {
+                    stPfEl.innerText = `● OPTIMAL PF (${s.power_factor.toFixed(2)})`;
+                    stPfEl.style.background = "#ECFDF5";
+                    stPfEl.style.color = "#065F46";
+                    stPfEl.style.borderColor = "#A7F3D0";
+                }
             }
+
+            if (cEl && s.phase_currents_a) {
+                const r = s.phase_currents_a.r_phase;
+                const y = s.phase_currents_a.y_phase;
+                const b = s.phase_currents_a.b_phase;
+                cEl.innerText = `${r.toFixed(0)} / ${y.toFixed(0)} / ${b.toFixed(0)} A`;
+
+                if (stCurrentEl) {
+                    const avg = (r + y + b) / 3;
+                    const maxDev = Math.max(Math.abs(r - avg), Math.abs(y - avg), Math.abs(b - avg));
+                    const imbPct = avg > 0 ? (maxDev / avg) * 100 : 0;
+                    if (imbPct > 5.0) {
+                        stCurrentEl.innerText = `⚠️ IMBALANCED (${imbPct.toFixed(1)}%)`;
+                        stCurrentEl.style.background = "#FEE2E2";
+                        stCurrentEl.style.color = "#991B1B";
+                        stCurrentEl.style.borderColor = "#FCA5A5";
+                    } else {
+                        stCurrentEl.innerText = `● BALANCED (${imbPct.toFixed(1)}%)`;
+                        stCurrentEl.style.background = "#ECFDF5";
+                        stCurrentEl.style.color = "#065F46";
+                        stCurrentEl.style.borderColor = "#A7F3D0";
+                    }
+                }
+            }
+
             if (tEl) {
                 tEl.innerText = `${s.transformer_temp_c.toFixed(1)} °C`;
                 tEl.style.color = s.transformer_temp_c >= 85.0 ? '#DC2626' : (s.transformer_temp_c >= 75.0 ? '#D97706' : '#059669');
             }
+            if (stTempEl) {
+                if (s.transformer_temp_c >= 85.0) {
+                    stTempEl.innerText = "⚠️ OVERHEAT (ALERT)";
+                    stTempEl.style.background = "#FEE2E2";
+                    stTempEl.style.color = "#991B1B";
+                    stTempEl.style.borderColor = "#FCA5A5";
+                } else if (s.transformer_temp_c >= 75.0) {
+                    stTempEl.innerText = "▲ ELEVATED TEMP";
+                    stTempEl.style.background = "#FEF3C7";
+                    stTempEl.style.color = "#92400E";
+                    stTempEl.style.borderColor = "#FCD34D";
+                } else {
+                    stTempEl.innerText = "● NORMAL COOLING";
+                    stTempEl.style.background = "#ECFDF5";
+                    stTempEl.style.color = "#065F46";
+                    stTempEl.style.borderColor = "#A7F3D0";
+                }
+            }
+
             if (tsEl) {
                 tsEl.innerText = `🕒 Ingested: ${s.timestamp.split(' ')[1] || s.timestamp}`;
             }

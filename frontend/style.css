@@ -1344,40 +1344,50 @@ input[type=range]::-webkit-slider-thumb:hover {
     border-radius: 20px !important;
 }
 
-.meter-stream-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
-    gap: 12px !important;
-}
-
-.meter-metric-card {
+/* SCADA Telemetry Stream Table Styling */
+.scada-telemetry-container {
     background: #FFFFFF !important;
-    border: 1px solid rgba(210, 200, 180, 0.7) !important;
-    border-radius: 12px !important;
-    padding: 12px 14px !important;
-    box-shadow: 0 2px 8px rgba(60, 52, 38, 0.04) !important;
-    transition: transform 0.2s ease, border-color 0.2s ease !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    margin-top: 14px !important;
+    margin-bottom: 22px !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
 }
 
-.meter-metric-card:hover {
-    transform: translateY(-2px) !important;
-    border-color: #059669 !important;
+.scada-meter-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+    font-size: 0.85rem !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
-.meter-metric-label {
+.scada-meter-table thead tr {
+    background: #F1F5F9 !important;
+    border-bottom: 2px solid #CBD5E1 !important;
+    color: #334155 !important;
     font-size: 0.72rem !important;
-    font-weight: 700 !important;
-    color: #526357 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.4px !important;
+    letter-spacing: 0.6px !important;
+    font-weight: 800 !important;
 }
 
-.meter-metric-val {
-    font-size: 1.25rem !important;
-    font-weight: 800 !important;
-    color: #1F2B24 !important;
-    margin-top: 4px !important;
-    font-family: 'Outfit', sans-serif !important;
+.scada-meter-table th, .scada-meter-table td {
+    padding: 12px 16px !important;
+}
+
+.scada-meter-table tbody tr {
+    border-bottom: 1px solid #E2E8F0 !important;
+    transition: background 0.15s ease !important;
+}
+
+.scada-meter-table tbody tr:hover {
+    background: #F8FAFC !important;
+}
+
+.scada-meter-table tbody tr:last-child {
+    border-bottom: none !important;
 }
 
 /* Individual Alert Item Card (High Contrast Light Theme) */
