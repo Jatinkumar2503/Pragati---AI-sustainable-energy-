@@ -2048,6 +2048,19 @@ def post_reject_load_recommendation(req: LoadRecommendationRejectRequest):
         raise HTTPException(status_code=404, detail=res["message"])
     return res
 
+@app.get("/api/v1/factory/schedule-comparison")
+def get_factory_schedule_comparison(
+    tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")
+):
+    """
+    Returns 24-hour hour-by-hour comparison matrix between baseline and proposed schedules.
+    Compares baseline load, proposed load, contract limit, tariff rates, hourly and cumulative
+    costs, peak demand reduction, and deadline impacts.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    return FACTORY_LOAD_MANAGER_INSTANCE.get_baseline_vs_proposed_schedule(tenant_id=tenant_id)
+
+
 
 @app.get("/api/v1/decision/overview")
 async def get_decision_overview(tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")):

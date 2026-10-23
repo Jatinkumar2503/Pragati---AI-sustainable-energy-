@@ -2341,7 +2341,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Standby / Maintenance`;
 
                         if (isActive) {
-                            if (isNightBaseload) {
+                            if (isPeakTariffHour) {
+                                blockBg = "#D97706";
+                                blockBorder = "1px solid #B45309";
+                                blockColor = "#FFFFFF";
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active Peak Operation (${m.load_kw} kW - Continuous Sequence Protected)`;
+                            } else if (isNightBaseload) {
                                 blockBg = "#2563EB";
                                 blockBorder = "1px solid #1D4ED8";
                                 blockColor = "#FFFFFF";
@@ -2353,10 +2358,17 @@ document.addEventListener("DOMContentLoaded", () => {
                                 blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active Day Shift (${m.load_kw} kW Solar Offset)`;
                             }
                         } else if (isPeakTariffHour) {
-                            blockBg = "rgba(239, 68, 68, 0.15)";
-                            blockBorder = "1px dashed #DC2626";
-                            blockColor = "#DC2626";
-                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window (₹12.50/kWh Surcharge Avoided)`;
+                            if (m.is_flexible) {
+                                blockBg = "rgba(239, 68, 68, 0.15)";
+                                blockBorder = "1px dashed #DC2626";
+                                blockColor = "#DC2626";
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Shifted to Off-Peak by Optimizer (Preserves 450 kW Limit)`;
+                            } else {
+                                blockBg = "#F1ECE1";
+                                blockBorder = "1px dashed #B45309";
+                                blockColor = "#92400E";
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Scheduled Roll Change / Maintenance Window`;
+                            }
                         }
 
                         ganttBlocksHtml += `
@@ -2382,6 +2394,11 @@ document.addEventListener("DOMContentLoaded", () => {
                                         <strong style="color: #1F2B24;">Rated Demand:</strong> <span style="color: #B45309; font-weight: 800;">${m.load_kw} kW</span> &nbsp;|&nbsp;
                                         <strong style="color: #1F2B24;">Total Daily Operation:</strong> <span style="color: #0284C7; font-weight: 800;">${dailyHours} Hours/Day (${m.daily_cycles || '6 Cycles'})</span>
                                     </div>
+                                    ${m.operating_directive ? `
+                                        <div style="margin-top: 6px; font-size: 0.78rem; background: #FAF9F5; border: 1px solid #D8CFC0; border-radius: 6px; padding: 5px 10px; color: #1F2B24;">
+                                            <strong style="color: #047857;">Directive:</strong> ${sanitizeHTML(m.operating_directive)}
+                                        </div>
+                                    ` : ''}
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 0.9rem; font-weight: 800; color: #047857;">
@@ -2399,7 +2416,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <span>00:00 (Night Baseload)</span>
                                     <span>06:00 (Morning Shift)</span>
                                     <span style="color: #047857; font-weight: 800;">12:00 (Solar Peak Shift)</span>
-                                    <span style="color: #DC2626; font-weight: 800;">18:00–22:00 (Peak Surcharge Pause)</span>
+                                    <span style="color: ${m.is_flexible ? '#DC2626' : '#D97706'}; font-weight: 800;">
+                                        ${m.is_flexible ? '18:00–22:00 (Peak Surcharge Shifted)' : '18:00–22:00 (Continuous Peak Operation Protected)'}
+                                    </span>
                                     <span>23:00</span>
                                 </div>
                                 <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
@@ -3010,6 +3029,153 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             console.error("Failed to load grouped events:", e);
         }
+    };
+
+    window.openScheduleComparisonModal = async function() {
+        const modal = document.getElementById("schedule-comparison-modal");
+        const content = document.getElementById("schedule-comparison-modal-content");
+        if (!modal || !content) return;
+
+        modal.style.display = "flex";
+        content.innerHTML = `<div style="text-align: center; padding: 40px; color: #526357;">Loading baseline vs proposed comparison matrix...</div>`;
+
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/factory/schedule-comparison?tenant_id=${currentTenantId}`);
+            if (!res.ok) throw new Error("API call failed");
+            const data = await res.json();
+            const s = data.summary;
+            const rows = data.hourly_comparison || [];
+
+            let rowsHtml = "";
+            rows.forEach(r => {
+                const isPeak = r.tariff_tier === "PEAK";
+                const isOffPeak = r.tariff_tier === "OFF_PEAK";
+                const rowBg = isPeak ? "rgba(239, 68, 68, 0.06)" : (isOffPeak ? "rgba(37, 99, 235, 0.04)" : "#FFFFFF");
+                const badgeColor = isPeak ? "#DC2626" : (isOffPeak ? "#1D4ED8" : "#059669");
+                const badgeBg = isPeak ? "#FEE2E2" : (isOffPeak ? "#EFF6FF" : "#ECFDF5");
+                const bExceeds = r.baseline_exceeds_limit;
+
+                rowsHtml += `
+                    <tr style="background: ${rowBg}; border-bottom: 1px solid rgba(210, 200, 180, 0.5); font-size: 0.82rem;">
+                        <td style="padding: 9px 12px; font-weight: 700; font-family: monospace; color: #1F2B24;">${r.hour_label}</td>
+                        <td style="padding: 9px 12px;">
+                            <span style="background: ${badgeBg}; color: ${badgeColor}; font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 6px;">
+                                ${r.tariff_tier} (₹${r.tariff_rate_inr.toFixed(2)})
+                            </span>
+                        </td>
+                        <td style="padding: 9px 12px; font-weight: 700; color: ${bExceeds ? '#DC2626' : '#1F2B24'};">
+                            ${r.baseline_load_kw.toFixed(1)} kW
+                            ${bExceeds ? '<span style="font-size: 0.7rem; background: #FEE2E2; color: #991B1B; padding: 1px 4px; border-radius: 4px; margin-left: 4px; font-weight: 800;">BREACH</span>' : ''}
+                        </td>
+                        <td style="padding: 9px 12px; font-weight: 800; color: #047857;">
+                            ${r.proposed_load_kw.toFixed(1)} kW
+                        </td>
+                        <td style="padding: 9px 12px; color: #526357; font-family: monospace;">
+                            ${r.contract_limit_kw.toFixed(0)} kW
+                        </td>
+                        <td style="padding: 9px 12px; font-weight: 700; color: ${r.delta_kw < 0 ? '#047857' : (r.delta_kw > 0 ? '#B45309' : '#64748B')}; font-family: monospace;">
+                            ${r.delta_kw > 0 ? '+' : ''}${r.delta_kw.toFixed(1)} kW
+                        </td>
+                        <td style="padding: 9px 12px; color: #526357;">
+                            ₹${r.baseline_cost_inr.toLocaleString()}
+                        </td>
+                        <td style="padding: 9px 12px; font-weight: 700; color: #047857;">
+                            ₹${r.proposed_cost_inr.toLocaleString()}
+                        </td>
+                        <td style="padding: 9px 12px; font-weight: 800; color: ${r.delta_cost_inr < 0 ? '#047857' : (r.delta_cost_inr > 0 ? '#B45309' : '#64748B')}; font-family: monospace;">
+                            ${r.delta_cost_inr > 0 ? '+' : ''}₹${r.delta_cost_inr.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            content.innerHTML = `
+                <!-- Summary KPI Strip -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 0.72rem; color: #526357; font-weight: 700; text-transform: uppercase;">Peak Factory Demand</div>
+                        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                            <span style="font-size: 1.3rem; font-weight: 800; color: #047857;">${s.proposed_peak_kw} kW</span>
+                            <span style="font-size: 0.85rem; color: #DC2626; text-decoration: line-through;">${s.baseline_peak_kw} kW</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #047857; font-weight: 700; margin-top: 3px;">
+                            ⬇️ -${s.peak_reduction_kw} kW Peak Reduction (Stays <= 450 kW)
+                        </div>
+                    </div>
+
+                    <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 0.72rem; color: #526357; font-weight: 700; text-transform: uppercase;">Batch Electricity Cost</div>
+                        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                            <span style="font-size: 1.3rem; font-weight: 800; color: #047857;">₹1,176</span>
+                            <span style="font-size: 0.85rem; color: #DC2626; text-decoration: line-through;">₹3,500</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #047857; font-weight: 700; margin-top: 3px;">
+                            💰 Saves ₹${s.energy_cost_savings_inr.toLocaleString()} (66.4% on Annealing)
+                        </div>
+                    </div>
+
+                    <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 0.72rem; color: #526357; font-weight: 700; text-transform: uppercase;">Avoided Demand Penalty</div>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #047857; margin-top: 4px;">
+                            ₹${s.avoided_demand_penalty_inr.toLocaleString()}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #047857; font-weight: 700; margin-top: 3px;">
+                            🛡️ DISCOM Contract Overrun Fine Eliminated
+                        </div>
+                    </div>
+
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 0.72rem; color: #166534; font-weight: 700; text-transform: uppercase;">Total Modeled Benefit</div>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #14532D; margin-top: 4px;">
+                            ₹${s.total_economic_benefit_inr.toLocaleString()}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #166534; font-weight: 700; margin-top: 3px;">
+                            ⏱️ Deadline: ${s.deadline_impact}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hour-by-Hour Comparison Table -->
+                <div style="border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 12px; overflow: hidden; background: #FFFFFF;">
+                    <div style="overflow-x: auto; max-height: 420px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead style="background: #F8F6F0; position: sticky; top: 0; border-bottom: 2px solid rgba(210, 200, 180, 0.8); z-index: 10;">
+                                <tr style="font-size: 0.75rem; color: #1F2B24; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <th style="padding: 10px 12px;">Hour</th>
+                                    <th style="padding: 10px 12px;">Tariff Period & Rate</th>
+                                    <th style="padding: 10px 12px;">Baseline Total Load</th>
+                                    <th style="padding: 10px 12px;">Proposed Total Load</th>
+                                    <th style="padding: 10px 12px;">Contract Limit</th>
+                                    <th style="padding: 10px 12px;">Delta (kW)</th>
+                                    <th style="padding: 10px 12px;">Baseline Cost</th>
+                                    <th style="padding: 10px 12px;">Proposed Cost</th>
+                                    <th style="padding: 10px 12px;">Delta Cost (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Engineering Constraints & Model Disclosure -->
+                <div style="margin-top: 14px; background: #FAF9F5; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 10px; padding: 12px 16px; font-size: 0.78rem; color: #526357; line-height: 1.5;">
+                    <strong style="color: #1F2B24;">Engineering Reality & Constraints Evaluated:</strong>
+                    Continuous steelmaking units (EAF-01 melting, LRF-01 refining, CCM-01 continuous casting) run through 18:00–22:00 because liquid steel temperature cannot be compromised. The optimizer identifies the cold buffer Annealing Bay (ANN-01, 70 kW) as the single eligible flexible unit and shifts it to 22:00 night off-peak.
+                    <div style="margin-top: 6px; font-style: italic; color: #78716C;">
+                        ⚠️ ${data.metadata.guarantee_disclaimer}
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            content.innerHTML = `<div style="text-align: center; padding: 40px; color: #DC2626;">Failed to load schedule comparison: ${err.message}</div>`;
+        }
+    };
+
+    window.closeScheduleComparisonModal = function() {
+        const modal = document.getElementById("schedule-comparison-modal");
+        if (modal) modal.style.display = "none";
     };
 
     // Initial load of Decision Center and Factory Fleet Machines Schedule

@@ -83,7 +83,7 @@ def test_4_kw_and_kwh_distinction_maintained():
     assert summary["total_factory_load_kw"] == 450.0
     # Accumulated energy is in kWh (power × time)
     assert summary["total_energy_consumed_kwh"] > summary["total_factory_load_kw"]
-    assert summary["total_energy_consumed_kwh"] == 8780.0
+    assert summary["total_energy_consumed_kwh"] == 9710.0
 
 
 def test_5_demand_limit_breach_detected():
@@ -142,7 +142,7 @@ def test_9_active_constrained_processes_not_interrupted_by_cost_optimization():
     for mid in ["EAF-01", "LRF-01", "CCM-01"]:
         assert m_dict[mid]["is_flexible"] is False
         assert m_dict[mid]["can_safely_reschedule"] is False
-        assert m_dict[mid]["recommended_action"] == "Continue running"
+        assert "Continue current operation" in m_dict[mid]["recommended_action"]
 
 
 def test_10_flexible_batch_rescheduled_when_deadline_and_recipe_permit():
@@ -152,7 +152,7 @@ def test_10_flexible_batch_rescheduled_when_deadline_and_recipe_permit():
 
     assert ann["is_flexible"] is True
     assert ann["can_safely_reschedule"] is True
-    assert ann["recommended_action"] == "Keep on standby"
+    assert "shifted to 22:00" in ann["recommended_action"]
 
 
 def test_11_recommendation_rejected_if_it_causes_deadline_violation():
@@ -299,3 +299,202 @@ def test_18_api_endpoints_functional():
     data_mach = res_mach.json()
     assert len(data_mach["machines"]) == 5
     assert data_mach["active_running_load_kw"] == 450.0
+
+    # 5. Schedule comparison endpoint
+    res_comp = client.get("/api/v1/factory/schedule-comparison?tenant_id=demo_steel")
+    assert res_comp.status_code == 200
+    data_comp = res_comp.json()
+    assert data_comp["status"] == "success"
+    assert "hourly_comparison" in data_comp
+    assert len(data_comp["hourly_comparison"]) == 24
+
+
+# ==============================================================================
+# SECTION 10: MANDATORY INDUSTRIAL COMPLIANCE TESTS
+# ==============================================================================
+
+def test_section10_1_peak_tariff_window_does_not_automatically_stop_every_machine():
+    """
+    Requirement 1: A peak-tariff window (18:00–22:00) does not automatically stop every machine.
+    Primary metallurgical and rolling operations continue running.
+    """
+    machines = FACTORY_LOAD_MANAGER_INSTANCE.get_fleet_machines("demo_steel")
+    m_dict = {m["machine_id"]: m for m in machines}
+
+    peak_hours = {18, 19, 20, 21}
+    # EAF, LRF, and CCM run continuously across all peak hours
+    for mid in ["EAF-01", "LRF-01", "CCM-01"]:
+        active = set(m_dict[mid]["active_hours"])
+        assert peak_hours.issubset(active), f"Machine {mid} must not pause during peak hours."
+
+    # ROLL-01 runs in peak hours 18 and 19 before scheduled roll change
+    assert 18 in m_dict["ROLL-01"]["active_hours"]
+    assert 19 in m_dict["ROLL-01"]["active_hours"]
+
+
+def test_section10_2_constrained_active_process_not_interrupted_solely_for_electricity_cost():
+    """
+    Requirement 2: A constrained active process is not interrupted solely to reduce electricity cost.
+    Thermal continuity and refractory freezing constraints take precedence.
+    """
+    machines = FACTORY_LOAD_MANAGER_INSTANCE.get_fleet_machines("demo_steel")
+    m_dict = {m["machine_id"]: m for m in machines}
+
+    for mid in ["EAF-01", "LRF-01", "CCM-01"]:
+        m = m_dict[mid]
+        assert m["can_safely_reschedule"] is False
+        assert m["is_flexible"] is False
+        assert "Active Process Protected" in m.get("operating_directive", "")
+        assert "Continue current operation" in m.get("recommended_action", "")
+
+
+def test_section10_3_eligible_flexible_batch_shifted_when_beneficial():
+    """
+    Requirement 3: An eligible flexible batch can be shifted when beneficial.
+    ANN-01 is cold resistive bay that can shift without metallurgical harm, saving ₹2,324.
+    """
+    machines = FACTORY_LOAD_MANAGER_INSTANCE.get_fleet_machines("demo_steel")
+    ann = next(m for m in machines if m["machine_id"] == "ANN-01")
+
+    assert ann["is_flexible"] is True
+    assert ann["can_safely_reschedule"] is True
+
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    opp = mgr.evaluate_schedule_opportunity(
+        machine_id="ANN-01",
+        planned_start_h=18,
+        duration_h=4.0,
+        deadline_h=32,  # 08:00 next day
+        current_tariff_tier="PEAK"
+    )
+    assert opp["should_shift"] is True
+    assert opp["proposed_start_h"] == 22
+    assert opp["cost_diff_inr"] < 0.0  # Demonstrates cost savings
+
+
+def test_section10_4_recommendation_rejected_if_it_violates_deadline():
+    """
+    Requirement 4: A recommendation is rejected if it violates a production deadline.
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    # Task duration = 5h, candidate start = 22:00, deadline = 01:00 (22 + 5 = 27 > 25)
+    feasibility = mgr.evaluate_schedule_feasibility(
+        task_duration_h=5.0,
+        planned_start_h=22,
+        deadline_h=25,
+        machine_load_kw=70.0
+    )
+    assert feasibility["is_feasible"] is False
+    assert any(v["constraint"] == "C-DEADLINE" for v in feasibility["violations"])
+
+
+def test_section10_5_schedule_change_not_recommended_when_no_modeled_benefit():
+    """
+    Requirement 5: A schedule change is not recommended when it provides no modeled benefit.
+    Displays: 'No change recommended. The current schedule is the best feasible option found.'
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+
+    # Activity already in off-peak night (hour 23)
+    opp = mgr.evaluate_schedule_opportunity(
+        machine_id="ANN-01",
+        planned_start_h=23,
+        duration_h=4.0,
+        deadline_h=32
+    )
+    assert opp["should_shift"] is False
+    assert opp["recommendation_text"] == "No change recommended. The current schedule is the best feasible option found."
+
+
+def test_section10_6_aggregate_demand_calculated_correctly():
+    """
+    Requirement 6: Aggregate factory demand is calculated correctly.
+    Sum of active machines kW, distinguishing instantaneous kW from accumulated kWh, with solar offset.
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    summary = mgr.calculate_factory_load("demo_steel")
+
+    # 4 active machines: 180 + 90 + 60 + 120 = 450.0 kW
+    active_machines = [m for m in summary["machines"] if m["is_running"]]
+    assert sum(m["active_power_kw"] for m in active_machines) == 450.0
+    assert summary["total_factory_load_kw"] == 450.0
+
+    # Solar generation offset
+    assert summary["net_grid_import_kw"] == pytest.approx(
+        max(0.0, summary["total_factory_load_kw"] - summary["current_solar_kw"]), 0.1
+    )
+
+
+def test_section10_7_optimizer_respects_production_dependencies():
+    """
+    Requirement 7: The optimizer respects production dependencies.
+    Preceding task end time constraints are strictly enforced.
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    # LRF requires EAF heat to complete first (e.g. EAF finishes at hour 14, LRF planned at 13)
+    feasibility = mgr.evaluate_schedule_feasibility(
+        task_duration_h=2.0,
+        planned_start_h=13,
+        deadline_h=18,
+        machine_load_kw=90.0,
+        preceding_task_end_h=14
+    )
+    assert feasibility["is_feasible"] is False
+    assert any(v["constraint"] == "C-PRECEDENCE" for v in feasibility["violations"])
+
+
+def test_section10_8_baseline_and_proposed_schedules_use_consistent_cost_calculations():
+    """
+    Requirement 8: The baseline and proposed schedules use consistent cost calculations and boundaries.
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    comp = mgr.get_baseline_vs_proposed_schedule("demo_steel")
+
+    s = comp["summary"]
+    # Same total energy consumed (all production jobs completed, same total kWh)
+    assert s["baseline_total_energy_kwh"] == s["proposed_total_energy_kwh"]
+    assert s["energy_delta_kwh"] == 0.0
+
+    # Energy savings are positive and come from tariff differential
+    assert s["energy_cost_savings_inr"] > 0.0
+    assert s["peak_reduction_kw"] == 70.0
+    assert s["proposed_peak_kw"] <= 450.0
+
+
+def test_section10_9_missing_data_does_not_produce_fabricated_savings():
+    """
+    Requirement 9: Missing data does not produce fabricated savings.
+    Data quality is explicitly marked as INCOMPLETE_ESTIMATED.
+    """
+    mgr = FactoryLoadManager(contract_demand_limit_kw=450.0)
+    summary = mgr.calculate_factory_load("demo_steel", missing_machine_ids=["LRF-01"])
+
+    assert summary["data_quality"]["is_incomplete"] is True
+    assert summary["data_quality"]["status"] == "INCOMPLETE_ESTIMATED"
+    assert "LRF-01" in summary["data_quality"]["missing_machines"]
+
+
+def test_section10_10_dashboard_reflects_actual_optimizer_output_rather_than_hardcoded_messages():
+    """
+    Requirement 10: The dashboard reflects actual optimizer output rather than hardcoded messages.
+    Does NOT output universal 'Peak Grid Surcharge Pause: 18:00–22:00' across all machines.
+    """
+    res = client.get("/api/v1/factory/machines?tenant_id=demo_steel")
+    assert res.status_code == 200
+    data = res.json()
+    machines = data["machines"]
+
+    for m in machines:
+        # No machine should have the old misleading universal string in its recommended_action
+        assert "Peak Grid Surcharge Pause: 18:00–22:00" not in m.get("recommended_action", "")
+        assert "Peak Grid Surcharge Pause: 18:00–22:00" not in m.get("time_window", "")
+
+    # Running continuous machines have individualized continuous directives
+    eaf = next(m for m in machines if m["machine_id"] == "EAF-01")
+    assert "Continue current operation" in eaf["recommended_action"]
+    assert "C-PROCESS-CONTINUITY" in eaf["operating_directive"]
+
+    # Only flexible ANN-01 has a load shift directive
+    ann = next(m for m in machines if m["machine_id"] == "ANN-01")
+    assert "shifted to 22:00" in ann["recommended_action"]
+

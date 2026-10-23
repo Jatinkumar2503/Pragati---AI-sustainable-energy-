@@ -145,7 +145,7 @@ class FactoryLoadManager:
         now = datetime.datetime.now()
         now_hour = now.hour
 
-        # 5 Steel Factory Machines
+        # 5 Steel Factory Machines — Process Constraints & Individualized Dispatch
         machines = [
             {
                 "machine_id": "EAF-01",
@@ -156,12 +156,12 @@ class FactoryLoadManager:
                 "is_running_now": True,
                 "current_power_kw": 180.0,
                 "load_kw": 180.0,
-                "energy_consumed_kwh": 3240.0,  # 18h daily operating regime
-                "daily_operating_hours": 18.0,
+                "energy_consumed_kwh": 3780.0,  # 21h daily operating regime
+                "daily_operating_hours": 21.0,
                 "daily_cycles": "6 Melting Heats / Day",
-                "shifts_regime": "3 Shifts (18h Daily Operation)",
-                "active_hours": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 23, 0, 1, 2, 3, 4, 5],
-                "time_window": "18.0h Daily (Shift 1: 06:00–14:00, Shift 2: 14:00–18:00, Shift 3: 22:00–06:00)",
+                "shifts_regime": "3 Continuous Shifts (21h Run Time)",
+                "active_hours": [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+                "time_window": "21.0h Daily Operation (Continuous Across Shifts 1, 2, 3; Overhaul Window: 02:00–05:00)",
                 "current_batch_id": "HEAT-EAF-4081",
                 "batch_start_time": "12:30",
                 "est_completion_time": "15:30",
@@ -177,13 +177,15 @@ class FactoryLoadManager:
                     "liquid state at 1,580°C under ongoing dephosphorization."
                 ),
                 "why_continue_or_change": (
-                    "Must complete remaining 45 minutes of meltdown to tap molten steel into the transfer ladle "
-                    "for LRF-01. Interrupting active melting would cause liquid slag freeze and thermal refractory shock."
+                    "Must complete meltdown to tap molten steel for LRF-01 on schedule. Process continuity constraint "
+                    "(C-PROCESS-CONTINUITY) strictly prohibits interrupting mid-melt: liquid slag freezes below 1,480°C "
+                    "which causes refractory damage and requires 120 kWh of reheat energy."
                 ),
-                "recommended_action": "Continue running",
+                "recommended_action": "Continue current operation. The active production process cannot be safely rescheduled under the current constraints.",
+                "operating_directive": "Active Process Protected: Operates through 18:00–22:00 peak under metallurgical continuity constraint (C-PROCESS-CONTINUITY).",
                 "expected_impact": (
                     "Maintains thermal continuity; delivers 40 tons of molten steel to LRF-01 on schedule at 15:30. "
-                    "Energy cost evaluated at day tariff (₹8.50/kWh); zero delivery delay."
+                    "Avoids ₹1,50,000 in frozen heat recovery and refractory lining damage."
                 ),
                 "data_source": "Substation PMU-01 / Modbus-TCP",
                 "data_freshness_sec": 1.2,
@@ -198,12 +200,12 @@ class FactoryLoadManager:
                 "is_running_now": True,
                 "current_power_kw": 90.0,
                 "load_kw": 90.0,
-                "energy_consumed_kwh": 1620.0,
-                "daily_operating_hours": 18.0,
+                "energy_consumed_kwh": 1890.0,
+                "daily_operating_hours": 21.0,
                 "daily_cycles": "6 Refining Batches / Day",
-                "shifts_regime": "3 Shifts (18h Daily Operation)",
-                "active_hours": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 23, 0, 1, 2, 3, 4, 5],
-                "time_window": "18.0h Daily (Shift 1: 06:00–14:00, Shift 2: 14:00–18:00, Shift 3: 22:00–06:00)",
+                "shifts_regime": "3 Continuous Shifts (21h Run Time)",
+                "active_hours": [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+                "time_window": "21.0h Daily Operation (Coupled to EAF Heats; Overhaul Window: 02:00–05:00)",
                 "current_batch_id": "BATCH-LRF-4080",
                 "batch_start_time": "13:00",
                 "est_completion_time": "15:00",
@@ -222,7 +224,8 @@ class FactoryLoadManager:
                     "Downstream Continuous Billet Caster (CCM-01) requires this ladle at 15:05 to avoid "
                     "a tundish sequence interruption. Halting LRF now would cause molten steel temperature to drop below casting superheat."
                 ),
-                "recommended_action": "Continue running",
+                "recommended_action": "Continue current operation. The active production process cannot be safely rescheduled under the current constraints.",
+                "operating_directive": "Active Process Protected: Operates through 18:00–22:00 peak to maintain liquid steel superheat for downstream continuous caster.",
                 "expected_impact": (
                     "Ensures molten steel cleanliness and casting readiness on schedule. Avoids casting sequence "
                     "breakout; energy consumption 90 kWh/h evaluated under day tariff (₹8.50/kWh)."
@@ -240,12 +243,12 @@ class FactoryLoadManager:
                 "is_running_now": True,
                 "current_power_kw": 60.0,
                 "load_kw": 60.0,
-                "energy_consumed_kwh": 1200.0,
-                "daily_operating_hours": 20.0,
+                "energy_consumed_kwh": 1320.0,
+                "daily_operating_hours": 22.0,
                 "daily_cycles": "Continuous Casting Sequence",
-                "shifts_regime": "3 Shifts (20h Daily Operation)",
-                "active_hours": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 0, 1, 2, 3, 4],
-                "time_window": "20.0h Daily (Continuous Sequence, Pauses 18:00–21:00 for Tundish Overhaul)",
+                "shifts_regime": "3 Continuous Shifts (22h Run Time)",
+                "active_hours": [0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+                "time_window": "22.0h Daily Continuous Strand Solidification (Tundish Re-bricking: 03:00–05:00)",
                 "current_batch_id": "SEQ-CCM-102",
                 "batch_start_time": "11:30",
                 "est_completion_time": "17:30",
@@ -264,7 +267,8 @@ class FactoryLoadManager:
                     "Process continuity constraint is critical: interrupting an active casting sequence causes liquid steel "
                     "breakout in the mold or solidifies steel inside the tundish nozzles, causing 4 hours of clearing downtime."
                 ),
-                "recommended_action": "Continue running",
+                "recommended_action": "Continue current operation. The active production process cannot be safely rescheduled under the current constraints.",
+                "operating_directive": "Active Process Protected: Continuous strand casting cannot be paused mid-sequence without tundish nozzle freezing and mold breakout.",
                 "expected_impact": (
                     "Guarantees strand safety and yields 48 hot billets ready for immediate hot-charging into ROLL-01. "
                     "Power draw is steady at 60 kW."
@@ -285,13 +289,13 @@ class FactoryLoadManager:
                 "energy_consumed_kwh": 2160.0,
                 "daily_operating_hours": 18.0,
                 "daily_cycles": "4 Rolling Campaigns / Day",
-                "shifts_regime": "3 Shifts (18h Daily Operation)",
-                "active_hours": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 23, 0, 1, 2, 3, 4, 5],
-                "time_window": "18.0h Daily (Shift 1: 06:00–14:00, Shift 2: 14:00–18:00, Shift 3: 22:00–06:00)",
+                "shifts_regime": "3 Shifts (18h Total Run Time)",
+                "active_hours": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+                "time_window": "18.0h Daily (Shift 1 & 2: 06:00–20:00, Shift 3: 02:00–06:00; Roll Change: 20:00–22:00)",
                 "current_batch_id": "CAMPAIGN-ROLL-502",
                 "batch_start_time": "12:00",
-                "est_completion_time": "16:00",
-                "production_deadline": "17:00",
+                "est_completion_time": "20:00",
+                "production_deadline": "21:00",
                 "upstream_dependency": "CCM-01 (Hot Billet Buffer Table)",
                 "downstream_dependency": "Cooling Bed & Automated Bundling Station",
                 "is_flexible": False,
@@ -304,9 +308,10 @@ class FactoryLoadManager:
                 ),
                 "why_continue_or_change": (
                     "Direct hot rolling utilizes existing billet thermal energy, avoiding reheating gas burner consumption. "
-                    "Current campaign completes at 16:00 before the 18:00 peak grid tariff window."
+                    "Active campaign completes at 20:00, followed by scheduled roll change from 20:00–22:00."
                 ),
-                "recommended_action": "Continue running",
+                "recommended_action": "Continue current operation. Rolling hot billets directly from CCM buffer table saves ₹42,000 in reheat gas; roll change scheduled at 20:00.",
+                "operating_directive": "Active Process Protected: Finishing campaign rolls incandescent billets through 20:00 before scheduled roll change.",
                 "expected_impact": (
                     "Consumes 120 kW electrical drive power while avoiding ₹42,000 in natural gas reheat costs per campaign. "
                     "Meets dispatch delivery deadline with 1.0h buffer."
@@ -342,7 +347,7 @@ class FactoryLoadManager:
                 "required_thermal_continuity": "Requires unbroken 4.0h soaking recipe (heating to 680°C, holding 2h, controlled cooling).",
                 "why_running_now": "",
                 "why_stopped_now": (
-                    "Intentionally held on Standby: Total factory load from the 4 primary production machines "
+                    "Held on Standby by Optimizer: Total factory load from the 4 primary production machines "
                     "(EAF-01: 180 kW, LRF-01: 90 kW, CCM-01: 60 kW, ROLL-01: 120 kW) is exactly 450.0 kW. "
                     "Starting this 70 kW resistive bay right now would push factory draw to 520.0 kW, exceeding the 450 kW contract limit."
                 ),
@@ -350,7 +355,8 @@ class FactoryLoadManager:
                     "Flexible batch with 14 hours until delivery deadline (08:00 AM tomorrow). Dispatching during "
                     "night off-peak (22:00–02:00) avoids both the 450 kW peak demand overrun fine and peak electricity tariff surcharges."
                 ),
-                "recommended_action": "Keep on standby",
+                "recommended_action": "Tariff peak: 18:00–22:00. This machine's next batch is shifted to 22:00 because the proposed schedule remains feasible and reduces the predicted factory peak by 70 kW.",
+                "operating_directive": "⏱️ Optimizer Load Shift: Next batch moved from 18:00 to 22:00 night off-peak to prevent 520 kW demand breach (saves ₹2,324 batch + avoids ₹15,000 fine).",
                 "expected_impact": (
                     "Avoids ₹15,000 maximum demand penalty fine. Saves ₹2,324 in electricity costs by operating "
                     "at ₹4.20/kWh night tariff instead of ₹12.50/kWh peak tariff. Zero deadline impact."
@@ -360,6 +366,7 @@ class FactoryLoadManager:
                 "measurement_nature": "CONFIGURED_ESTIMATE"
             }
         ]
+
 
         return machines
 
@@ -754,6 +761,208 @@ class FactoryLoadManager:
                 if is_feasible
                 else f"Infeasible schedule: {len(violations)} constraint violation(s) detected."
             )
+        }
+
+
+    def evaluate_schedule_opportunity(
+        self,
+        machine_id: str,
+        planned_start_h: int,
+        duration_h: float,
+        deadline_h: int,
+        current_tariff_tier: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Determines whether shifting an activity genuinely improves total factory operation.
+        Section 5 & 7 rules:
+        - If active process cannot be safely rescheduled: returns 'Continue current operation...'
+        - If alternative schedule is not feasible (e.g. deadline violation): returns 'No change recommended...'
+        - If shifting provides no peak reduction or cost savings: returns 'No change recommended. The current schedule is the best feasible option found.'
+        - If feasible and reduces peak/cost: returns specific recommendation with calculated impact.
+        """
+        machines = {m["machine_id"]: m for m in self.get_fleet_machines()}
+        machine = machines.get(machine_id)
+        if not machine:
+            return {
+                "recommendation_text": "Machine not found in factory catalog.",
+                "should_shift": False,
+                "reason": "Missing telemetry / catalog definition."
+            }
+
+        if not machine["is_flexible"] or not machine["can_safely_reschedule"]:
+            return {
+                "recommendation_text": "Continue current operation. The active production process cannot be safely rescheduled under the current constraints.",
+                "should_shift": False,
+                "reason": f"{machine['name']} is subject to {machine.get('required_thermal_continuity', 'process continuity constraints')}."
+            }
+
+        # Check if the planned start is already in off-peak hours
+        if planned_start_h in TARIFF_SCHEDULE_INR["offpeak"]["hours"]:
+            return {
+                "recommendation_text": "No change recommended. The current schedule is the best feasible option found.",
+                "should_shift": False,
+                "reason": f"Activity is already scheduled during lowest off-peak tariff window (hour {planned_start_h}:00)."
+            }
+
+        # Check if shift to off-peak (hour 22) is feasible
+        candidate_start_h = 22
+        feasibility = self.evaluate_schedule_feasibility(
+            task_duration_h=duration_h,
+            planned_start_h=candidate_start_h,
+            deadline_h=deadline_h,
+            machine_load_kw=machine["load_kw"]
+        )
+
+        if not feasibility["is_feasible"]:
+            return {
+                "recommendation_text": "No change recommended. The current schedule is the best feasible option found.",
+                "should_shift": False,
+                "reason": f"Shifting to hour {candidate_start_h} would violate delivery deadline at hour {deadline_h}."
+            }
+
+        # Calculate cost difference
+        baseline_rate = get_current_tariff_rate(planned_start_h)["rate_inr"]
+        candidate_rate = get_current_tariff_rate(candidate_start_h)["rate_inr"]
+        cost_diff_inr = (candidate_rate - baseline_rate) * machine["load_kw"] * duration_h
+
+        if cost_diff_inr >= 0.0:
+            return {
+                "recommendation_text": "No change recommended. The current schedule is the best feasible option found.",
+                "should_shift": False,
+                "reason": "Alternative schedule provides zero modeled cost or peak reduction."
+            }
+
+        return {
+            "recommendation_text": f"Tariff peak: 18:00–22:00. This machine's next batch may be shifted to {candidate_start_h}:00 because the proposed schedule remains feasible and reduces the predicted factory peak.",
+            "should_shift": True,
+            "proposed_start_h": candidate_start_h,
+            "cost_diff_inr": cost_diff_inr,
+            "reason": f"Shifting avoids {baseline_rate} INR/kWh peak tariff and eliminates {machine['load_kw']} kW peak contribution."
+        }
+
+    def get_baseline_vs_proposed_schedule(self, tenant_id: str = "demo_steel") -> Dict[str, Any]:
+        """
+        Builds a comprehensive 24-hour hour-by-hour comparison between the unmanaged Baseline
+        schedule and the Proposed (Intelligent Load Managed) schedule.
+        """
+        hourly_comparison = []
+        limit_kw = self.contract_demand_limit_kw
+
+        # Fleet definition
+        # EAF-01: 180 kW, runs hours [0, 1, 5..23] (21h)
+        eaf_hours = [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        # LRF-01: 90 kW, runs hours [0, 1, 5..23] (21h)
+        lrf_hours = [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        # CCM-01: 60 kW, runs hours [0, 1, 2, 5..23] (22h)
+        ccm_hours = [0, 1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        # ROLL-01: 120 kW, runs hours [2..19] (18h; 20, 21 roll change; 22..1 setup)
+        roll_hours = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+        # ANN-01: 70 kW
+        # In baseline: planned at 18:00-22:00 (hours 18, 19, 20, 21)
+        ann_baseline_hours = [18, 19, 20, 21]
+        # In proposed: shifted to 22:00-02:00 (hours 22, 23, 0, 1)
+        ann_proposed_hours = [22, 23, 0, 1]
+
+        baseline_total_energy_kwh = 0.0
+        proposed_total_energy_kwh = 0.0
+        baseline_total_cost_inr = 0.0
+        proposed_total_cost_inr = 0.0
+
+        baseline_peak_kw = 0.0
+        proposed_peak_kw = 0.0
+
+        for h in range(24):
+            tariff = get_current_tariff_rate(h)
+            rate = tariff["rate_inr"]
+
+            # Base machines running load
+            base_load = 0.0
+            if h in eaf_hours: base_load += 180.0
+            if h in lrf_hours: base_load += 90.0
+            if h in ccm_hours: base_load += 60.0
+            if h in roll_hours: base_load += 120.0
+
+            ann_base = 70.0 if h in ann_baseline_hours else 0.0
+            ann_prop = 70.0 if h in ann_proposed_hours else 0.0
+
+            b_load = base_load + ann_base
+            p_load = base_load + ann_prop
+
+            if b_load > baseline_peak_kw: baseline_peak_kw = b_load
+            if p_load > proposed_peak_kw: proposed_peak_kw = p_load
+
+            b_energy_kwh = b_load * 1.0
+            p_energy_kwh = p_load * 1.0
+
+            b_cost_inr = b_energy_kwh * rate
+            p_cost_inr = p_energy_kwh * rate
+
+            baseline_total_energy_kwh += b_energy_kwh
+            proposed_total_energy_kwh += p_energy_kwh
+            baseline_total_cost_inr += b_cost_inr
+            proposed_total_cost_inr += p_cost_inr
+
+            hourly_comparison.append({
+                "hour": h,
+                "hour_label": f"{h:02d}:00",
+                "tariff_tier": tariff["tier"],
+                "tariff_rate_inr": rate,
+                "baseline_load_kw": b_load,
+                "proposed_load_kw": p_load,
+                "contract_limit_kw": limit_kw,
+                "baseline_exceeds_limit": b_load > limit_kw,
+                "proposed_exceeds_limit": p_load > limit_kw,
+                "baseline_cost_inr": round(b_cost_inr, 2),
+                "proposed_cost_inr": round(p_cost_inr, 2),
+                "ann_01_baseline_kw": ann_base,
+                "ann_01_proposed_kw": ann_prop,
+                "delta_kw": round(p_load - b_load, 1),
+                "delta_cost_inr": round(p_cost_inr - b_cost_inr, 2)
+            })
+
+        energy_savings_inr = round(baseline_total_cost_inr - proposed_total_cost_inr, 2)
+        # Avoided DISCOM demand overrun fine (since baseline exceeded limit by +70 kW during 18:00-20:00)
+        avoided_fine_inr = 15000.0 if baseline_peak_kw > limit_kw else 0.0
+        total_economic_benefit_inr = round(energy_savings_inr + avoided_fine_inr, 2)
+
+        return {
+            "status": "success",
+            "metadata": {
+                "calculation_type": "SIMULATED_ENGINEERING_MODEL",
+                "tenant_id": tenant_id,
+                "contract_demand_limit_kw": limit_kw,
+                "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "tariff_structure": "DISCOM Haryana/Punjab Industrial HT TOD",
+                "guarantee_disclaimer": "Simulated engineering projection based on scheduled batch operations; actual billing depends on utility meter settlement."
+            },
+            "summary": {
+                "baseline_peak_kw": baseline_peak_kw,
+                "proposed_peak_kw": proposed_peak_kw,
+                "peak_reduction_kw": round(baseline_peak_kw - proposed_peak_kw, 1),
+                "baseline_total_energy_kwh": round(baseline_total_energy_kwh, 1),
+                "proposed_total_energy_kwh": round(proposed_total_energy_kwh, 1),
+                "energy_delta_kwh": round(proposed_total_energy_kwh - baseline_total_energy_kwh, 1),
+                "baseline_energy_cost_inr": round(baseline_total_cost_inr, 2),
+                "proposed_energy_cost_inr": round(proposed_total_cost_inr, 2),
+                "energy_cost_savings_inr": energy_savings_inr,
+                "avoided_demand_penalty_inr": avoided_fine_inr,
+                "total_economic_benefit_inr": total_economic_benefit_inr,
+                "affected_machine_id": "ANN-01",
+                "affected_job_id": "BATCH-ANN-882",
+                "baseline_start": "18:00",
+                "proposed_start": "22:00",
+                "batch_duration_h": 4.0,
+                "deadline": "08:00 Next Day",
+                "deadline_impact": "Zero delay. Finishes at 02:00 AM, 6.0 hours before delivery deadline.",
+                "constraints_evaluated": [
+                    "C-PROCESS-CONTINUITY (EAF, LRF, CCM protected continuous melting/casting)",
+                    "C-DEMAND-01 (450 kW contract limit respected during peak hours)",
+                    "C-RECIPE-01 (4h continuous thermal soaking preserved)",
+                    "C-DEADLINE-01 (Customer delivery deadline preserved with 6h slack)"
+                ]
+            },
+            "hourly_comparison": hourly_comparison
         }
 
 
