@@ -2044,7 +2044,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     machines.forEach((m, idx) => {
                         const isCurrentlyRunning = (m.is_running_now !== undefined) ? m.is_running_now : (idx < 4);
                         const activeDrawKw = isCurrentlyRunning ? m.load_kw : 0.0;
-                        const totalBatchKwh = m.load_kw * m.duration_h;
+                        const dailyHours = m.daily_operating_hours || 18;
+                        const totalDailyKwh = m.load_kw * dailyHours;
 
                         dashHtml += `
                             <div class="card" style="background: #FFFFFF !important; border: 1px solid ${isCurrentlyRunning ? '#A7F3D0' : '#FDE68A'} !important; border-top: 4px solid ${isCurrentlyRunning ? '#059669' : '#D97706'} !important; border-radius: 16px !important; padding: 18px !important; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; box-shadow: 0 6px 18px rgba(60, 52, 38, 0.06) !important;">
@@ -2068,18 +2069,24 @@ document.addEventListener("DOMContentLoaded", () => {
                                         </div>
                                     </div>
 
-                                    <!-- Real-time Power & Consumption -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; background: #F8F6F0; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(210, 200, 180, 0.6);">
+                                    <!-- Multi-Shift Operating Duty & Power Grid -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; background: #F8F6F0; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(210, 200, 180, 0.6);">
                                         <div>
                                             <span style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Current Power Draw</span>
                                             <div style="font-size: 1.35rem; font-weight: 800; color: ${isCurrentlyRunning ? '#047857' : '#64748B'};">
                                                 ${activeDrawKw.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
                                             </div>
+                                            <div style="font-size: 0.72rem; color: #526357; margin-top: 2px;">
+                                                Single Heat: <strong>${m.duration_h}h / cycle</strong>
+                                            </div>
                                         </div>
                                         <div>
-                                            <span style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Batch Energy (${m.duration_h}h)</span>
+                                            <span style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Daily Operating Duty</span>
                                             <div style="font-size: 1.25rem; font-weight: 800; color: #0284C7;">
-                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 600;">kWh</span>
+                                                ${dailyHours.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 600;">h / Day</span>
+                                            </div>
+                                            <div style="font-size: 0.72rem; color: #059669; font-weight: 700; margin-top: 2px;">
+                                                ${totalDailyKwh.toLocaleString()} kWh/day (${m.daily_cycles || '6 Cycles'})
                                             </div>
                                         </div>
                                     </div>
@@ -2119,10 +2126,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                         </div>
                                     `}
 
-                                    <!-- Operational Window Directive -->
-                                    <div style="margin-top: 12px; font-size: 0.8rem; color: #526357; background: #F8F6F0; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(210, 200, 180, 0.6); display: flex; justify-content: space-between; align-items: center;">
-                                        <span style="font-weight: 600;">🕒 ${isCurrentlyRunning ? 'Active Operating Window:' : 'Scheduled Start Window:'}</span>
-                                        <strong style="color: ${isCurrentlyRunning ? '#047857' : '#B45309'}; font-family: monospace; font-size: 0.88rem;">${m.time_window}</strong>
+                                    <!-- 24h Multi-Shift Window Directive -->
+                                    <div style="margin-top: 12px; font-size: 0.78rem; color: #526357; background: #F8F6F0; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(210, 200, 180, 0.6); display: flex; flex-direction: column; gap: 4px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 700; color: #1F2B24;">🏭 24h Multi-Shift Plan (${dailyHours}h/day):</span>
+                                            <strong style="color: ${isCurrentlyRunning ? '#047857' : '#B45309'}; font-family: monospace;">${m.shifts_regime || '3 Shifts (24/7)'}</strong>
+                                        </div>
+                                        <div style="font-size: 0.76rem; color: #334155;">
+                                            ${m.time_window}
+                                        </div>
+                                        <div style="font-size: 0.72rem; color: #DC2626; font-weight: 700; margin-top: 2px;">
+                                            🛑 Peak Grid Surcharge Pause: 18:00 – 22:00 (Saves ₹12.50/kWh Peak Penalty)
+                                        </div>
                                     </div>
                                 </div>
 
@@ -2150,47 +2165,46 @@ document.addEventListener("DOMContentLoaded", () => {
                     const badgeColor = isNight ? "#1D4ED8" : "#047857";
                     const badgeBg = isNight ? "#EFF6FF" : "#ECFDF5";
                     const badgeBorder = isNight ? "#BFDBFE" : "#A7F3D0";
+                    const dailyHours = m.daily_operating_hours || 18;
 
-                    // Generate 24-hour visual Gantt timeline blocks
+                    // Generate 24-hour visual Gantt timeline blocks across all 3 production shifts
                     let ganttBlocksHtml = "";
                     for (let h = 0; h < 24; h++) {
                         let isActive = false;
-                        if (m.start_hour < m.end_hour) {
+                        if (m.active_hours && Array.isArray(m.active_hours)) {
+                            isActive = m.active_hours.includes(h);
+                        } else if (m.start_hour < m.end_hour) {
                             isActive = (h >= m.start_hour && h < m.end_hour);
                         } else {
                             isActive = (h >= m.start_hour || h < m.end_hour);
                         }
 
-                        const isPeakTariffHour = (h >= 18 && h <= 21);
-                        const isMaintenanceHour = (h >= 2 && h <= 5);
+                        const isPeakTariffHour = (h >= 18 && h < 22);
+                        const isDaySolar = (h >= 6 && h < 18);
+                        const isNightBaseload = (h >= 22 || h < 6);
 
                         let blockBg = "#E8E2D5";
                         let blockBorder = "1px solid #D5CBB8";
                         let blockColor = "#526357";
-                        let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Idle / Standby`;
+                        let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Standby / Maintenance`;
 
                         if (isActive) {
-                            if (isNight) {
+                            if (isNightBaseload) {
                                 blockBg = "#2563EB";
                                 blockBorder = "1px solid #1D4ED8";
                                 blockColor = "#FFFFFF";
-                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Off-Peak Night Run)`;
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active Night Baseload (${m.load_kw} kW at $0.06/kWh)`;
                             } else {
                                 blockBg = "#059669";
                                 blockBorder = "1px solid #047857";
                                 blockColor = "#FFFFFF";
-                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Solar Window Dispatch)`;
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active Day Shift (${m.load_kw} kW Solar Offset)`;
                             }
                         } else if (isPeakTariffHour) {
                             blockBg = "rgba(239, 68, 68, 0.15)";
                             blockBorder = "1px dashed #DC2626";
                             blockColor = "#DC2626";
                             blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window ($0.18/kWh Surcharge Avoided)`;
-                        } else if (isMaintenanceHour) {
-                            blockBg = "#E2E8F0";
-                            blockBorder = "1px solid #CBD5E1";
-                            blockColor = "#64748B";
-                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Plant Maintenance Overhaul Blackout`;
                         }
 
                         ganttBlocksHtml += `
@@ -2208,18 +2222,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                         <span class="badge" style="background: #F1ECE1; color: #1F2B24; border: 1px solid #D8CFC0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
                                         <h3 style="margin: 0; color: #1F2B24; font-size: 1.1rem; font-family: 'Outfit', sans-serif; font-weight: 800;">${sanitizeHTML(m.name)}</h3>
                                         <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 0.72rem; font-weight: 700;">
-                                            ${isNight ? '🌙 OFF-PEAK NIGHT BASELOAD' : '☀️ SHIFTED TO SOLAR MIDDAY'}
+                                            ${m.shifts_regime || '3 Shifts (24/7 Fleet)'}
                                         </span>
                                     </div>
                                     <div style="font-size: 0.85rem; color: #526357; margin-top: 5px;">
                                         <strong style="color: #1F2B24;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
                                         <strong style="color: #1F2B24;">Rated Demand:</strong> <span style="color: #B45309; font-weight: 800;">${m.load_kw} kW</span> &nbsp;|&nbsp;
-                                        <strong style="color: #1F2B24;">Run Duration:</strong> <span style="color: #0284C7; font-weight: 800;">${m.duration_h} Hours</span>
+                                        <strong style="color: #1F2B24;">Total Daily Operation:</strong> <span style="color: #0284C7; font-weight: 800;">${dailyHours} Hours/Day (${m.daily_cycles || '6 Cycles'})</span>
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 0.9rem; font-weight: 800; color: #047857;">
-                                        🕒 Dispatched Window: ${m.time_window}
+                                        🕒 Active Schedule: ${dailyHours} Hours / 24h
                                     </div>
                                     <div style="font-size: 0.8rem; color: #059669; font-weight: 700; margin-top: 2px;">
                                         Saved vs Peak: +₹${m.hourly_cost_saved_inr.toLocaleString()} (+$${m.hourly_cost_saved_usd.toFixed(2)})
@@ -2227,13 +2241,13 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </div>
                             </div>
 
-                            <!-- 24-Hour Visual Dispatch Gantt -->
+                            <!-- 24-Hour Visual Multi-Shift Dispatch Gantt -->
                             <div style="margin-top: 12px; background: #F8F6F0; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(210, 200, 180, 0.7);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.75rem; color: #526357; font-weight: 600;">
-                                    <span>00:00 (Midnight)</span>
-                                    <span>06:00 (Dawn)</span>
-                                    <span style="color: #047857; font-weight: 800;">12:00 (Solar Peak)</span>
-                                    <span style="color: #DC2626; font-weight: 800;">18:00 (Peak Tariff Surcharge)</span>
+                                    <span>00:00 (Midnight Shift)</span>
+                                    <span>06:00 (Morning Shift)</span>
+                                    <span style="color: #047857; font-weight: 800;">12:00 (Solar Peak Shift)</span>
+                                    <span style="color: #DC2626; font-weight: 800;">18:00–22:00 (Peak Surcharge Pause)</span>
                                     <span>23:00</span>
                                 </div>
                                 <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
