@@ -203,8 +203,35 @@
                         <div class="kpi-value-v2 red-val" id="kpi-anomalies-count">—</div>
                         <div class="kpi-footer-badge alert" id="kpi-anomalies-status">600 observations (15k records)</div>
                     </div>
+                <!-- Live Factory Fleet Machinery Status & AI Operational Run Windows -->
+                <div class="card" id="dashboard-machinery-card" style="margin-bottom: 24px; border: 1px solid rgba(16, 185, 129, 0.25); background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.65) 100%);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.4rem;">⚡</span>
+                                <div>
+                                    <h2 style="margin: 0; font-size: 1.15rem; color: #F8FAFC;">Live Machinery Fleet — Power Consumption & AI Run Window Advice</h2>
+                                    <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: #94A3B8;">
+                                        Real-time operational status, instantaneous kW power draw, and actionable AI timing advice detailing exactly when to run each machine to maximize tariff savings.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span class="badge blue-bg" id="dash-machinery-factory-badge">DAEWOO Steel Facility</span>
+                            <span class="badge green-bg" id="dash-machinery-savings-badge">Estimated Daily Savings: ₹5,043.91</span>
+                            <button class="premium-btn" onclick="switchTab('tab-scheduler'); setTimeout(() => { const el = document.getElementById('factory-machines-card'); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100);" style="width: auto; padding: 6px 14px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.2); border: 1px solid #3B82F6; color: #93C5FD; font-weight: 700;">
+                                📅 Open 24h Visual Gantt Timetable ➔
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Machinery Grid Container -->
+                    <div id="dashboard-machines-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 16px;">
+                        <!-- Dynamically populated by loadFactoryMachines -->
+                    </div>
                 </div>
-                
+
                 <!-- Telemetry Chart -->
                 <div class="chart-container card">
                     <div class="card-header">

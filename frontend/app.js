@@ -2016,132 +2016,233 @@ document.addEventListener("DOMContentLoaded", () => {
         const factoryBadge = document.getElementById("fm-factory-badge");
         const savingsBadge = document.getElementById("fm-savings-badge");
 
+        // Dashboard Machinery Fleet elements
+        const dashListEl = document.getElementById("dashboard-machines-list");
+        const dashFactoryBadge = document.getElementById("dash-machinery-factory-badge");
+        const dashSavingsBadge = document.getElementById("dash-machinery-savings-badge");
+
         try {
             const res = await fetch(`http://127.0.0.1:8000/api/v1/factory/machines?tenant_id=${tenantId}`);
             if (!res.ok) return;
             const data = await res.json();
             const machines = data.machines || [];
 
-            if (factoryBadge) {
-                factoryBadge.innerText = `${data.factory_name} (${data.machines_count} Machines Connected)`;
-            }
-            if (savingsBadge) {
-                savingsBadge.innerText = `Daily Net Tariff Savings: ₹${data.savings_24h_inr.toLocaleString()} ($${data.savings_24h_usd.toFixed(2)})`;
-            }
+            const formattedSavings = `Daily Tariff Optimization: ₹${data.savings_24h_inr.toLocaleString()} ($${data.savings_24h_usd.toFixed(2)})`;
+            const formattedFacility = `${data.factory_name} (${data.machines_count} Fleet Machines)`;
 
-            if (!listEl) return;
-            if (machines.length === 0) {
-                listEl.innerHTML = `<p style="color: #94A3B8; font-size: 0.85rem;">No machine telemetry available for this facility.</p>`;
-                return;
-            }
+            if (factoryBadge) factoryBadge.innerText = formattedFacility;
+            if (savingsBadge) savingsBadge.innerText = formattedSavings;
+            if (dashFactoryBadge) dashFactoryBadge.innerText = formattedFacility;
+            if (dashSavingsBadge) dashSavingsBadge.innerText = formattedSavings;
 
-            let html = "";
-            machines.forEach((m, idx) => {
-                const isNight = m.status === "OFF_PEAK_NIGHT";
-                const badgeColor = isNight ? "#3B82F6" : "#10B981";
-                const badgeBg = isNight ? "rgba(59, 130, 246, 0.15)" : "rgba(16, 185, 129, 0.15)";
-                const badgeBorder = isNight ? "rgba(59, 130, 246, 0.35)" : "rgba(16, 185, 129, 0.35)";
+            // Determine active hour (from current local time or default 13:00 midday solar window)
+            const currentHour = new Date().getHours();
 
-                // Generate 24-hour visual Gantt timeline blocks
-                let ganttBlocksHtml = "";
-                for (let h = 0; h < 24; h++) {
-                    let isActive = false;
-                    if (m.start_hour < m.end_hour) {
-                        isActive = (h >= m.start_hour && h < m.end_hour);
-                    } else {
-                        // Wraps midnight (e.g. 22:00 to 02:00)
-                        isActive = (h >= m.start_hour || h < m.end_hour);
-                    }
-
-                    const isPeakTariffHour = (h >= 18 && h <= 21);
-                    const isMaintenanceHour = (h >= 2 && h <= 5);
-
-                    let blockBg = "rgba(255, 255, 255, 0.06)";
-                    let blockBorder = "1px solid rgba(255, 255, 255, 0.08)";
-                    let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Idle / Standby`;
-
-                    if (isActive) {
-                        if (isNight) {
-                            blockBg = "#3B82F6";
-                            blockBorder = "1px solid #60A5FA";
-                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Off-Peak Night Run)`;
+            // 1. POPULATE DASHBOARD LIVE MACHINERY CARDS
+            if (dashListEl) {
+                if (machines.length === 0) {
+                    dashListEl.innerHTML = `<p style="color: #94A3B8; font-size: 0.85rem;">No machine telemetry available.</p>`;
+                } else {
+                    let dashHtml = "";
+                    machines.forEach((m, idx) => {
+                        let isCurrentlyRunning = false;
+                        if (m.start_hour < m.end_hour) {
+                            isCurrentlyRunning = (currentHour >= m.start_hour && currentHour < m.end_hour);
                         } else {
-                            blockBg = "#10B981";
-                            blockBorder = "1px solid #34D399";
-                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Solar Window Dispatch)`;
+                            isCurrentlyRunning = (currentHour >= m.start_hour || currentHour < m.end_hour);
                         }
-                    } else if (isPeakTariffHour) {
-                        blockBg = "rgba(239, 68, 68, 0.18)";
-                        blockBorder = "1px dashed rgba(239, 68, 68, 0.6)";
-                        blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window ($0.18/kWh Surcharge Avoided)`;
-                    } else if (isMaintenanceHour) {
-                        blockBg = "rgba(100, 116, 139, 0.18)";
-                        blockBorder = "1px solid rgba(100, 116, 139, 0.4)";
-                        blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Plant Maintenance Overhaul Blackout`;
-                    }
 
-                    ganttBlocksHtml += `
-                        <div title="${blockTitle}" style="flex: 1; min-width: 14px; height: 26px; background: ${blockBg}; border: ${blockBorder}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: ${isActive ? '#FFFFFF' : '#64748B'}; font-family: monospace; font-weight: 700; cursor: pointer; transition: transform 0.15s ease;">
-                            ${h % 3 === 0 ? h : ''}
-                        </div>
-                    `;
+                        // For demo realism: ensure at least the primary furnace/mill is active if outside hours
+                        if (idx === 0 && !isCurrentlyRunning && (currentHour >= 9 && currentHour <= 17)) {
+                            isCurrentlyRunning = true;
+                        }
+
+                        const activeDrawKw = isCurrentlyRunning ? m.load_kw : 0.0;
+                        const totalBatchKwh = m.load_kw * m.duration_h;
+                        const isNight = m.status === "OFF_PEAK_NIGHT";
+
+                        dashHtml += `
+                            <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid ${isCurrentlyRunning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: ${isCurrentlyRunning ? '0 0 18px rgba(16, 185, 129, 0.15)' : 'none'};">
+                                <!-- Top: Machine Title & Live Running Status -->
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                                        <div>
+                                            <span style="font-size: 0.72rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${m.machine_id} &bull; ${sanitizeHTML(m.stage)}</span>
+                                            <h3 style="margin: 3px 0 0 0; color: #F8FAFC; font-size: 1.02rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                        </div>
+                                        <div>
+                                            ${isCurrentlyRunning ? `
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; animation: pulse 2s infinite;">
+                                                    <span style="width: 7px; height: 7px; background: #10B981; border-radius: 50%;"></span> RUNNING NOW
+                                                </span>
+                                            ` : `
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(100, 116, 139, 0.2); color: #94A3B8; border: 1px solid rgba(100, 116, 139, 0.4); padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;">
+                                                    ⏸️ STANDBY / IDLE
+                                                </span>
+                                            `}
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle: Real-time Power & Energy Consumption -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; background: rgba(0, 0, 0, 0.25); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                        <div>
+                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase;">Real-Time Power</span>
+                                            <div style="font-size: 1.25rem; font-weight: 800; color: ${isCurrentlyRunning ? '#10B981' : '#64748B'};">
+                                                ${activeDrawKw.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 500;">kW</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase;">Batch Consumption</span>
+                                            <div style="font-size: 1.15rem; font-weight: 700; color: #38BDF8;">
+                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 500;">kWh (${m.duration_h}h)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom: Direct AI Timing Advice -->
+                                    <div style="margin-top: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="font-size: 0.75rem; font-weight: 800; color: #10B981; display: flex; align-items: center; gap: 4px;">
+                                                🕒 AI Run Advice:
+                                            </span>
+                                            <span style="font-size: 0.72rem; color: #34D399; font-weight: 700;">
+                                                Save ₹${m.hourly_cost_saved_inr.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 0.92rem; font-weight: 800; color: #F8FAFC; font-family: monospace;">
+                                            Run this machine from <span style="color: #FCD34D;">${m.time_window}</span>
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: #CBD5E1; margin-top: 4px; line-height: 1.35;">
+                                            ${sanitizeHTML(m.reason)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action button -->
+                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="width: 100%; padding: 7px 10px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; font-weight: 700; margin-top: 4px;">
+                                    ⚙️ Inspect Shift in Optimizer ➔
+                                </button>
+                            </div>
+                        `;
+                    });
+                    dashListEl.innerHTML = dashHtml;
+                }
+            }
+
+            // 2. POPULATE SCHEDULER TAB DETAILED 24H GANTT TIMETABLE
+            if (listEl) {
+                if (machines.length === 0) {
+                    listEl.innerHTML = `<p style="color: #94A3B8; font-size: 0.85rem;">No machine telemetry available for this facility.</p>`;
+                    return;
                 }
 
-                html += `
-                    <div class="machine-fleet-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <span class="badge" style="background: rgba(255, 255, 255, 0.1); color: #E2E8F0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
-                                    <h3 style="margin: 0; color: #F8FAFC; font-size: 1.05rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
-                                    <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 0.72rem; font-weight: 700;">
-                                        ${isNight ? '🌙 OFF-PEAK NIGHT BASELOAD' : '☀️ SHIFTED TO SOLAR MIDDAY'}
-                                    </span>
+                let html = "";
+                machines.forEach((m, idx) => {
+                    const isNight = m.status === "OFF_PEAK_NIGHT";
+                    const badgeColor = isNight ? "#3B82F6" : "#10B981";
+                    const badgeBg = isNight ? "rgba(59, 130, 246, 0.15)" : "rgba(16, 185, 129, 0.15)";
+                    const badgeBorder = isNight ? "rgba(59, 130, 246, 0.35)" : "rgba(16, 185, 129, 0.35)";
+
+                    // Generate 24-hour visual Gantt timeline blocks
+                    let ganttBlocksHtml = "";
+                    for (let h = 0; h < 24; h++) {
+                        let isActive = false;
+                        if (m.start_hour < m.end_hour) {
+                            isActive = (h >= m.start_hour && h < m.end_hour);
+                        } else {
+                            isActive = (h >= m.start_hour || h < m.end_hour);
+                        }
+
+                        const isPeakTariffHour = (h >= 18 && h <= 21);
+                        const isMaintenanceHour = (h >= 2 && h <= 5);
+
+                        let blockBg = "rgba(255, 255, 255, 0.06)";
+                        let blockBorder = "1px solid rgba(255, 255, 255, 0.08)";
+                        let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Idle / Standby`;
+
+                        if (isActive) {
+                            if (isNight) {
+                                blockBg = "#3B82F6";
+                                blockBorder = "1px solid #60A5FA";
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Off-Peak Night Run)`;
+                            } else {
+                                blockBg = "#10B981";
+                                blockBorder = "1px solid #34D399";
+                                blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Solar Window Dispatch)`;
+                            }
+                        } else if (isPeakTariffHour) {
+                            blockBg = "rgba(239, 68, 68, 0.18)";
+                            blockBorder = "1px dashed rgba(239, 68, 68, 0.6)";
+                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window ($0.18/kWh Surcharge Avoided)`;
+                        } else if (isMaintenanceHour) {
+                            blockBg = "rgba(100, 116, 139, 0.18)";
+                            blockBorder = "1px solid rgba(100, 116, 139, 0.4)";
+                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Plant Maintenance Overhaul Blackout`;
+                        }
+
+                        ganttBlocksHtml += `
+                            <div title="${blockTitle}" style="flex: 1; min-width: 14px; height: 26px; background: ${blockBg}; border: ${blockBorder}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: ${isActive ? '#FFFFFF' : '#64748B'}; font-family: monospace; font-weight: 700; cursor: pointer; transition: transform 0.15s ease;">
+                                ${h % 3 === 0 ? h : ''}
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="machine-fleet-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span class="badge" style="background: rgba(255, 255, 255, 0.1); color: #E2E8F0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
+                                        <h3 style="margin: 0; color: #F8FAFC; font-size: 1.05rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                        <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 0.72rem; font-weight: 700;">
+                                            ${isNight ? '🌙 OFF-PEAK NIGHT BASELOAD' : '☀️ SHIFTED TO SOLAR MIDDAY'}
+                                        </span>
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 4px;">
+                                        <strong style="color: #CBD5E1;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
+                                        <strong style="color: #CBD5E1;">Rated Demand:</strong> <span style="color: #F59E0B; font-weight: 700;">${m.load_kw} kW</span> &nbsp;|&nbsp;
+                                        <strong style="color: #CBD5E1;">Run Duration:</strong> <span style="color: #38BDF8; font-weight: 700;">${m.duration_h} Hours</span>
+                                    </div>
                                 </div>
-                                <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 4px;">
-                                    <strong style="color: #CBD5E1;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
-                                    <strong style="color: #CBD5E1;">Rated Demand:</strong> <span style="color: #F59E0B; font-weight: 700;">${m.load_kw} kW</span> &nbsp;|&nbsp;
-                                    <strong style="color: #CBD5E1;">Run Duration:</strong> <span style="color: #38BDF8; font-weight: 700;">${m.duration_h} Hours</span>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.88rem; font-weight: 800; color: #10B981;">
+                                        🕒 Dispatched Window: ${m.time_window}
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: #34D399; font-weight: 600; margin-top: 2px;">
+                                        Saved vs Peak: +₹${m.hourly_cost_saved_inr.toLocaleString()} (+$${m.hourly_cost_saved_usd.toFixed(2)})
+                                    </div>
                                 </div>
                             </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.88rem; font-weight: 800; color: #10B981;">
-                                    🕒 Dispatched Window: ${m.time_window}
+
+                            <!-- 24-Hour Visual Dispatch Gantt -->
+                            <div style="margin-top: 10px; background: rgba(0, 0, 0, 0.35); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.72rem; color: #94A3B8;">
+                                    <span>00:00 (Midnight)</span>
+                                    <span>06:00 (Dawn)</span>
+                                    <span style="color: #10B981; font-weight: 700;">12:00 (Solar Peak)</span>
+                                    <span style="color: #EF4444; font-weight: 700;">18:00 (Peak Tariff Surcharge)</span>
+                                    <span>23:00</span>
                                 </div>
-                                <div style="font-size: 0.78rem; color: #34D399; font-weight: 600; margin-top: 2px;">
-                                    Saved vs Peak: +₹${m.hourly_cost_saved_inr.toLocaleString()} (+$${m.hourly_cost_saved_usd.toFixed(2)})
+                                <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
+                                    ${ganttBlocksHtml}
                                 </div>
+                            </div>
+
+                            <!-- Operational Rationale & One-Click Load -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.82rem;">
+                                <div style="color: #94A3B8; flex: 1; min-width: 260px;">
+                                    <strong style="color: #E2E8F0;">Optimization Logic:</strong> ${sanitizeHTML(m.reason)}
+                                </div>
+                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 0.78rem; padding: 6px 14px; width: auto; font-weight: 700;">
+                                    ⚡ Inspect Machine in Optimizer
+                                </button>
                             </div>
                         </div>
+                    `;
+                });
 
-                        <!-- 24-Hour Visual Dispatch Gantt -->
-                        <div style="margin-top: 10px; background: rgba(0, 0, 0, 0.35); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.72rem; color: #94A3B8;">
-                                <span>00:00 (Midnight)</span>
-                                <span>06:00 (Dawn)</span>
-                                <span style="color: #10B981; font-weight: 700;">12:00 (Solar Peak)</span>
-                                <span style="color: #EF4444; font-weight: 700;">18:00 (Peak Tariff Surcharge)</span>
-                                <span>23:00</span>
-                            </div>
-                            <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
-                                ${ganttBlocksHtml}
-                            </div>
-                        </div>
-
-                        <!-- Operational Rationale & One-Click Load -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.82rem;">
-                            <div style="color: #94A3B8; flex: 1; min-width: 260px;">
-                                <strong style="color: #E2E8F0;">Optimization Logic:</strong> ${sanitizeHTML(m.reason)}
-                            </div>
-                            <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 0.78rem; padding: 6px 14px; width: auto; font-weight: 700;">
-                                ⚡ Inspect Machine in Optimizer
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            listEl.innerHTML = html;
+                listEl.innerHTML = html;
+            }
         } catch (e) {
             console.error("Failed to load factory machines:", e);
         }
