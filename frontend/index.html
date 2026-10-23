@@ -212,19 +212,99 @@
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="font-size: 1.5rem;">⚡</span>
                                 <div>
-                                    <h2 style="margin: 0; font-size: 1.2rem; color: #1F2B24; font-weight: 800; font-family: 'Outfit', sans-serif;">Live Machinery Fleet — Power Consumption & AI Run Window Advice</h2>
+                                    <h2 style="margin: 0; font-size: 1.2rem; color: #1F2B24; font-weight: 800; font-family: 'Outfit', sans-serif;">Live Machinery Fleet — Power Consumption & Operational Dispatch</h2>
                                     <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #526357;">
-                                        Real-time operational status, instantaneous kW power draw, and actionable AI timing advice detailing exactly when to run each machine to maximize tariff savings.
+                                        Real-time operational status, instantaneous active power (kW), process stage constraints, and multi-machine load coordination.
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <span class="badge blue-bg" id="dash-machinery-factory-badge" style="background: #EBF5FF; color: #1E40AF; border: 1px solid #BFDBFE; font-weight: 700;">DAEWOO Steel Facility</span>
-                            <span class="badge green-bg" id="dash-machinery-savings-badge" style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-weight: 700;">Active Fleet Power Draw: 450 kW</span>
+                            <span class="badge blue-bg" id="dash-machinery-factory-badge" style="background: #EBF5FF; color: #1E40AF; border: 1px solid #BFDBFE; font-weight: 700;">DAEWOO Steel (4 of 5 Running Concurrently)</span>
+                            <span class="badge green-bg" id="dash-machinery-savings-badge" style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-weight: 700;">Active Fleet Load: 450.0 kW / 450 kW Cap</span>
                             <button class="premium-btn" onclick="switchTab('tab-scheduler'); setTimeout(() => { const el = document.getElementById('factory-machines-card'); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100);" style="width: auto; padding: 7px 15px; font-size: 0.8rem; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFFFFF; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
                                 📅 Open 24h Visual Gantt Timetable ➔
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Factory-Wide Centralized Load Monitoring Strip -->
+                    <div id="factory-load-monitoring-bar" style="margin-top: 16px; background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 14px; padding: 14px 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid rgba(210, 200, 180, 0.5); padding-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-weight: 800; color: #1F2B24; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">🏭 Centralized Factory Load Monitoring</span>
+                                <span class="badge" style="background: #E0E7FF; color: #3730A3; font-size: 0.7rem; font-weight: 700;">Simultaneous Fleet Dispatch</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #526357; display: flex; align-items: center; gap: 10px;">
+                                <span>Freshness: <strong id="flm-freshness" style="color: #047857;">1.2s</strong></span>
+                                <span>•</span>
+                                <span style="color: #4338CA; font-weight: 700;">Simulation / Demonstration Mode</span>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                            <!-- KPI 1: Active Factory Load -->
+                            <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Total Active Load</div>
+                                <div id="flm-active-load" style="font-size: 1.35rem; font-weight: 800; color: #047857; margin-top: 2px;">
+                                    450.0 <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #526357; margin-top: 2px;">Sum of 4 Active Machines</div>
+                            </div>
+
+                            <!-- KPI 2: Contract Demand Limit -->
+                            <div style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Contract Demand Limit</div>
+                                <div id="flm-contract-limit" style="font-size: 1.35rem; font-weight: 800; color: #1F2B24; margin-top: 2px;">
+                                    450.0 <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #526357; margin-top: 2px;">DISCOM Sanctioned Ceiling</div>
+                            </div>
+
+                            <!-- KPI 3: Remaining Demand Headroom -->
+                            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Demand Headroom</div>
+                                <div id="flm-headroom" style="font-size: 1.35rem; font-weight: 800; color: #D97706; margin-top: 2px;">
+                                    0.0 <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
+                                </div>
+                                <div id="flm-headroom-status" style="font-size: 0.7rem; color: #B45309; font-weight: 700; margin-top: 2px;">At Maximum Safe Limit</div>
+                            </div>
+
+                            <!-- KPI 4: Solar Generation -->
+                            <div style="background: #FFFFFF; border: 1px solid #BAE6FD; border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Solar PV Generation</div>
+                                <div id="flm-solar" style="font-size: 1.35rem; font-weight: 800; color: #0284C7; margin-top: 2px;">
+                                    142.5 <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #0369A1; margin-top: 2px;">150 kW On-Site Array</div>
+                            </div>
+
+                            <!-- KPI 5: Net Grid Import -->
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Net Grid Import</div>
+                                <div id="flm-grid-import" style="font-size: 1.35rem; font-weight: 800; color: #334155; margin-top: 2px;">
+                                    307.5 <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #526357; margin-top: 2px;">Load − Solar Generation</div>
+                            </div>
+
+                            <!-- KPI 6: Current Tariff Rate -->
+                            <div style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Current TOD Tariff</div>
+                                <div id="flm-tariff" style="font-size: 1.35rem; font-weight: 800; color: #1F2B24; margin-top: 2px;">
+                                    ₹8.50 <span style="font-size: 0.75rem; font-weight: 600;">/ kWh</span>
+                                </div>
+                                <div id="flm-tariff-label" style="font-size: 0.7rem; color: #059669; font-weight: 600; margin-top: 2px;">Day Normal Tier</div>
+                            </div>
+
+                            <!-- KPI 7: Fleet Machine Breakdown -->
+                            <div style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 10px; padding: 10px 12px;">
+                                <div style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Fleet Status</div>
+                                <div id="flm-fleet-breakdown" style="font-size: 1.15rem; font-weight: 800; color: #1F2B24; margin-top: 4px;">
+                                    <span style="color: #047857;">4 Run</span> &bull; <span style="color: #B45309;">1 Standby</span>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #526357; margin-top: 2px;">0 Fault &bull; 5 Machines Total</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -233,6 +313,147 @@
                         <!-- Dynamically populated by loadFactoryMachines -->
                     </div>
                 </div>
+
+                <!-- INTELLIGENT LOAD MANAGEMENT (NEW SECTION) -->
+                <div class="card" id="intelligent-load-management-card" style="margin-bottom: 24px; border: 2px solid #059669 !important; background: #FFFFFF !important; box-shadow: 0 12px 30px -4px rgba(5, 150, 105, 0.12) !important; border-radius: 20px; padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(220, 210, 195, 0.7); padding-bottom: 14px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span class="badge" style="background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.5px;">
+                                    🧠 INTELLIGENT LOAD MANAGEMENT
+                                </span>
+                                <span id="ilm-rec-id-badge" class="badge" style="background: #F1ECE1; color: #1F2B24; border: 1px solid #D8CFC0; font-weight: 800; font-size: 0.75rem;">
+                                    REC-2026-LM01
+                                </span>
+                                <span id="ilm-status-pill" class="badge" style="background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; font-weight: 800; font-size: 0.75rem;">
+                                    ⏳ PENDING OPERATOR REVIEW
+                                </span>
+                            </div>
+                            <h2 id="ilm-rec-title" style="margin: 0; font-size: 1.25rem; color: #1F2B24; font-weight: 800; font-family: 'Outfit', sans-serif;">
+                                Hold Flexible 70 kW Annealing Bay on Standby to Prevent 486 kW Contract Demand Breach
+                            </h2>
+                            <p id="ilm-rec-situation" style="margin: 6px 0 0 0; color: #526357; font-size: 0.88rem; line-height: 1.5;">
+                                Current factory load is 450.0 kW across 4 simultaneously operating machines. Demand headroom under the 450 kW sanctioned ceiling is 0.0 kW.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button id="ilm-reanalyze-btn" class="premium-btn" onclick="window.reanalyzeFactoryLoadManagement()" style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.8); color: #1F2B24; font-size: 0.8rem; padding: 8px 16px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+                                ⚡ Re-Evaluate Live
+                            </button>
+                            <button id="ilm-reject-btn" class="premium-btn" onclick="window.openRejectLoadRecommendationModal()" style="background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; font-size: 0.8rem; padding: 8px 16px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+                                ❌ Reject Load Shift
+                            </button>
+                            <button id="ilm-approve-btn" class="premium-btn" onclick="window.approveLoadRecommendation()" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFFFFF; font-size: 0.8rem; padding: 8px 18px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
+                                ✅ Approve Load Shift
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Body Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 18px;">
+                        <!-- Column 1: Predicted Hazard & Timing Delta -->
+                        <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 12px; padding: 16px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1F2B24; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                                <span>⚠️</span> Predicted Problem & Timing Shift
+                            </h4>
+                            <div id="ilm-problem-text" style="font-size: 0.83rem; color: #334155; line-height: 1.5; margin-bottom: 12px;">
+                                Load forecast anticipates a peak spike of 486.0 kW during 18:00–22:00. Starting Annealing Bay ANN-01 (70 kW) now would push total factory draw to 520.0 kW, exceeding contract capacity by 70 kW.
+                            </div>
+                            <div style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.6); border-radius: 8px; padding: 10px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 6px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Affected Machine:</span>
+                                    <strong id="ilm-affected-machine" style="color: #1F2B24;">ANN-01 (Annealing Bay)</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Affected Batch:</span>
+                                    <span id="ilm-affected-batch" style="color: #1F2B24; font-weight: 600;">BATCH-ANN-882</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Planned Start:</span>
+                                    <span id="ilm-planned-start" style="color: #DC2626; font-weight: 700;">18:00 (Peak Window)</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Recommended Start:</span>
+                                    <strong id="ilm-recommended-start" style="color: #047857;">22:00 (Night Off-Peak)</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Delivery Deadline Impact:</span>
+                                    <strong id="ilm-deadline-impact" style="color: #047857;">Zero Delay (6h Buffer)</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Process Constraints Respected -->
+                        <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 12px; padding: 16px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1F2B24; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                                <span>🛡️</span> Manufacturing & Process Constraints
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="color: #059669; font-weight: 800;">✔️</span>
+                                    <div>
+                                        <strong style="color: #1F2B24;">Primary Process Continuity Protected:</strong>
+                                        <span style="color: #526357;"> EAF-01 (180 kW), LRF-01 (90 kW), and CCM-01 (60 kW) continue running uninterrupted to prevent liquid slag and nozzle freeze.</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="color: #059669; font-weight: 800;">✔️</span>
+                                    <div>
+                                        <strong style="color: #1F2B24;">Contract Demand Limit Protected:</strong>
+                                        <span style="color: #526357;"> Peak grid draw during evening shift remains under 440.0 kW, safely inside the 450 kW ceiling.</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="color: #059669; font-weight: 800;">✔️</span>
+                                    <div>
+                                        <strong style="color: #1F2B24;">Annealing Metallurgy Recipe Satisfied:</strong>
+                                        <span style="color: #526357;"> Full 4.0-hour continuous thermal soak recipe executed in uninterrupted off-peak window.</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                    <span style="color: #059669; font-weight: 800;">✔️</span>
+                                    <div>
+                                        <strong style="color: #1F2B24;">Simultaneous Operation Preserved:</strong>
+                                        <span style="color: #526357;"> 4 primary production machines operate concurrently without artificial serialization.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Transparent Baseline-vs-Optimized Impact -->
+                        <div style="background: #F8F6F0; border: 1px solid rgba(210, 200, 180, 0.7); border-radius: 12px; padding: 16px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1F2B24; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                                <span>💵</span> Calculated Financial & Peak Impact
+                            </h4>
+                            <div style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.6); border-radius: 8px; padding: 12px; font-size: 0.82rem; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Baseline Energy Cost (at 18:00 Peak):</span>
+                                    <strong style="color: #DC2626;">₹3,500.00</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #526357;">Optimized Energy Cost (at 22:00 Night):</span>
+                                    <strong style="color: #047857;">₹1,176.00</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #E2E8F0; padding-top: 6px;">
+                                    <span style="color: #1F2B24; font-weight: 700;">Direct Energy Savings:</span>
+                                    <strong id="ilm-direct-savings" style="color: #047857;">₹2,324.00 (66.4%)</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #1F2B24; font-weight: 700;">Avoided Demand Overrun Fine:</span>
+                                    <strong id="ilm-avoided-fine" style="color: #047857;">₹15,000.00</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-top: 2px solid #E2E8F0; padding-top: 6px;">
+                                    <span style="color: #1F2B24; font-weight: 800;">Total Modeled Benefit:</span>
+                                    <strong id="ilm-total-benefit" style="color: #047857; font-size: 0.95rem;">₹17,324.00 / Batch</strong>
+                                </div>
+                            </div>
+                            <div id="ilm-explanation-box" style="margin-top: 10px; font-size: 0.76rem; color: #526357; line-height: 1.4;">
+                                <em>Calculated transparently against DISCOM TOD tariff: 70 kW × 4h × (₹12.50 − ₹4.20/kWh) = ₹2,324.00 direct electricity savings.</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- Telemetry Chart -->
                 <div class="chart-container card">

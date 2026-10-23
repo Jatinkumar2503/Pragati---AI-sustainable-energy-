@@ -700,8 +700,22 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
 
 def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
     """Returns factory profile and full list of machines with multi-shift run timestamps and operational reasons."""
+    from .load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    
     cfg = FACTORY_MACHINES_CATALOG.get(tenant_id, FACTORY_MACHINES_CATALOG["demo_steel"])
-    machines = cfg["machines"]
+    if tenant_id == "demo_steel":
+        machines = FACTORY_LOAD_MANAGER_INSTANCE.get_fleet_machines("demo_steel")
+        load_summary = FACTORY_LOAD_MANAGER_INSTANCE.calculate_factory_load("demo_steel")
+        active_load_kw = load_summary["total_factory_load_kw"]
+        demand_headroom_kw = load_summary["demand_headroom_kw"]
+        is_limit_breached = load_summary["is_limit_breached"]
+    else:
+        machines = cfg["machines"]
+        running_machines = [m for m in machines if m.get("is_running_now", True)]
+        active_load_kw = round(sum(m["load_kw"] for m in running_machines), 1)
+        demand_headroom_kw = round(cfg["contract_demand_kw"] - active_load_kw, 1)
+        is_limit_breached = demand_headroom_kw < 0.0
+
     total_load = sum(m["load_kw"] for m in machines)
     base_cost_inr = cfg["base_tariff_cost_24h_inr"]
     opt_cost_inr = cfg["opt_tariff_cost_24h_inr"]
@@ -710,7 +724,6 @@ def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
 
     running_machines = [m for m in machines if m.get("is_running_now", True)]
     stopped_machines = [m for m in machines if not m.get("is_running_now", True)]
-    active_load_kw = round(sum(m["load_kw"] for m in running_machines), 1)
 
     return {
         "status": "success",
@@ -723,6 +736,8 @@ def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
         "running_machines_count": len(running_machines),
         "stopped_machines_count": len(stopped_machines),
         "active_running_load_kw": active_load_kw,
+        "demand_headroom_kw": demand_headroom_kw,
+        "is_limit_breached": is_limit_breached,
         "total_connected_load_kw": total_load,
         "base_tariff_cost_24h_inr": base_cost_inr,
         "base_tariff_cost_24h_usd": cfg["base_tariff_cost_24h_usd"],
@@ -735,3 +750,4 @@ def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
         "peak_grid_opt_kw": cfg["peak_grid_opt_kw"],
         "machines": machines
     }
+

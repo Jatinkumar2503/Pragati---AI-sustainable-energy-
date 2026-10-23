@@ -1963,6 +1963,92 @@ def get_factory_machines(tenant_id: str = Query("demo_steel", description="Tenan
     from engine.factory_catalog import get_factory_machines_data
     return get_factory_machines_data(tenant_id)
 
+class LoadRecommendationApproveRequest(BaseModel):
+    recommendation_id: str = Field(..., description="ID of recommendation to approve")
+    operator_name: str = Field(default="Plant Chief Engineer", description="Authorizing engineer name")
+    notes: Optional[str] = Field(default=None, description="Operational notes")
+
+class LoadRecommendationRejectRequest(BaseModel):
+    recommendation_id: str = Field(..., description="ID of recommendation to reject")
+    operator_name: str = Field(default="Plant Chief Engineer", description="Rejecting engineer name")
+    reason: str = Field(default="Operator operational override", description="Rejection rationale")
+
+@app.get("/api/v1/factory/load-status")
+def get_factory_load_status(
+    tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier"),
+    contract_demand_limit_kw: Optional[float] = Query(None, description="Optional override for contract demand limit")
+):
+    """
+    Centralized factory load monitoring:
+    Returns instantaneous factory load (sum of active machines), demand headroom,
+    solar generation, grid import, tariffs, and machine fleet breakdown.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    return FACTORY_LOAD_MANAGER_INSTANCE.calculate_factory_load(
+        tenant_id=tenant_id,
+        contract_demand_limit_kw=contract_demand_limit_kw
+    )
+
+@app.get("/api/v1/factory/load-forecast")
+def get_factory_load_forecast(
+    tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier"),
+    horizon_hours: int = Query(24, ge=1, le=72, description="Forecast horizon in hours")
+):
+    """
+    Returns factory aggregate load forecast and peak demand breach detection.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    return FACTORY_LOAD_MANAGER_INSTANCE.evaluate_load_forecast_and_peak(
+        tenant_id=tenant_id,
+        forecast_horizon_hours=horizon_hours
+    )
+
+@app.get("/api/v1/factory/load-recommendations")
+def get_factory_load_recommendations(
+    tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")
+):
+    """
+    Returns structured intelligent load-management recommendations for factory peak shaving.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    rec = FACTORY_LOAD_MANAGER_INSTANCE.generate_intelligent_recommendation(tenant_id=tenant_id)
+    return {
+        "status": "success",
+        "active_recommendation": rec,
+        "history_count": len(FACTORY_LOAD_MANAGER_INSTANCE.recommendations_history)
+    }
+
+@app.post("/api/v1/factory/load-recommendations/approve")
+def post_approve_load_recommendation(req: LoadRecommendationApproveRequest):
+    """
+    Records human-in-the-loop operator approval for a load-management recommendation.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    res = FACTORY_LOAD_MANAGER_INSTANCE.approve_recommendation(
+        recommendation_id=req.recommendation_id,
+        operator_name=req.operator_name,
+        notes=req.notes
+    )
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res["message"])
+    return res
+
+@app.post("/api/v1/factory/load-recommendations/reject")
+def post_reject_load_recommendation(req: LoadRecommendationRejectRequest):
+    """
+    Records operator rejection with reason for a load-management recommendation.
+    """
+    from engine.load_manager import FACTORY_LOAD_MANAGER_INSTANCE
+    res = FACTORY_LOAD_MANAGER_INSTANCE.reject_recommendation(
+        recommendation_id=req.recommendation_id,
+        operator_name=req.operator_name,
+        reason=req.reason
+    )
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res["message"])
+    return res
+
+
 @app.get("/api/v1/decision/overview")
 async def get_decision_overview(tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")):
     """
