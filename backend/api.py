@@ -1954,14 +1954,23 @@ async def get_grouped_events(limit: int = Query(10, ge=1, le=100)):
         "events": events
     }
 
+@app.get("/api/v1/factory/machines")
+def get_factory_machines(tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")):
+    """
+    Returns the comprehensive machine fleet for the selected factory tenant,
+    including rated kW loads, optimal run time windows, and 24h operational status.
+    """
+    from engine.factory_catalog import get_factory_machines_data
+    return get_factory_machines_data(tenant_id)
+
 @app.get("/api/v1/decision/overview")
-async def get_decision_overview():
+async def get_decision_overview(tenant_id: str = Query("demo_steel", description="Tenant or Factory Identifier")):
     """
     PRAGATI AI Decision Center: connects forecasting, open alerts, schedule optimization,
     and modeled cost impact into one unified decision state for plant managers.
     """
     active_alerts = telemetry_streamer.get_active_alerts()
-    overview = DECISION_ENGINE_INSTANCE.get_overview(active_alerts_count=len(active_alerts))
+    overview = DECISION_ENGINE_INSTANCE.get_overview(active_alerts_count=len(active_alerts), tenant_id=tenant_id)
     return overview
 
 @app.post("/api/v1/decision/generate")

@@ -870,6 +870,38 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Factory Fleet Machine Dispatch Timetable & Visual 24h Timeline Gantt -->
+                <div class="card" id="factory-machines-card" style="margin-top: 24px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 style="display: flex; align-items: center; gap: 8px;">
+                                <span>🏭</span> Factory Fleet Machine Dispatch Timetable & Visual 24h Timeline
+                            </h2>
+                            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94A3B8;">
+                                Automated dispatch windows for all plant machinery. Shows optimal turn-on and turn-off timestamps to avoid peak tariff penalties.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span class="badge blue-bg" id="fm-factory-badge">DAEWOO Steel (5 Machines Connected)</span>
+                            <span class="badge green-bg" id="fm-savings-badge">Estimated Daily Savings: ₹5,043.91</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Gantt Legend -->
+                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 0.78rem; background: rgba(0,0,0,0.25); padding: 8px 14px; border-radius: 8px;">
+                        <span style="color: #94A3B8; font-weight: 600;">TIMELINE LEGEND:</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #10B981;"><span style="display: inline-block; width: 14px; height: 10px; background: #10B981; border-radius: 2px;"></span> Machine Running (Solar Window / Clean Energy)</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #60A5FA;"><span style="display: inline-block; width: 14px; height: 10px; background: #3B82F6; border-radius: 2px;"></span> Machine Running (Off-Peak Night Baseload)</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #F87171;"><span style="display: inline-block; width: 14px; height: 10px; background: rgba(239, 68, 68, 0.35); border: 1px dashed #EF4444; border-radius: 2px;"></span> Prohibited Overhaul / Peak Tariff Blackout</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #64748B;"><span style="display: inline-block; width: 14px; height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 2px;"></span> Machine Idle / Standby</span>
+                    </div>
+
+                    <!-- Machine Fleet Cards & Timelines Container -->
+                    <div id="factory-machines-list" style="display: flex; flex-direction: column; gap: 14px; margin-top: 18px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
             </div>
             
             <!-- TAB 5: DIGITAL TWIN -->

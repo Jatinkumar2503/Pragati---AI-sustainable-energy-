@@ -1633,6 +1633,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
     // 4. Demo Workspace Tenant Switcher & Automated Pipeline Trigger
+    // 4. Demo Workspace Tenant Switcher & Automated Pipeline Trigger
     window.switchDemoTenant = function(tenantId) {
         const tenantNames = {
             "demo_steel": "DAEWOO Steel facility (Faridabad)",
@@ -1641,16 +1642,32 @@ document.addEventListener("DOMContentLoaded", () => {
             "demo_auto": "Maruti Component Forging Plant (Gurugram)",
             "demo_chemical": "Haryana Specialty Chemicals Facility (Ambala)"
         };
+        const tenantLoads = {
+            "demo_steel": { load: 180.0, duration: 3 },
+            "demo_textile": { load: 120.0, duration: 4 },
+            "demo_rice": { load: 90.0, duration: 3 },
+            "demo_auto": { load: 300.0, duration: 3 },
+            "demo_chemical": { load: 200.0, duration: 4 }
+        };
         currentTenantId = tenantId;
         const name = tenantNames[tenantId] || tenantId;
         const sub = document.getElementById("tab-subtitle");
         if (sub) sub.innerText = `Real-time telemetry and key sustainability metrics from ${name}.`;
         
+        // Update scheduler process load inputs to match this factory's primary heavy equipment
+        const cfg = tenantLoads[tenantId] || { load: 100.0, duration: 4 };
+        const loadInput = document.getElementById("sched-load");
+        const durInput = document.getElementById("sched-duration");
+        if (loadInput) loadInput.value = cfg.load;
+        if (durInput) durInput.value = cfg.duration;
+
         loadTelemetry(7, tenantId);
         loadAnomalies(tenantId);
         runForecasting();
         runScheduler();
         runDigitalTwin();
+        window.loadDecisionCenter(tenantId);
+        window.loadFactoryMachines(tenantId);
     };
 
     window.triggerPipelineRetrain = async function() {
@@ -1691,9 +1708,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     window.currentDecisionActionId = "ACT-2026-081";
 
-    window.loadDecisionCenter = async function() {
+    window.loadDecisionCenter = async function(tenantId = currentTenantId) {
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/overview`);
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/overview?tenant_id=${tenantId}`);
             if (!res.ok) return;
             const data = await res.json();
             const dc = data.decision_center;
@@ -1960,13 +1977,13 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.innerText = "Analyzing Telemetry...";
         }
         try {
-            // Multi-stage process: Electric Arc Furnace -> Ladle Refining Furnace -> Continuous Casting Machine
-            const sampleTasks = [
-                { task_id: "EAF-01", name: "Electric Arc Melting", machine: "Electric Arc Furnace #1", task_load_kw: 180.0, task_duration_h: 3, dependencies: [], min_lag_h: 0, max_lag_h: null },
-                { task_id: "LRF-01", name: "Ladle Refining & Alloying", machine: "Ladle Refining Station #2", task_load_kw: 90.0, task_duration_h: 2, dependencies: ["EAF-01"], min_lag_h: 1, max_lag_h: 3 },
-                { task_id: "CCM-01", name: "Continuous Billet Casting", machine: "Continuous Casting Machine #1", task_load_kw: 60.0, task_duration_h: 2, dependencies: ["LRF-01"], min_lag_h: 0, max_lag_h: 2 }
-            ];
-
+            const sectorMap = {
+                "demo_steel": "Steel",
+                "demo_textile": "Textile",
+                "demo_rice": "Agro",
+                "demo_auto": "Automotive",
+                "demo_chemical": "Chemical"
+            };
             const res = await fetch(`http://127.0.0.1:8000/api/v1/decision/generate`, {
                 method: "POST",
                 headers: {
@@ -1974,15 +1991,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     "X-API-Key": API_KEY
                 },
                 body: JSON.stringify({
-                    tenant_id: "demo_steel",
-                    sector: "Steel",
+                    tenant_id: currentTenantId,
+                    sector: sectorMap[currentTenantId] || "Steel",
                     task_load_kw: 180.0,
-                    duration_hours: 3,
-                    tasks: sampleTasks
+                    duration_hours: 3
                 })
             });
             if (res.ok) {
-                await window.loadDecisionCenter();
+                await window.loadDecisionCenter(currentTenantId);
+                await window.loadFactoryMachines(currentTenantId);
             }
         } catch (e) {
             console.error("Failed to generate live decision recommendation:", e);
@@ -1991,6 +2008,159 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.disabled = false;
                 btn.innerText = "⚡ Re-Analyze Live";
             }
+        }
+    };
+
+    window.loadFactoryMachines = async function(tenantId = currentTenantId) {
+        const listEl = document.getElementById("factory-machines-list");
+        const factoryBadge = document.getElementById("fm-factory-badge");
+        const savingsBadge = document.getElementById("fm-savings-badge");
+
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/v1/factory/machines?tenant_id=${tenantId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const machines = data.machines || [];
+
+            if (factoryBadge) {
+                factoryBadge.innerText = `${data.factory_name} (${data.machines_count} Machines Connected)`;
+            }
+            if (savingsBadge) {
+                savingsBadge.innerText = `Daily Net Tariff Savings: ₹${data.savings_24h_inr.toLocaleString()} ($${data.savings_24h_usd.toFixed(2)})`;
+            }
+
+            if (!listEl) return;
+            if (machines.length === 0) {
+                listEl.innerHTML = `<p style="color: #94A3B8; font-size: 0.85rem;">No machine telemetry available for this facility.</p>`;
+                return;
+            }
+
+            let html = "";
+            machines.forEach((m, idx) => {
+                const isNight = m.status === "OFF_PEAK_NIGHT";
+                const badgeColor = isNight ? "#3B82F6" : "#10B981";
+                const badgeBg = isNight ? "rgba(59, 130, 246, 0.15)" : "rgba(16, 185, 129, 0.15)";
+                const badgeBorder = isNight ? "rgba(59, 130, 246, 0.35)" : "rgba(16, 185, 129, 0.35)";
+
+                // Generate 24-hour visual Gantt timeline blocks
+                let ganttBlocksHtml = "";
+                for (let h = 0; h < 24; h++) {
+                    let isActive = false;
+                    if (m.start_hour < m.end_hour) {
+                        isActive = (h >= m.start_hour && h < m.end_hour);
+                    } else {
+                        // Wraps midnight (e.g. 22:00 to 02:00)
+                        isActive = (h >= m.start_hour || h < m.end_hour);
+                    }
+
+                    const isPeakTariffHour = (h >= 18 && h <= 21);
+                    const isMaintenanceHour = (h >= 2 && h <= 5);
+
+                    let blockBg = "rgba(255, 255, 255, 0.06)";
+                    let blockBorder = "1px solid rgba(255, 255, 255, 0.08)";
+                    let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Idle / Standby`;
+
+                    if (isActive) {
+                        if (isNight) {
+                            blockBg = "#3B82F6";
+                            blockBorder = "1px solid #60A5FA";
+                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Off-Peak Night Run)`;
+                        } else {
+                            blockBg = "#10B981";
+                            blockBorder = "1px solid #34D399";
+                            blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Solar Window Dispatch)`;
+                        }
+                    } else if (isPeakTariffHour) {
+                        blockBg = "rgba(239, 68, 68, 0.18)";
+                        blockBorder = "1px dashed rgba(239, 68, 68, 0.6)";
+                        blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window ($0.18/kWh Surcharge Avoided)`;
+                    } else if (isMaintenanceHour) {
+                        blockBg = "rgba(100, 116, 139, 0.18)";
+                        blockBorder = "1px solid rgba(100, 116, 139, 0.4)";
+                        blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Plant Maintenance Overhaul Blackout`;
+                    }
+
+                    ganttBlocksHtml += `
+                        <div title="${blockTitle}" style="flex: 1; min-width: 14px; height: 26px; background: ${blockBg}; border: ${blockBorder}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: ${isActive ? '#FFFFFF' : '#64748B'}; font-family: monospace; font-weight: 700; cursor: pointer; transition: transform 0.15s ease;">
+                            ${h % 3 === 0 ? h : ''}
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="machine-fleet-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span class="badge" style="background: rgba(255, 255, 255, 0.1); color: #E2E8F0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
+                                    <h3 style="margin: 0; color: #F8FAFC; font-size: 1.05rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                    <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 0.72rem; font-weight: 700;">
+                                        ${isNight ? '🌙 OFF-PEAK NIGHT BASELOAD' : '☀️ SHIFTED TO SOLAR MIDDAY'}
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 4px;">
+                                    <strong style="color: #CBD5E1;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
+                                    <strong style="color: #CBD5E1;">Rated Demand:</strong> <span style="color: #F59E0B; font-weight: 700;">${m.load_kw} kW</span> &nbsp;|&nbsp;
+                                    <strong style="color: #CBD5E1;">Run Duration:</strong> <span style="color: #38BDF8; font-weight: 700;">${m.duration_h} Hours</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.88rem; font-weight: 800; color: #10B981;">
+                                    🕒 Dispatched Window: ${m.time_window}
+                                </div>
+                                <div style="font-size: 0.78rem; color: #34D399; font-weight: 600; margin-top: 2px;">
+                                    Saved vs Peak: +₹${m.hourly_cost_saved_inr.toLocaleString()} (+$${m.hourly_cost_saved_usd.toFixed(2)})
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 24-Hour Visual Dispatch Gantt -->
+                        <div style="margin-top: 10px; background: rgba(0, 0, 0, 0.35); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.72rem; color: #94A3B8;">
+                                <span>00:00 (Midnight)</span>
+                                <span>06:00 (Dawn)</span>
+                                <span style="color: #10B981; font-weight: 700;">12:00 (Solar Peak)</span>
+                                <span style="color: #EF4444; font-weight: 700;">18:00 (Peak Tariff Surcharge)</span>
+                                <span>23:00</span>
+                            </div>
+                            <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
+                                ${ganttBlocksHtml}
+                            </div>
+                        </div>
+
+                        <!-- Operational Rationale & One-Click Load -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.82rem;">
+                            <div style="color: #94A3B8; flex: 1; min-width: 260px;">
+                                <strong style="color: #E2E8F0;">Optimization Logic:</strong> ${sanitizeHTML(m.reason)}
+                            </div>
+                            <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 0.78rem; padding: 6px 14px; width: auto; font-weight: 700;">
+                                ⚡ Inspect Machine in Optimizer
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+        } catch (e) {
+            console.error("Failed to load factory machines:", e);
+        }
+    };
+
+    window.inspectMachineInScheduler = function(name, loadKw, durationH) {
+        const loadInput = document.getElementById("sched-load");
+        const durInput = document.getElementById("sched-duration");
+        if (loadInput) loadInput.value = loadKw;
+        if (durInput) durInput.value = durationH;
+
+        // Switch to scheduler tab
+        switchTab("tab-scheduler");
+        runScheduler();
+
+        // Scroll to scheduler results
+        const recCard = document.getElementById("sched-recommendation");
+        if (recCard) {
+            recCard.scrollIntoView({ behavior: "smooth" });
         }
     };
 
@@ -2507,6 +2677,10 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Failed to load grouped events:", e);
         }
     };
+
+    // Initial load of Decision Center and Factory Fleet Machines Schedule
+    window.loadDecisionCenter(currentTenantId);
+    window.loadFactoryMachines(currentTenantId);
 
     // Start live meter stream polling on interval
     window.pollLiveTelemetryStream();
