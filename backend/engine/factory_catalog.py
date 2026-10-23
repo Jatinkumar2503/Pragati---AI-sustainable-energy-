@@ -2,6 +2,8 @@
 PRAGATI AI — Industrial Factory Machines Catalog & Dispatch Schedules
 Provides realistic machine specifications, power ratings, and optimal dispatch
 time-windows for 5 major Indian manufacturing industrial sectors.
+Includes explicit operational rationale for active/idle machinery states,
+thermal buffer constraints, demand cap management, and real-time energy draw.
 """
 
 from typing import Dict, Any, List
@@ -35,6 +37,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 32.40,
                 "hourly_cost_saved_inr": 2689.20,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Currently at full 1,580°C scrap meltdown phase. On-site 150 kW rooftop solar array is generating peak 142 kW right now, directly supplying 79% of the furnace's heavy electrical load.",
+                "benefit_running_now": "Zero grid surcharge during high-temperature arc striking; prevents liquid metal temperature dropping below liquidus point (which would freeze slag and require 45 mins and 120 kWh of reheat energy).",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Shifted to peak solar generation window (11:00–14:00) avoiding $0.18/kWh peak grid tariff."
             },
             {
@@ -43,13 +50,18 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "stage": "Alloying & Desulfurization",
                 "load_kw": 90.0,
                 "duration_h": 2,
-                "start_hour": 15,
-                "end_hour": 17,
-                "time_window": "03:00 PM – 05:00 PM",
-                "tariff_slot": "Shoulder Solar Transition",
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 10.80,
                 "hourly_cost_saved_inr": 896.40,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Actively receiving molten steel tapped from EAF-01; stirring with argon bubbling to inject ferro-alloys and remove sulfur while solar power is abundantly available.",
+                "benefit_running_now": "Zero thermal latency between melting and refining; eliminates reheat burner propane consumption; ensures steel cleanliness grade meets ASTM structural standards.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Maintains 1h thermal buffer after EAF-01; completed prior to 18:00 peak tariff onset."
             },
             {
@@ -57,14 +69,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Continuous Billet Caster CCM-01",
                 "stage": "Strand Casting & Cutting",
                 "load_kw": 60.0,
-                "duration_h": 2,
-                "start_hour": 17,
-                "end_hour": 19,
-                "time_window": "05:00 PM – 07:00 PM",
-                "tariff_slot": "Pre-Peak Thermal Run",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 5.40,
                 "hourly_cost_saved_inr": 448.20,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Continuous strand mold oscillation, secondary spray cooling, and flying shear cutters are active, solidifying 150x150mm semi-finished square billets.",
+                "benefit_running_now": "Direct strand continuity prevents molten steel freezing in the tundish nozzle (avoiding a 4-hour clearing downtime); immediately outputs hot billets for rolling.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Begins immediately as Ladle Refining finishes to prevent liquid steel freezing in ladle."
             },
             {
@@ -74,12 +91,17 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "load_kw": 120.0,
                 "duration_h": 3,
                 "start_hour": 10,
-                "end_hour": 13,
-                "time_window": "10:00 AM – 01:00 PM",
+                "end_hour": 14,
+                "time_window": "10:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Peak Window",
                 "hourly_cost_saved_usd": 21.60,
                 "hourly_cost_saved_inr": 1792.80,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Hot-charging incandescent billets directly from the continuous caster into roughing and finishing roll stands at 1,050°C.",
+                "benefit_running_now": "Direct hot-charging eliminates ₹45,000 in reheat gas fuel per batch by rolling billets before they cool down; high-torque DC drive motors are powered by daytime solar.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Direct rooftop solar offset minimizes grid draw during heavy billet plastic deformation."
             },
             {
@@ -95,6 +117,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 25.20,
                 "hourly_cost_saved_inr": 2091.60,
                 "status": "OFF_PEAK_NIGHT",
+                "is_running_now": False,
+                "why_running_now": "",
+                "benefit_running_now": "",
+                "why_stopped_now": "Intentionally held on standby: Running this 70 kW resistive furnace right now while EAF-01 (180 kW), LRF (90 kW), and Rolling Mill (120 kW) are drawing 390 kW would push plant demand over the 450 kW sanctioned contract limit.",
+                "benefit_stopped_now": "Prevents triggering a ₹15,000 DISCOM maximum demand penalty fine (exceeding sanctioned contract capacity); shifts the 4-hour batch soak (280 kWh) to the overnight low-tariff band (₹4.10/kWh vs ₹12.50/kWh peak).",
                 "reason": "Dispatched during off-peak night rate ($0.06/kWh) avoiding daylight demand competition."
             }
         ]
@@ -121,12 +148,17 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "load_kw": 65.0,
                 "duration_h": 3,
                 "start_hour": 9,
-                "end_hour": 12,
-                "time_window": "09:00 AM – 12:00 PM",
+                "end_hour": 14,
+                "time_window": "09:00 AM – 02:00 PM",
                 "tariff_slot": "Morning Solar Ramp",
                 "hourly_cost_saved_usd": 11.70,
                 "hourly_cost_saved_inr": 971.10,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Licker-in cylinder and carding flats running continuously to open raw cotton bales and deliver clean carded sliver cans to drawframes.",
+                "benefit_running_now": "Maintains continuous buffer of sliver cans so downstream ring spinning frames never suffer feed starvation; leverages morning solar generation.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Synchronized with morning rooftop solar ramp to prepare sliver cans for spinning frames."
             },
             {
@@ -135,13 +167,18 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "stage": "Yarn Drafting & Twisting",
                 "load_kw": 120.0,
                 "duration_h": 4,
-                "start_hour": 11,
+                "start_hour": 10,
                 "end_hour": 15,
-                "time_window": "11:00 AM – 03:00 PM",
+                "time_window": "10:00 AM – 03:00 PM",
                 "tariff_slot": "Solar Peak Window",
                 "hourly_cost_saved_usd": 28.80,
                 "hourly_cost_saved_inr": 2390.40,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "1,008 high-speed spinning spindles drafting roving into 40s combed cotton yarn at 18,500 RPM while 100 kW solar array produces peak clean power.",
+                "benefit_running_now": "Consumes 100% of zero-marginal-cost solar output; continuous drafting maintains yarn count consistency and avoids costly yarn end-break defects.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Heaviest electrical consumer scheduled during 100 kW on-site solar peak."
             },
             {
@@ -149,14 +186,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Auto-Coner & Winding Station #1",
                 "stage": "Yarn Clearing & Cone Winding",
                 "load_kw": 45.0,
-                "duration_h": 2,
-                "start_hour": 15,
-                "end_hour": 17,
-                "time_window": "03:00 PM – 05:00 PM",
-                "tariff_slot": "Afternoon Shoulder",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 15,
+                "time_window": "11:00 AM – 03:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 5.40,
                 "hourly_cost_saved_inr": 448.20,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Optical sensors clearing yarn faults and auto-splicing bobbins onto 2.5 kg paper cones directly downstream from the ring spinning frames.",
+                "benefit_running_now": "Zero bobbin holding inventory on factory floor; packages yarn immediately into dispatchable cartons while drawing daytime solar energy.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Direct successor to ring spinning with zero buffer lag to avoid bobbin holding inventory."
             },
             {
@@ -164,14 +206,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Air-Jet Weaving Shed #2",
                 "stage": "Fabric Weaving",
                 "load_kw": 85.0,
-                "duration_h": 3,
-                "start_hour": 12,
+                "duration_h": 4,
+                "start_hour": 10,
                 "end_hour": 15,
-                "time_window": "12:00 PM – 03:00 PM",
+                "time_window": "10:00 AM – 03:00 PM",
                 "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 15.30,
                 "hourly_cost_saved_inr": 1269.90,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "48 air-jet weaving looms and central 7.5 bar screw air compressors operating continuously on premium shirting fabric export orders.",
+                "benefit_running_now": "Steady compressed air pressure avoids compressor load/unload hunting cycles; high-volume daytime weaving hits export shipping deadline.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "High compressed-air load runs when plant solar generation is at 100% capacity."
             },
             {
@@ -187,6 +234,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 12.00,
                 "hourly_cost_saved_inr": 996.00,
                 "status": "OFF_PEAK_NIGHT",
+                "is_running_now": False,
+                "why_running_now": "",
+                "benefit_running_now": "",
+                "why_stopped_now": "Held on standby until 10:00 PM night shift: Running this thermal stenter and hot circulation blowers now would push total plant demand over the 320 kW contract cap.",
+                "benefit_stopped_now": "Protects plant against ₹12,000 maximum demand penalty; shifts high-temperature thermal drying to off-peak night rate (₹4.20/kWh vs ₹11.50/kWh peak).",
                 "reason": "Runs during night off-peak tariff ($0.06/kWh) using cogeneration boiler thermal balance."
             }
         ]
@@ -211,14 +263,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Paddy Pre-Cleaner & Destoner",
                 "stage": "Grain Intake & Screening",
                 "load_kw": 35.0,
-                "duration_h": 2,
+                "duration_h": 3,
                 "start_hour": 10,
-                "end_hour": 12,
-                "time_window": "10:00 AM – 12:00 PM",
+                "end_hour": 14,
+                "time_window": "10:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 4.20,
                 "hourly_cost_saved_inr": 348.60,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Rotary aspiration screens and vibratory destoners are continuously separating mud balls, straw, and heavy stones from incoming raw 1121 paddy lots.",
+                "benefit_running_now": "Protects downstream rubber hulling rolls from premature abrasive wear (saving ₹18,000/week in roller replacement); powers screening directly from solar.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Pre-cleans paddy lot for husker lines using on-site solar generation."
             },
             {
@@ -234,6 +291,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 16.20,
                 "hourly_cost_saved_inr": 1344.60,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Differential rubber rollers stripping paddy husk at 91% shelling efficiency; 75 kW solar array offsets majority of heavy induction motor draw.",
+                "benefit_running_now": "Maximizes brown rice recovery with minimal grain breakage; captures peak solar generation without drawing expensive grid units.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Highest continuous mill load shifted out of evening tariff into zero-cost solar slot."
             },
             {
@@ -241,14 +303,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Rice Whitener & Polisher #3",
                 "stage": "Friction Bran Polishing",
                 "load_kw": 50.0,
-                "duration_h": 2,
-                "start_hour": 14,
-                "end_hour": 16,
-                "time_window": "02:00 PM – 04:00 PM",
-                "tariff_slot": "Afternoon Solar Window",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 6.00,
                 "hourly_cost_saved_inr": 498.00,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Vertical silicon carbide abrasive rollers scouring bran layers to achieve uniform export-grade whiteness (Kett meter 42.5 score).",
+                "benefit_running_now": "Direct coupling with de-husker output keeps grain temperate below 42°C, preventing thermal stress micro-cracks inside basmati grains.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Downstream polishing follows de-husking with 1h buffer storage."
             },
             {
@@ -256,14 +323,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Buhler Sortex Optical Sorter",
                 "stage": "Chalky & Discolored Kernel Rejection",
                 "load_kw": 40.0,
-                "duration_h": 2,
-                "start_hour": 12,
+                "duration_h": 3,
+                "start_hour": 11,
                 "end_hour": 14,
-                "time_window": "12:00 PM – 02:00 PM",
+                "time_window": "11:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 4.80,
                 "hourly_cost_saved_inr": 398.40,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Trichromatic CCD cameras and ultra-fast pneumatic air ejectors inspecting 14 tons/hour of polished rice to reject yellow, peck, and chalky kernels.",
+                "benefit_running_now": "Guarantees 99.7% export purity for Middle East containers in real time; operates on clean, surge-free solar power.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Precision optical color sorting scheduled during maximum clean solar power."
             },
             {
@@ -279,6 +351,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 3.60,
                 "hourly_cost_saved_inr": 298.80,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": False,
+                "why_running_now": "",
+                "benefit_running_now": "",
+                "why_stopped_now": "On scheduled standby: Storage bins are buffering sorted grains. Grader line will run from 04:00 PM to 06:00 PM to finish separation before the 18:00 peak tariff penalty.",
+                "benefit_stopped_now": "Prevents exceeding the 250 kW plant demand ceiling during peak midday milling; avoids evening peak grid tariff ($0.18/kWh).",
                 "reason": "Separates premium long grains and broken rice before evening peak shut-off."
             }
         ]
@@ -303,14 +380,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Inductotherm 800kW Billet Heater",
                 "stage": "Induction Billet Heating (1250°C)",
                 "load_kw": 220.0,
-                "duration_h": 2,
+                "duration_h": 3,
                 "start_hour": 10,
-                "end_hour": 12,
-                "time_window": "10:00 AM – 12:00 PM",
+                "end_hour": 14,
+                "time_window": "10:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Peak Window",
                 "hourly_cost_saved_usd": 26.40,
                 "hourly_cost_saved_inr": 2191.20,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Medium-frequency induction coils heating alloy steel crankshaft billets to precise forging temperature (1,250°C); 250 kW solar array absorbs the heavy inductive draw.",
+                "benefit_running_now": "Rapid 45-second induction cycle prevents scale formation on steel surface; avoids drawing peak grid units for heavy thermal transformation.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Pre-heats 65mm alloy steel round bars immediately prior to drop hammer forging."
             },
             {
@@ -319,13 +401,18 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "stage": "Hot Die Forging & Heading",
                 "load_kw": 300.0,
                 "duration_h": 3,
-                "start_hour": 12,
-                "end_hour": 15,
-                "time_window": "12:00 PM – 03:00 PM",
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 54.00,
                 "hourly_cost_saved_inr": 4482.00,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Closed-die hammer striking incandescent billets into connecting rods and steering knuckles under 1,600 kN ram force.",
+                "benefit_running_now": "Hot-die plastic deformation completes with zero reheat delay; synchronized with induction heater to keep takt time below 32 seconds.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Massive 300 kW forge draw scheduled right in the 250 kW solar peak to avoid demand spikes."
             },
             {
@@ -333,15 +420,40 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Hydraulic Trimming & Piercing",
                 "stage": "Flash Removal & Hole Piercing",
                 "load_kw": 75.0,
-                "duration_h": 2,
-                "start_hour": 15,
-                "end_hour": 17,
-                "time_window": "03:00 PM – 05:00 PM",
-                "tariff_slot": "Afternoon Window",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 9.00,
                 "hourly_cost_saved_inr": 747.00,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Hydraulic press dies shearing peripheral flash from newly forged components while parts remain in 850°C ductile range.",
+                "benefit_running_now": "Shearing while warm requires 60% less hydraulic tonnage than cold trimming, preventing die chipping and micro-crack formation.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Immediate post-forging trim cycle with 10-minute thermal lag limit."
+            },
+            {
+                "machine_id": "CNC-01",
+                "name": "5-Axis CNC Finish Machining Cell",
+                "stage": "Spline Milling & Thread Turning",
+                "load_kw": 95.0,
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Afternoon Window",
+                "hourly_cost_saved_usd": 17.10,
+                "hourly_cost_saved_inr": 1419.30,
+                "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Precision motorized spindles milling oil holes and turning bearing journals on connecting rods at 12,000 RPM.",
+                "benefit_running_now": "Maintains 5-micron machining tolerances using stabilized clean power; ensures continuous flow of finished components to OEM line.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
+                "reason": "High precision tooling runs on stabilized solar voltage with zero grid sags."
             },
             {
                 "machine_id": "FURN-01",
@@ -356,22 +468,12 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 31.20,
                 "hourly_cost_saved_inr": 2589.60,
                 "status": "OFF_PEAK_NIGHT",
+                "is_running_now": False,
+                "why_running_now": "",
+                "benefit_running_now": "",
+                "why_stopped_now": "Intentionally held on standby: Running this 130 kW multi-zone furnace right now while the Forging Press (300 kW) and Induction Heater (220 kW) are pulling 520 kW would breach the 750 kW contract demand limit.",
+                "benefit_stopped_now": "Prevents triggering a ₹25,000 maximum demand penalty fine from Haryana Vidyut Prasaran Nigam; defers 520 kWh thermal cycle to overnight off-peak tier ($0.06/kWh).",
                 "reason": "Dispatched into low-tariff overnight hours ($0.06/kWh) avoiding the 750 kW contract demand peak."
-            },
-            {
-                "machine_id": "CNC-01",
-                "name": "5-Axis CNC Finish Machining Cell",
-                "stage": "Spline Milling & Thread Turning",
-                "load_kw": 95.0,
-                "duration_h": 3,
-                "start_hour": 13,
-                "end_hour": 16,
-                "time_window": "01:00 PM – 04:00 PM",
-                "tariff_slot": "Solar Afternoon Window",
-                "hourly_cost_saved_usd": 17.10,
-                "hourly_cost_saved_inr": 1419.30,
-                "status": "OPTIMIZED_RUN",
-                "reason": "High precision tooling runs on stabilized solar voltage with zero grid sags."
             }
         ]
     },
@@ -403,6 +505,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 48.00,
                 "hourly_cost_saved_inr": 3984.00,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Jacketed agitation and catalyst dosing running in delicate exothermic polymerization reaction (85°C, 3.2 bar) under continuous solar power.",
+                "benefit_running_now": "Continuous agitation prevents thermal polymer runaway and batch coagulation; 180 kW solar array absorbs heavy motor draw.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "4-hour polymerization run scheduled right during solar surplus to offset heavy agitator motors."
             },
             {
@@ -411,13 +518,18 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "stage": "Solvent Separation & Stripping",
                 "load_kw": 110.0,
                 "duration_h": 3,
-                "start_hour": 14,
-                "end_hour": 17,
-                "time_window": "02:00 PM – 05:00 PM",
-                "tariff_slot": "Afternoon Window",
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 19.80,
                 "hourly_cost_saved_inr": 1643.40,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Vacuum reboilers and reflux circulating pumps separating high-purity solvent fractions from reaction mother liquor at 0.05 bar.",
+                "benefit_running_now": "Continuous vapor-liquid equilibrium prevents column thermal cycling and preserves 99.6% solvent purity for immediate recycling.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Direct pipeline transfer from reactor completed before 18:00 peak tariff penalty window."
             },
             {
@@ -425,14 +537,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Centrifugal Decanter & Filter",
                 "stage": "Precipitate Cake Separation",
                 "load_kw": 55.0,
-                "duration_h": 2,
-                "start_hour": 13,
-                "end_hour": 15,
-                "time_window": "01:00 PM – 03:00 PM",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
                 "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 6.60,
                 "hourly_cost_saved_inr": 547.80,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "3,400 RPM horizontal bowl centrifuge dewatering crystalline polymer slurry coming from the reactor crystallization tanks.",
+                "benefit_running_now": "Reduces moisture content of chemical cake to 8% before drying, cutting downstream dryer thermal energy consumption by 45%.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "High-torque centrifuge runs during solar generation to avoid APFC capacitor wear."
             },
             {
@@ -440,14 +557,19 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "name": "Fluid Bed Polymer Dryer FBD-500",
                 "stage": "Hot Air Fluidized Drying",
                 "load_kw": 70.0,
-                "duration_h": 2,
-                "start_hour": 15,
-                "end_hour": 17,
-                "time_window": "03:00 PM – 05:00 PM",
-                "tariff_slot": "Afternoon Window",
+                "duration_h": 3,
+                "start_hour": 11,
+                "end_hour": 14,
+                "time_window": "11:00 AM – 02:00 PM",
+                "tariff_slot": "Solar Midday Window",
                 "hourly_cost_saved_usd": 8.40,
                 "hourly_cost_saved_inr": 697.20,
                 "status": "OPTIMIZED_RUN",
+                "is_running_now": True,
+                "why_running_now": "Centrifugal draft blowers and steam-heated coils suspending polymer particles in hot air to evaporate residual surface solvent.",
+                "benefit_running_now": "Achieves strict 0.05% moisture specification for export polymer bags; completes drying before the 18:00 grid surcharge period.",
+                "why_stopped_now": "",
+                "benefit_stopped_now": "",
                 "reason": "Drying cycle completes before 18:00 to prevent peak thermal boiler surcharges."
             },
             {
@@ -463,6 +585,11 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
                 "hourly_cost_saved_usd": 19.20,
                 "hourly_cost_saved_inr": 1593.60,
                 "status": "OFF_PEAK_NIGHT",
+                "is_running_now": False,
+                "why_running_now": "",
+                "benefit_running_now": "",
+                "why_stopped_now": "Intentionally stopped on standby: High-power pin mill and liquid nitrogen chiller held for the 10:00 PM night shift to avoid pushing total plant demand over 520 kW.",
+                "benefit_stopped_now": "Avoids ₹18,000 contract demand breach fine; takes advantage of lowest night tariff ($0.06/kWh) for energy-dense cryogenic grinding.",
                 "reason": "Cryogenic compressor and pin-mill grind overnight at lowest tariff tier ($0.06/kWh)."
             }
         ]
@@ -470,7 +597,7 @@ FACTORY_MACHINES_CATALOG: Dict[str, Dict[str, Any]] = {
 }
 
 def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
-    """Returns factory profile and full list of machines with run timestamps."""
+    """Returns factory profile and full list of machines with run timestamps and operational reasons."""
     cfg = FACTORY_MACHINES_CATALOG.get(tenant_id, FACTORY_MACHINES_CATALOG["demo_steel"])
     machines = cfg["machines"]
     total_load = sum(m["load_kw"] for m in machines)
@@ -478,6 +605,10 @@ def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
     opt_cost_inr = cfg["opt_tariff_cost_24h_inr"]
     savings_inr = round(base_cost_inr - opt_cost_inr, 2)
     savings_pct = round((savings_inr / base_cost_inr) * 100.0, 2) if base_cost_inr > 0 else 0.0
+
+    running_machines = [m for m in machines if m.get("is_running_now", True)]
+    stopped_machines = [m for m in machines if not m.get("is_running_now", True)]
+    active_load_kw = round(sum(m["load_kw"] for m in running_machines), 1)
 
     return {
         "status": "success",
@@ -487,6 +618,9 @@ def get_factory_machines_data(tenant_id: str = "demo_steel") -> Dict[str, Any]:
         "contract_demand_kw": cfg["contract_demand_kw"],
         "solar_capacity_kw": cfg["solar_capacity_kw"],
         "machines_count": len(machines),
+        "running_machines_count": len(running_machines),
+        "stopped_machines_count": len(stopped_machines),
+        "active_running_load_kw": active_load_kw,
         "total_connected_load_kw": total_load,
         "base_tariff_cost_24h_inr": base_cost_inr,
         "base_tariff_cost_24h_usd": cfg["base_tariff_cost_24h_usd"],

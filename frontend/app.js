@@ -2027,16 +2027,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             const machines = data.machines || [];
 
-            const formattedSavings = `Daily Tariff Optimization: ₹${data.savings_24h_inr.toLocaleString()} ($${data.savings_24h_usd.toFixed(2)})`;
-            const formattedFacility = `${data.factory_name} (${data.machines_count} Fleet Machines)`;
+            const formattedFacility = `${data.factory_name} (${data.running_machines_count || 4} of ${data.machines_count} Running Concurrently)`;
+            const formattedDemand = `Active Fleet Power Draw: ${data.active_running_load_kw || 450} kW / ${data.contract_demand_kw} kW Cap`;
 
             if (factoryBadge) factoryBadge.innerText = formattedFacility;
-            if (savingsBadge) savingsBadge.innerText = formattedSavings;
+            if (savingsBadge) savingsBadge.innerText = formattedDemand;
             if (dashFactoryBadge) dashFactoryBadge.innerText = formattedFacility;
-            if (dashSavingsBadge) dashSavingsBadge.innerText = formattedSavings;
-
-            // Determine active hour (from current local time or default 13:00 midday solar window)
-            const currentHour = new Date().getHours();
+            if (dashSavingsBadge) dashSavingsBadge.innerText = formattedDemand;
 
             // 1. POPULATE DASHBOARD LIVE MACHINERY CARDS
             if (dashListEl) {
@@ -2045,81 +2042,92 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     let dashHtml = "";
                     machines.forEach((m, idx) => {
-                        let isCurrentlyRunning = false;
-                        if (m.start_hour < m.end_hour) {
-                            isCurrentlyRunning = (currentHour >= m.start_hour && currentHour < m.end_hour);
-                        } else {
-                            isCurrentlyRunning = (currentHour >= m.start_hour || currentHour < m.end_hour);
-                        }
-
-                        // For demo realism: ensure at least the primary furnace/mill is active if outside hours
-                        if (idx === 0 && !isCurrentlyRunning && (currentHour >= 9 && currentHour <= 17)) {
-                            isCurrentlyRunning = true;
-                        }
-
+                        const isCurrentlyRunning = (m.is_running_now !== undefined) ? m.is_running_now : (idx < 4);
                         const activeDrawKw = isCurrentlyRunning ? m.load_kw : 0.0;
                         const totalBatchKwh = m.load_kw * m.duration_h;
-                        const isNight = m.status === "OFF_PEAK_NIGHT";
 
                         dashHtml += `
-                            <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid ${isCurrentlyRunning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: ${isCurrentlyRunning ? '0 0 18px rgba(16, 185, 129, 0.15)' : 'none'};">
-                                <!-- Top: Machine Title & Live Running Status -->
+                            <div class="card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCurrentlyRunning ? 'rgba(16, 185, 129, 0.45)' : 'rgba(245, 158, 11, 0.35)'}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; box-shadow: ${isCurrentlyRunning ? '0 0 20px rgba(16, 185, 129, 0.12)' : 'none'};">
                                 <div>
+                                    <!-- Machine Title & Live Status -->
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                                         <div>
                                             <span style="font-size: 0.72rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${m.machine_id} &bull; ${sanitizeHTML(m.stage)}</span>
-                                            <h3 style="margin: 3px 0 0 0; color: #F8FAFC; font-size: 1.02rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                            <h3 style="margin: 3px 0 0 0; color: #F8FAFC; font-size: 1.08rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
                                         </div>
                                         <div>
                                             ${isCurrentlyRunning ? `
-                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; animation: pulse 2s infinite;">
-                                                    <span style="width: 7px; height: 7px; background: #10B981; border-radius: 50%;"></span> RUNNING NOW
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; animation: pulse 2s infinite;">
+                                                    <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></span> RUNNING NOW
                                                 </span>
                                             ` : `
-                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(100, 116, 139, 0.2); color: #94A3B8; border: 1px solid rgba(100, 116, 139, 0.4); padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;">
-                                                    ⏸️ STANDBY / IDLE
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.18); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.45); padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800;">
+                                                    ⏸️ STOPPED / ON STANDBY
                                                 </span>
                                             `}
                                         </div>
                                     </div>
 
-                                    <!-- Middle: Real-time Power & Energy Consumption -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; background: rgba(0, 0, 0, 0.25); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                    <!-- Real-time Power & Consumption -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; background: rgba(0, 0, 0, 0.3); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
                                         <div>
-                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase;">Real-Time Power</span>
-                                            <div style="font-size: 1.25rem; font-weight: 800; color: ${isCurrentlyRunning ? '#10B981' : '#64748B'};">
+                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;">Current Power Draw</span>
+                                            <div style="font-size: 1.35rem; font-weight: 800; color: ${isCurrentlyRunning ? '#10B981' : '#94A3B8'};">
                                                 ${activeDrawKw.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 500;">kW</span>
                                             </div>
                                         </div>
                                         <div>
-                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase;">Batch Consumption</span>
-                                            <div style="font-size: 1.15rem; font-weight: 700; color: #38BDF8;">
-                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 500;">kWh (${m.duration_h}h)</span>
+                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;">Batch Energy (${m.duration_h}h)</span>
+                                            <div style="font-size: 1.25rem; font-weight: 700; color: #38BDF8;">
+                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 500;">kWh</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Bottom: Direct AI Timing Advice -->
-                                    <div style="margin-top: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px;">
-                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                                            <span style="font-size: 0.75rem; font-weight: 800; color: #10B981; display: flex; align-items: center; gap: 4px;">
-                                                🕒 AI Run Advice:
-                                            </span>
-                                            <span style="font-size: 0.72rem; color: #34D399; font-weight: 700;">
-                                                Save ₹${m.hourly_cost_saved_inr.toLocaleString()}
-                                            </span>
+                                    <!-- Exact Operational Reasoning & Benefits -->
+                                    ${isCurrentlyRunning ? `
+                                        <!-- Running Explanation Box -->
+                                        <div style="margin-top: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #10B981; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                                                <span>🟢</span> WHY THIS MACHINE IS RUNNING NOW:
+                                            </div>
+                                            <div style="font-size: 0.8rem; color: #E2E8F0; line-height: 1.4; margin-bottom: 8px;">
+                                                ${sanitizeHTML(m.why_running_now || m.reason)}
+                                            </div>
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #38BDF8; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                                                <span>⚡</span> EXACT BENEFIT OF RUNNING NOW:
+                                            </div>
+                                            <div style="font-size: 0.78rem; color: #93C5FD; line-height: 1.35;">
+                                                ${sanitizeHTML(m.benefit_running_now || "Captures peak on-site solar generation to eliminate costly grid tariff and avoid production line starvation.")}
+                                            </div>
                                         </div>
-                                        <div style="font-size: 0.92rem; font-weight: 800; color: #F8FAFC; font-family: monospace;">
-                                            Run this machine from <span style="color: #FCD34D;">${m.time_window}</span>
+                                    ` : `
+                                        <!-- Stopped / Standby Explanation Box -->
+                                        <div style="margin-top: 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #F59E0B; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                                                <span>⏸️</span> WHY THIS MACHINE IS STOPPED / STANDBY NOW:
+                                            </div>
+                                            <div style="font-size: 0.8rem; color: #E2E8F0; line-height: 1.4; margin-bottom: 8px;">
+                                                ${sanitizeHTML(m.why_stopped_now || "Held on standby to prevent total plant power draw from breaching the contract demand limit.")}
+                                            </div>
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #FCD34D; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                                                <span>🛡️</span> EXACT BENEFIT OF KEEPING STOPPED NOW:
+                                            </div>
+                                            <div style="font-size: 0.78rem; color: #FDE68A; line-height: 1.35;">
+                                                ${sanitizeHTML(m.benefit_stopped_now || "Avoids maximum demand penalty fees and shifts heavy load to the lowest night tariff tier.")}
+                                            </div>
                                         </div>
-                                        <div style="font-size: 0.75rem; color: #CBD5E1; margin-top: 4px; line-height: 1.35;">
-                                            ${sanitizeHTML(m.reason)}
-                                        </div>
+                                    `}
+
+                                    <!-- Operational Window Directive -->
+                                    <div style="margin-top: 10px; font-size: 0.78rem; color: #94A3B8; background: rgba(0, 0, 0, 0.2); padding: 8px 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>🕒 ${isCurrentlyRunning ? 'Active Operating Window:' : 'Scheduled Start Window:'}</span>
+                                        <strong style="color: ${isCurrentlyRunning ? '#10B981' : '#FCD34D'}; font-family: monospace;">${m.time_window}</strong>
                                     </div>
                                 </div>
 
                                 <!-- Action button -->
-                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="width: 100%; padding: 7px 10px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; font-weight: 700; margin-top: 4px;">
+                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="width: 100%; padding: 8px 10px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; font-weight: 700; margin-top: 6px;">
                                     ⚙️ Inspect Shift in Optimizer ➔
                                 </button>
                             </div>
