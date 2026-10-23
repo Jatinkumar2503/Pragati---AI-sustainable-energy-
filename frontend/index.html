@@ -206,30 +206,30 @@
                 </div>
 
                 <!-- Live Factory Fleet Machinery Status & AI Operational Run Windows -->
-                <div class="card" id="dashboard-machinery-card" style="margin-bottom: 24px; border: 1px solid rgba(16, 185, 129, 0.25); background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.65) 100%);">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div class="card" id="dashboard-machinery-card" style="margin-bottom: 24px; border: 1px solid rgba(210, 200, 180, 0.8) !important; background: #FFFFFF !important; box-shadow: 0 12px 30px -4px rgba(60, 52, 38, 0.08) !important; border-radius: 20px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(220, 210, 195, 0.7); padding-bottom: 14px;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 1.4rem;">⚡</span>
+                                <span style="font-size: 1.5rem;">⚡</span>
                                 <div>
-                                    <h2 style="margin: 0; font-size: 1.15rem; color: #F8FAFC;">Live Machinery Fleet — Power Consumption & AI Run Window Advice</h2>
-                                    <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: #94A3B8;">
+                                    <h2 style="margin: 0; font-size: 1.2rem; color: #1F2B24; font-weight: 800; font-family: 'Outfit', sans-serif;">Live Machinery Fleet — Power Consumption & AI Run Window Advice</h2>
+                                    <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #526357;">
                                         Real-time operational status, instantaneous kW power draw, and actionable AI timing advice detailing exactly when to run each machine to maximize tariff savings.
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <span class="badge blue-bg" id="dash-machinery-factory-badge">DAEWOO Steel Facility</span>
-                            <span class="badge green-bg" id="dash-machinery-savings-badge">Estimated Daily Savings: ₹5,043.91</span>
-                            <button class="premium-btn" onclick="switchTab('tab-scheduler'); setTimeout(() => { const el = document.getElementById('factory-machines-card'); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100);" style="width: auto; padding: 6px 14px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.2); border: 1px solid #3B82F6; color: #93C5FD; font-weight: 700;">
+                            <span class="badge blue-bg" id="dash-machinery-factory-badge" style="background: #EBF5FF; color: #1E40AF; border: 1px solid #BFDBFE; font-weight: 700;">DAEWOO Steel Facility</span>
+                            <span class="badge green-bg" id="dash-machinery-savings-badge" style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-weight: 700;">Active Fleet Power Draw: 450 kW</span>
+                            <button class="premium-btn" onclick="switchTab('tab-scheduler'); setTimeout(() => { const el = document.getElementById('factory-machines-card'); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100);" style="width: auto; padding: 7px 15px; font-size: 0.8rem; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFFFFF; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
                                 📅 Open 24h Visual Gantt Timetable ➔
                             </button>
                         </div>
                     </div>
                     
                     <!-- Machinery Grid Container -->
-                    <div id="dashboard-machines-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 16px;">
+                    <div id="dashboard-machines-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 18px;">
                         <!-- Dynamically populated by loadFactoryMachines -->
                     </div>
                 </div>
@@ -907,23 +907,23 @@
                             <h2 style="display: flex; align-items: center; gap: 8px;">
                                 <span>🏭</span> Factory Fleet Machine Dispatch Timetable & Visual 24h Timeline
                             </h2>
-                            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94A3B8;">
+                            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #526357;">
                                 Automated dispatch windows for all plant machinery. Shows optimal turn-on and turn-off timestamps to avoid peak tariff penalties.
                             </p>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <span class="badge blue-bg" id="fm-factory-badge">DAEWOO Steel (5 Machines Connected)</span>
-                            <span class="badge green-bg" id="fm-savings-badge">Estimated Daily Savings: ₹5,043.91</span>
+                            <span class="badge blue-bg" id="fm-factory-badge" style="background: #EBF5FF; color: #1E40AF; border: 1px solid #BFDBFE; font-weight: 700;">DAEWOO Steel (5 Machines Connected)</span>
+                            <span class="badge green-bg" id="fm-savings-badge" style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-weight: 700;">Estimated Daily Savings: ₹5,043.91</span>
                         </div>
                     </div>
 
                     <!-- Visual Gantt Legend -->
-                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 0.78rem; background: rgba(0,0,0,0.25); padding: 8px 14px; border-radius: 8px;">
-                        <span style="color: #94A3B8; font-weight: 600;">TIMELINE LEGEND:</span>
-                        <span style="display: flex; align-items: center; gap: 6px; color: #10B981;"><span style="display: inline-block; width: 14px; height: 10px; background: #10B981; border-radius: 2px;"></span> Machine Running (Solar Window / Clean Energy)</span>
-                        <span style="display: flex; align-items: center; gap: 6px; color: #60A5FA;"><span style="display: inline-block; width: 14px; height: 10px; background: #3B82F6; border-radius: 2px;"></span> Machine Running (Off-Peak Night Baseload)</span>
-                        <span style="display: flex; align-items: center; gap: 6px; color: #F87171;"><span style="display: inline-block; width: 14px; height: 10px; background: rgba(239, 68, 68, 0.35); border: 1px dashed #EF4444; border-radius: 2px;"></span> Prohibited Overhaul / Peak Tariff Blackout</span>
-                        <span style="display: flex; align-items: center; gap: 6px; color: #64748B;"><span style="display: inline-block; width: 14px; height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 2px;"></span> Machine Idle / Standby</span>
+                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 0.78rem; background: #F7F5EE; border: 1px solid rgba(210, 200, 180, 0.7); padding: 9px 14px; border-radius: 10px;">
+                        <span style="color: #1F2B24; font-weight: 700;">TIMELINE LEGEND:</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #047857; font-weight: 600;"><span style="display: inline-block; width: 14px; height: 10px; background: #059669; border-radius: 2px;"></span> Machine Running (Solar Window / Clean Energy)</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #1D4ED8; font-weight: 600;"><span style="display: inline-block; width: 14px; height: 10px; background: #2563EB; border-radius: 2px;"></span> Machine Running (Off-Peak Night Baseload)</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #B91C1C; font-weight: 600;"><span style="display: inline-block; width: 14px; height: 10px; background: rgba(239, 68, 68, 0.15); border: 1px dashed #DC2626; border-radius: 2px;"></span> Prohibited Overhaul / Peak Tariff Blackout</span>
+                        <span style="display: flex; align-items: center; gap: 6px; color: #64748B; font-weight: 600;"><span style="display: inline-block; width: 14px; height: 10px; background: #E2E8F0; border: 1px solid #CBD5E1; border-radius: 2px;"></span> Machine Idle / Standby</span>
                     </div>
 
                     <!-- Machine Fleet Cards & Timelines Container -->

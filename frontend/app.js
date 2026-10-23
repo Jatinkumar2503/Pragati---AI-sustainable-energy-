@@ -2047,21 +2047,21 @@ document.addEventListener("DOMContentLoaded", () => {
                         const totalBatchKwh = m.load_kw * m.duration_h;
 
                         dashHtml += `
-                            <div class="card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid ${isCurrentlyRunning ? 'rgba(16, 185, 129, 0.45)' : 'rgba(245, 158, 11, 0.35)'}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; box-shadow: ${isCurrentlyRunning ? '0 0 20px rgba(16, 185, 129, 0.12)' : 'none'};">
+                            <div class="card" style="background: #FFFFFF !important; border: 1px solid ${isCurrentlyRunning ? '#A7F3D0' : '#FDE68A'} !important; border-top: 4px solid ${isCurrentlyRunning ? '#059669' : '#D97706'} !important; border-radius: 16px !important; padding: 18px !important; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; box-shadow: 0 6px 18px rgba(60, 52, 38, 0.06) !important;">
                                 <div>
                                     <!-- Machine Title & Live Status -->
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                                         <div>
-                                            <span style="font-size: 0.72rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${m.machine_id} &bull; ${sanitizeHTML(m.stage)}</span>
-                                            <h3 style="margin: 3px 0 0 0; color: #F8FAFC; font-size: 1.08rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                            <span style="font-size: 0.72rem; color: #526357; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${m.machine_id} &bull; ${sanitizeHTML(m.stage)}</span>
+                                            <h3 style="margin: 3px 0 0 0; color: #1F2B24; font-size: 1.1rem; font-family: 'Outfit', sans-serif; font-weight: 800;">${sanitizeHTML(m.name)}</h3>
                                         </div>
                                         <div>
                                             ${isCurrentlyRunning ? `
-                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; animation: pulse 2s infinite;">
-                                                    <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></span> RUNNING NOW
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; animation: pulse 2s infinite;">
+                                                    <span style="width: 8px; height: 8px; background: #059669; border-radius: 50%;"></span> RUNNING NOW
                                                 </span>
                                             ` : `
-                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.18); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.45); padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800;">
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800;">
                                                     ⏸️ STOPPED / ON STANDBY
                                                 </span>
                                             `}
@@ -2069,65 +2069,65 @@ document.addEventListener("DOMContentLoaded", () => {
                                     </div>
 
                                     <!-- Real-time Power & Consumption -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; background: rgba(0, 0, 0, 0.3); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; background: #F8F6F0; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(210, 200, 180, 0.6);">
                                         <div>
-                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;">Current Power Draw</span>
-                                            <div style="font-size: 1.35rem; font-weight: 800; color: ${isCurrentlyRunning ? '#10B981' : '#94A3B8'};">
-                                                ${activeDrawKw.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 500;">kW</span>
+                                            <span style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Current Power Draw</span>
+                                            <div style="font-size: 1.35rem; font-weight: 800; color: ${isCurrentlyRunning ? '#047857' : '#64748B'};">
+                                                ${activeDrawKw.toFixed(1)} <span style="font-size: 0.75rem; font-weight: 600;">kW</span>
                                             </div>
                                         </div>
                                         <div>
-                                            <span style="font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;">Batch Energy (${m.duration_h}h)</span>
-                                            <div style="font-size: 1.25rem; font-weight: 700; color: #38BDF8;">
-                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 500;">kWh</span>
+                                            <span style="font-size: 0.7rem; color: #526357; text-transform: uppercase; font-weight: 700;">Batch Energy (${m.duration_h}h)</span>
+                                            <div style="font-size: 1.25rem; font-weight: 800; color: #0284C7;">
+                                                ${totalBatchKwh.toFixed(0)} <span style="font-size: 0.75rem; font-weight: 600;">kWh</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Exact Operational Reasoning & Benefits -->
                                     ${isCurrentlyRunning ? `
-                                        <!-- Running Explanation Box -->
-                                        <div style="margin-top: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px;">
-                                            <div style="font-size: 0.75rem; font-weight: 800; color: #10B981; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                                        <!-- Running Explanation Box (Soft Mint Cream) -->
+                                        <div style="margin-top: 12px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 12px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #15803D; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
                                                 <span>🟢</span> WHY THIS MACHINE IS RUNNING NOW:
                                             </div>
-                                            <div style="font-size: 0.8rem; color: #E2E8F0; line-height: 1.4; margin-bottom: 8px;">
+                                            <div style="font-size: 0.83rem; color: #1F2B24; line-height: 1.45; margin-bottom: 8px; font-weight: 500;">
                                                 ${sanitizeHTML(m.why_running_now || m.reason)}
                                             </div>
-                                            <div style="font-size: 0.75rem; font-weight: 800; color: #38BDF8; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #0369A1; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
                                                 <span>⚡</span> EXACT BENEFIT OF RUNNING NOW:
                                             </div>
-                                            <div style="font-size: 0.78rem; color: #93C5FD; line-height: 1.35;">
+                                            <div style="font-size: 0.82rem; color: #0F172A; line-height: 1.4; font-weight: 500;">
                                                 ${sanitizeHTML(m.benefit_running_now || "Captures peak on-site solar generation to eliminate costly grid tariff and avoid production line starvation.")}
                                             </div>
                                         </div>
                                     ` : `
-                                        <!-- Stopped / Standby Explanation Box -->
-                                        <div style="margin-top: 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px;">
-                                            <div style="font-size: 0.75rem; font-weight: 800; color: #F59E0B; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                                        <!-- Stopped / Standby Explanation Box (Soft Warm Cream) -->
+                                        <div style="margin-top: 12px; background: #FFFDF5; border: 1px solid #FDE68A; border-radius: 10px; padding: 12px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #B45309; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
                                                 <span>⏸️</span> WHY THIS MACHINE IS STOPPED / STANDBY NOW:
                                             </div>
-                                            <div style="font-size: 0.8rem; color: #E2E8F0; line-height: 1.4; margin-bottom: 8px;">
+                                            <div style="font-size: 0.83rem; color: #1F2B24; line-height: 1.45; margin-bottom: 8px; font-weight: 500;">
                                                 ${sanitizeHTML(m.why_stopped_now || "Held on standby to prevent total plant power draw from breaching the contract demand limit.")}
                                             </div>
-                                            <div style="font-size: 0.75rem; font-weight: 800; color: #FCD34D; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                                            <div style="font-size: 0.75rem; font-weight: 800; color: #92400E; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
                                                 <span>🛡️</span> EXACT BENEFIT OF KEEPING STOPPED NOW:
                                             </div>
-                                            <div style="font-size: 0.78rem; color: #FDE68A; line-height: 1.35;">
+                                            <div style="font-size: 0.82rem; color: #78350F; line-height: 1.4; font-weight: 500;">
                                                 ${sanitizeHTML(m.benefit_stopped_now || "Avoids maximum demand penalty fees and shifts heavy load to the lowest night tariff tier.")}
                                             </div>
                                         </div>
                                     `}
 
                                     <!-- Operational Window Directive -->
-                                    <div style="margin-top: 10px; font-size: 0.78rem; color: #94A3B8; background: rgba(0, 0, 0, 0.2); padding: 8px 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
-                                        <span>🕒 ${isCurrentlyRunning ? 'Active Operating Window:' : 'Scheduled Start Window:'}</span>
-                                        <strong style="color: ${isCurrentlyRunning ? '#10B981' : '#FCD34D'}; font-family: monospace;">${m.time_window}</strong>
+                                    <div style="margin-top: 12px; font-size: 0.8rem; color: #526357; background: #F8F6F0; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(210, 200, 180, 0.6); display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-weight: 600;">🕒 ${isCurrentlyRunning ? 'Active Operating Window:' : 'Scheduled Start Window:'}</span>
+                                        <strong style="color: ${isCurrentlyRunning ? '#047857' : '#B45309'}; font-family: monospace; font-size: 0.88rem;">${m.time_window}</strong>
                                     </div>
                                 </div>
 
                                 <!-- Action button -->
-                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="width: 100%; padding: 8px 10px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93C5FD; font-weight: 700; margin-top: 6px;">
+                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="width: 100%; padding: 9px 12px; font-size: 0.8rem; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #FFFFFF; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 3px 10px rgba(5, 150, 105, 0.2); margin-top: 6px;">
                                     ⚙️ Inspect Shift in Optimizer ➔
                                 </button>
                             </div>
@@ -2140,16 +2140,16 @@ document.addEventListener("DOMContentLoaded", () => {
             // 2. POPULATE SCHEDULER TAB DETAILED 24H GANTT TIMETABLE
             if (listEl) {
                 if (machines.length === 0) {
-                    listEl.innerHTML = `<p style="color: #94A3B8; font-size: 0.85rem;">No machine telemetry available for this facility.</p>`;
+                    listEl.innerHTML = `<p style="color: #526357; font-size: 0.85rem;">No machine telemetry available for this facility.</p>`;
                     return;
                 }
 
                 let html = "";
                 machines.forEach((m, idx) => {
                     const isNight = m.status === "OFF_PEAK_NIGHT";
-                    const badgeColor = isNight ? "#3B82F6" : "#10B981";
-                    const badgeBg = isNight ? "rgba(59, 130, 246, 0.15)" : "rgba(16, 185, 129, 0.15)";
-                    const badgeBorder = isNight ? "rgba(59, 130, 246, 0.35)" : "rgba(16, 185, 129, 0.35)";
+                    const badgeColor = isNight ? "#1D4ED8" : "#047857";
+                    const badgeBg = isNight ? "#EFF6FF" : "#ECFDF5";
+                    const badgeBorder = isNight ? "#BFDBFE" : "#A7F3D0";
 
                     // Generate 24-hour visual Gantt timeline blocks
                     let ganttBlocksHtml = "";
@@ -2164,71 +2164,76 @@ document.addEventListener("DOMContentLoaded", () => {
                         const isPeakTariffHour = (h >= 18 && h <= 21);
                         const isMaintenanceHour = (h >= 2 && h <= 5);
 
-                        let blockBg = "rgba(255, 255, 255, 0.06)";
-                        let blockBorder = "1px solid rgba(255, 255, 255, 0.08)";
+                        let blockBg = "#E8E2D5";
+                        let blockBorder = "1px solid #D5CBB8";
+                        let blockColor = "#526357";
                         let blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Idle / Standby`;
 
                         if (isActive) {
                             if (isNight) {
-                                blockBg = "#3B82F6";
-                                blockBorder = "1px solid #60A5FA";
+                                blockBg = "#2563EB";
+                                blockBorder = "1px solid #1D4ED8";
+                                blockColor = "#FFFFFF";
                                 blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Off-Peak Night Run)`;
                             } else {
-                                blockBg = "#10B981";
-                                blockBorder = "1px solid #34D399";
+                                blockBg = "#059669";
+                                blockBorder = "1px solid #047857";
+                                blockColor = "#FFFFFF";
                                 blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Active (${m.load_kw} kW Solar Window Dispatch)`;
                             }
                         } else if (isPeakTariffHour) {
-                            blockBg = "rgba(239, 68, 68, 0.18)";
-                            blockBorder = "1px dashed rgba(239, 68, 68, 0.6)";
+                            blockBg = "rgba(239, 68, 68, 0.15)";
+                            blockBorder = "1px dashed #DC2626";
+                            blockColor = "#DC2626";
                             blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Peak Tariff Window ($0.18/kWh Surcharge Avoided)`;
                         } else if (isMaintenanceHour) {
-                            blockBg = "rgba(100, 116, 139, 0.18)";
-                            blockBorder = "1px solid rgba(100, 116, 139, 0.4)";
+                            blockBg = "#E2E8F0";
+                            blockBorder = "1px solid #CBD5E1";
+                            blockColor = "#64748B";
                             blockTitle = `Hour ${h.toString().padStart(2, '0')}:00 - Plant Maintenance Overhaul Blackout`;
                         }
 
                         ganttBlocksHtml += `
-                            <div title="${blockTitle}" style="flex: 1; min-width: 14px; height: 26px; background: ${blockBg}; border: ${blockBorder}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: ${isActive ? '#FFFFFF' : '#64748B'}; font-family: monospace; font-weight: 700; cursor: pointer; transition: transform 0.15s ease;">
+                            <div title="${blockTitle}" style="flex: 1; min-width: 14px; height: 26px; background: ${blockBg}; border: ${blockBorder}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: ${blockColor}; font-family: monospace; font-weight: 700; cursor: pointer; transition: transform 0.15s ease;">
                                 ${h % 3 === 0 ? h : ''}
                             </div>
                         `;
                     }
 
                     html += `
-                        <div class="machine-fleet-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 20px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <div class="machine-fleet-card" style="background: #FFFFFF; border: 1px solid rgba(210, 200, 180, 0.8); border-radius: 16px; padding: 18px 22px; box-shadow: 0 4px 14px rgba(60, 52, 38, 0.05); transition: transform 0.2s ease, box-shadow 0.2s ease;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                        <span class="badge" style="background: rgba(255, 255, 255, 0.1); color: #E2E8F0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
-                                        <h3 style="margin: 0; color: #F8FAFC; font-size: 1.05rem; font-family: 'Outfit', sans-serif;">${sanitizeHTML(m.name)}</h3>
+                                        <span class="badge" style="background: #F1ECE1; color: #1F2B24; border: 1px solid #D8CFC0; font-size: 0.75rem; font-weight: 800;">STAGE ${idx + 1}: ${m.machine_id}</span>
+                                        <h3 style="margin: 0; color: #1F2B24; font-size: 1.1rem; font-family: 'Outfit', sans-serif; font-weight: 800;">${sanitizeHTML(m.name)}</h3>
                                         <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 0.72rem; font-weight: 700;">
                                             ${isNight ? '🌙 OFF-PEAK NIGHT BASELOAD' : '☀️ SHIFTED TO SOLAR MIDDAY'}
                                         </span>
                                     </div>
-                                    <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 4px;">
-                                        <strong style="color: #CBD5E1;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
-                                        <strong style="color: #CBD5E1;">Rated Demand:</strong> <span style="color: #F59E0B; font-weight: 700;">${m.load_kw} kW</span> &nbsp;|&nbsp;
-                                        <strong style="color: #CBD5E1;">Run Duration:</strong> <span style="color: #38BDF8; font-weight: 700;">${m.duration_h} Hours</span>
+                                    <div style="font-size: 0.85rem; color: #526357; margin-top: 5px;">
+                                        <strong style="color: #1F2B24;">Process Stage:</strong> ${sanitizeHTML(m.stage)} &nbsp;|&nbsp; 
+                                        <strong style="color: #1F2B24;">Rated Demand:</strong> <span style="color: #B45309; font-weight: 800;">${m.load_kw} kW</span> &nbsp;|&nbsp;
+                                        <strong style="color: #1F2B24;">Run Duration:</strong> <span style="color: #0284C7; font-weight: 800;">${m.duration_h} Hours</span>
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div style="font-size: 0.88rem; font-weight: 800; color: #10B981;">
+                                    <div style="font-size: 0.9rem; font-weight: 800; color: #047857;">
                                         🕒 Dispatched Window: ${m.time_window}
                                     </div>
-                                    <div style="font-size: 0.78rem; color: #34D399; font-weight: 600; margin-top: 2px;">
+                                    <div style="font-size: 0.8rem; color: #059669; font-weight: 700; margin-top: 2px;">
                                         Saved vs Peak: +₹${m.hourly_cost_saved_inr.toLocaleString()} (+$${m.hourly_cost_saved_usd.toFixed(2)})
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 24-Hour Visual Dispatch Gantt -->
-                            <div style="margin-top: 10px; background: rgba(0, 0, 0, 0.35); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.72rem; color: #94A3B8;">
+                            <div style="margin-top: 12px; background: #F8F6F0; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(210, 200, 180, 0.7);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.75rem; color: #526357; font-weight: 600;">
                                     <span>00:00 (Midnight)</span>
                                     <span>06:00 (Dawn)</span>
-                                    <span style="color: #10B981; font-weight: 700;">12:00 (Solar Peak)</span>
-                                    <span style="color: #EF4444; font-weight: 700;">18:00 (Peak Tariff Surcharge)</span>
+                                    <span style="color: #047857; font-weight: 800;">12:00 (Solar Peak)</span>
+                                    <span style="color: #DC2626; font-weight: 800;">18:00 (Peak Tariff Surcharge)</span>
                                     <span>23:00</span>
                                 </div>
                                 <div style="display: flex; gap: 3px; width: 100%; overflow-x: auto;">
@@ -2237,11 +2242,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
 
                             <!-- Operational Rationale & One-Click Load -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.82rem;">
-                                <div style="color: #94A3B8; flex: 1; min-width: 260px;">
-                                    <strong style="color: #E2E8F0;">Optimization Logic:</strong> ${sanitizeHTML(m.reason)}
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(210, 200, 180, 0.7); font-size: 0.83rem;">
+                                <div style="color: #334155; flex: 1; min-width: 260px;">
+                                    <strong style="color: #1F2B24;">Optimization Logic:</strong> ${sanitizeHTML(m.reason)}
                                 </div>
-                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 0.78rem; padding: 6px 14px; width: auto; font-weight: 700;">
+                                <button class="premium-btn" onclick="window.inspectMachineInScheduler('${m.name}', ${m.load_kw}, ${m.duration_h})" style="background: #F0FDF4; border: 1px solid #A7F3D0; color: #047857; font-size: 0.8rem; padding: 7px 16px; width: auto; font-weight: 700; border-radius: 8px; cursor: pointer;">
                                     ⚡ Inspect Machine in Optimizer
                                 </button>
                             </div>
