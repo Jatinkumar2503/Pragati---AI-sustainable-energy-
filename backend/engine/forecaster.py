@@ -724,9 +724,12 @@ def generate_forecast(df, forecast_hours=48, train_split_ratio=0.9, backtest_fol
     # Clean up any NaNs in hourly data
     df_hourly = df_hourly.ffill().bfill()
     
-    # Define split index
+    # Define split index: ensure validation set contains full requested forecast horizon if dataset permits
     n_rows = len(df_hourly)
-    split_idx = int(n_rows * train_split_ratio)
+    if n_rows >= forecast_hours + 48:
+        split_idx = n_rows - forecast_hours
+    else:
+        split_idx = max(24, int(n_rows * train_split_ratio))
     
     train_df = df_hourly.iloc[:split_idx]
     val_df = df_hourly.iloc[split_idx:]

@@ -680,8 +680,8 @@
                         <h3>Forecast Parameters</h3>
                         <div class="input-group">
                             <label for="forecast-hours">Prediction Range (Hours)</label>
-                            <input type="range" id="forecast-hours" min="24" max="168" value="48" step="24" class="premium-slider">
-                            <div class="slider-val"><span id="forecast-hours-val">48</span> hours (2 days)</div>
+                            <input type="range" id="forecast-hours" min="24" max="168" value="48" step="24" class="premium-slider" oninput="updateForecastSliderLabel(this.value)">
+                            <div class="slider-val" id="forecast-hours-label">48 hours (2 days)</div>
                         </div>
                         <div class="input-group">
                             <label for="backtest-folds">Rolling Backtest Folds</label>
@@ -1635,6 +1635,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=20000.0"></script>
+    <script src="app.js?v=20261023.2"></script>
 </body>
 </html>

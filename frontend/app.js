@@ -20,6 +20,16 @@ function sanitizeHTML(str) {
     return temp.innerHTML;
 }
 
+// Utility: Update forecast hours slider label dynamically
+function updateForecastSliderLabel(val) {
+    const hours = parseInt(val) || 48;
+    const days = Math.round(hours / 24);
+    const label = `${hours} hours (${days === 1 ? '1 day' : days + ' days'})`;
+    const el = document.getElementById("forecast-hours-label");
+    if (el) el.innerText = label;
+}
+window.updateForecastSliderLabel = updateForecastSliderLabel;
+
 // Application Initialization
 document.addEventListener("DOMContentLoaded", () => {
     // Set dynamic date badge
@@ -43,9 +53,11 @@ document.addEventListener("DOMContentLoaded", () => {
         runForecasting();
     });
     
-    document.getElementById("forecast-hours").addEventListener("input", (e) => {
-        document.getElementById("forecast-hours-val").innerText = e.target.value;
-    });
+    const forecastSlider = document.getElementById("forecast-hours");
+    if (forecastSlider) {
+        forecastSlider.addEventListener("input", (e) => updateForecastSliderLabel(e.target.value));
+        forecastSlider.addEventListener("change", (e) => updateForecastSliderLabel(e.target.value));
+    }
     
     document.getElementById("optimize-schedule-btn").addEventListener("click", () => {
         runScheduler();
@@ -721,7 +733,15 @@ function renderForecastChart(data, seasonalName = "Prophet") {
     forecastChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: data.timestamps.map(t => t.split(" ")[1] ? t.split(" ")[1].substring(0, 5) : t),
+            labels: data.timestamps.map(t => {
+                const parts = t.split(" ");
+                if (parts.length >= 2) {
+                    const d = parts[0].substring(5).replace("-", "/");
+                    const h = parts[1].substring(0, 5);
+                    return `${d} ${h}`;
+                }
+                return t;
+            }),
             datasets: datasets
         },
         options: {
